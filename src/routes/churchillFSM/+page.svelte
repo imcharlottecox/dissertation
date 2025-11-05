@@ -6,53 +6,40 @@
     type Transition = { from: string; to: string; label: string };
 
     const acceptingStates = [
-        'Cat', 'Car', 'Cart', 'Carton', 'Cats', 'Cars', 'Carts', 'Cartons', 'ACCEPT'
+        'surrender', 'ACCEPT'
     ];
     const startingStates = [
         'START'
     ];
     const fsmStates = [
-        'START',
-        'C',
-        'Ca', // Central axis
-        
-        'Cat',  // Top branch
-        'Cats', // Top branch 
-        
-        'Car',  // Middle path 
-        'Cars', // Bottom branch (plurals)
-
-        'Cart',  // Middle/Top path 
-        'Carts', // Bottom branch (plurals)
-
-        'Carto', // Middle path 
-        'Carton', // Middle path
-        'Cartons', // Middle path 
-
+        'START', 'we', 'shall', 'fight', 'on', 'the',
+        'beaches', 'landing', 'grounds', 'in', 'fields',
+        'and', 'streets', 'hills', 'never', 'surrender', 'ACCEPT'
     ];
-
-    const fsmTransitions: Transition[] = [
-        { from: 'START', to: 'C', label: 'C' },
-        { from: 'C', to: 'Ca', label: 'a' },
-        { from: 'Ca', to: 'Cat', label: 't' },
-        { from: 'Ca', to: 'Car', label: 'r' },
-        { from: 'Cat', to: 'ACCEPT', label: 'END' },
-        { from: 'Cat', to: 'Cats', label: 's' },
-        { from: 'Cats', to: 'ACCEPT', label: 'END' },
-        { from: 'Car', to: 'ACCEPT', label: 'END' },
-        { from: 'Car', to: 'Cart', label: 't' },
-        { from: 'Car', to: 'Cars', label: 's' },
-        { from: 'Cars', to: 'ACCEPT', label: 'END' },
-        { from: 'Cart', to: 'ACCEPT', label: 'END' },
-        { from: 'Cart', to: 'Carts', label: 's' },
-        { from: 'Carts', to: 'ACCEPT', label: 'END' },
-        { from: 'Cart', to: 'Carto', label: 'o' },
-        { from: 'Carto', to: 'Carton', label: 'n' },
-        { from: 'Carton', to: 'ACCEPT', label: 'END' },
-        { from: 'Carton', to: 'Cartons', label: 's' },
-        { from: 'Cartons', to: 'ACCEPT', label: 'END' }
+    const fsmTransitions = [
+        { from: 'START', to: 'we', label: 'we' },
+        { from: 'we', to: 'shall', label: 'shall' },
+        { from: 'shall', to: 'fight', label: 'fight' },
+        { from: 'fight', to: 'on', label: 'on' },
+        { from: 'on', to: 'the', label: 'the' },
+        { from: 'the', to: 'beaches', label: 'beaches' },
+        { from: 'beaches', to: 'we', label: 'we' },
+        { from: 'the', to: 'landing', label: 'landing' },
+        { from: 'landing', to: 'grounds', label: 'grounds' },
+        { from: 'grounds', to: 'we', label: 'we' },
+        { from: 'fight', to: 'in', label: 'in' },
+        { from: 'in', to: 'the', label: 'the' },
+        { from: 'the', to: 'fields', label: 'fields' },
+        { from: 'fields', to: 'and', label: 'and' },
+        { from: 'and', to: 'in', label: 'in' },
+        { from: 'the', to: 'streets', label: 'streets' },
+        { from: 'streets', to: 'we', label: 'we' },
+        { from: 'the', to: 'hills', label: 'hills' },
+        { from: 'hills', to: 'we', label: 'we' },
+        { from: 'shall', to: 'never', label: 'never' },
+        { from: 'never', to: 'surrender', label: 'surrender' },
+        { from: 'surrender', to: 'ACCEPT', label: 'END' }
     ];
-    
 
     const graphHeight = 600;
     const nodeRadius = 20;
@@ -98,6 +85,7 @@
             };
         });
     }
+
     function computeLevels(edges: Transition[]) {
         const adjacency = new Map<string, string[]>();
         edges.forEach(e => {
@@ -137,6 +125,8 @@
         })).filter((e): e is { label: string; source: StateNode; target: StateNode } => !!(e.source && e.target)); //drop the edges where source or target is undefined in fsmStates
         console.log('nodeMap, resolvedEdges:', nodeMap, resolvedEdges);
 
+        const levels = computeLevels(fsmTransitions);
+
         const g = svg.append('g').attr('class', 'content-group');
 
         //zoom
@@ -147,7 +137,7 @@
         svg.call(zoom);
         svg.call(zoom.transform, d3.zoomIdentity);
 
-        //drag handler: remembers and saves positions of node drags, to persist state across window resizes
+        // drag handler: remembers and saves positions of node drags, to persist state across window resizes
         const dragHandler = d3.drag<any, any>()
             .on('start', (event, d: any) => {
                 if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -167,7 +157,7 @@
                     graphNodes[index].fy = d.y;
                 }
 		});
-        const levels = computeLevels(fsmTransitions);
+
         const maxLevel = Math.max(...levels.values());
         const simulation = d3.forceSimulation(graphNodes)
             .force("link", d3.forceLink(resolvedEdges)
@@ -175,21 +165,21 @@
                 .distance(75)
             )
             .force("charge", d3.forceManyBody().strength(-1000))
-            // .force("collide", d3.forceCollide().radius(10))
+            .force("collide", d3.forceCollide().radius(22))
             .force("center", d3.forceCenter((graphWidth/2)+2*padding, 300.00))
+            // no center force!
             .force("xLevel", d3.forceX((d: any) => {
                 const level = levels.get(d.id) ?? 0;
-                // if (acceptingStates.includes(d.id)) return graphWidth * 0.975;
+                if (acceptingStates.includes(d.id)) return graphWidth * 0.975;
                 if (startingStates.includes(d.id)) return graphWidth * 0.025;
                 return padding + (level / maxLevel) * (graphWidth - 2 * padding);
             }).strength(1))
             .force("ySpread", d3.forceY(graphHeight / 2))
-            .alphaDecay(0.09)
+            .alphaDecay(0.05)
             .on("tick", tick);
+        //issue: origin x is offset into yellow box, so everything is shifted right - nodes wont spread evenly thru the box
 
 
-        //draw edges
-        
         //defs are reusable definitions
         svg.append("svg:defs")
             .append("svg:marker")
@@ -204,41 +194,73 @@
             .append("svg:path")
             .attr("d", "M 0 0 L 10 5 L 0 10 z"); //M 0 0 move to top, L 10 5 means draw line to middle right, L 0 10 line to bottom, z closes path
 
+        //draw edges
         const edge = g.append('g')
             .attr('stroke', 'black' )
             .selectAll('line')
             .data(resolvedEdges)
             .join('line')
-            .attr('marker-end', 'url(#arrowhead)')
-            .attr('stroke', 'grey');
+            .attr('stroke', 'grey')
+            .attr('marker-end', 'url(#arrowhead)');
 
         const edgeLabel = g.append('g')
             .selectAll('text')
             .data(resolvedEdges)
             .join('text')
             .attr('font-size', 10)
-            .text(d => d.label);
+            .text(d => d.label)
 
         const node = g.append('g')
-            .selectAll<SVGGElement, StateNode>('g')
-            .data(graphNodes, (n: StateNode) => n.id)
+            .selectAll('g')
+            .data(graphNodes, (n:any) => n.id)
             .join('g')
             .call(dragHandler as any)
 
 
         node.append('circle')
             .attr('r', nodeRadius)
-            .attr('fill', (d: StateNode) => acceptingStates.includes(d.id) ? 'lightgreen' : 'lightblue')
+            .attr('fill', d => acceptingStates.includes(d.id) ? 'lightgreen' : 'lightblue')
             .attr('stroke', 'black')
-            .attr('stroke-width', (d: StateNode) => acceptingStates.includes(d.id) ? 3 : 0.5);
+            .attr('stroke-width', d => acceptingStates.includes(d.id) ? 3 : 0.5);
 
         node.append('text')
             .attr('text-anchor', 'middle')
             .attr('dy', 5)
             .attr('font-size', 10)
-            .text((d: StateNode) => d.id);
+            .text(d => d.id);
 
+        svg.append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 100)
+            .attr("y2", 0)
+            .attr("stroke", "red");
+
+        svg.append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 0)
+            .attr("y2", 100)
+            .attr("stroke", "blue");
             
+          
+        // const simulation = d3.forceSimulation(graphNodes)
+        //     .force("link", d3.forceLink(resolvedEdges).id((d: any) => d.id))
+        //     .force("charge", d3.forceManyBody().strength(-1000))
+        //     .force("center", d3.forceCenter(graphWidth / 2, graphHeight / 2))
+            // .force("acceptY", d3.forceY((d: any) =>
+            //         acceptingStates.includes(d.id) || startingStates.includes(d.id) ? graphHeight * 0.5 : graphHeight / 2
+            //     ).strength(0.6))
+        //     .force("startX", d3.forceX((d: any) =>
+        //             startingStates.includes(d.id) ? graphWidth * 0.1 : graphWidth / 2
+        //         ).strength(0.9))
+        // .force("acceptX", d3.forceX((d: any) =>
+        //         acceptingStates.includes(d.id) ? graphWidth * 0.9 : graphWidth / 2
+        //     ).strength(0.9))
+        //     .on("tick", tick);
+
+
+              
         function tick() {
             graphNodes.forEach((d) => {
                 const minX = nodeRadius + padding;
@@ -248,30 +270,32 @@
                 d.x = Math.max(minX, Math.min(maxX, d.x));
                 d.y = Math.max(minY, Math.min(maxY, d.y));
             });
-        
             edge
                 .attr('x1', (d: any) => d.source.x)
                 .attr('y1', (d: any) => d.source.y)
                 .attr('x2', (d: any) => d.target.x)
                 .attr('y2', (d: any) => d.target.y)
                 .attr("d", function(d: any) {
+                    // Total difference in x and y from source to target
                     const differenceX = d.target.x - d.source.x;
                     const differenceY = d.target.y - d.source.y;
+
+                    // Length of path from center of source node to center of target node
                     const edgeLength = Math.sqrt((differenceX * differenceX) + (differenceY * differenceY));
-                    // distance of x and y from the centre to the outside of the target node
+
+                    // x and y distances from center to outside edge of target node
                     const offsetX = (differenceX * d.target.radius) / edgeLength;
                     const offsetY = (differenceY * d.target.radius) / edgeLength;
 
                     return 'M' + d.source.x + ',' + d.source.y + 'L' + (d.target.x - offsetX) + ',' + (d.target.y - offsetY);
                 })
-                .attr('stroke', (d: any) => (d.target.x >= d.source.x) ? 'grey' : 'blue')
+                .attr('stroke', (d: any) => (d.target.x >= d.source.x) ? 'black' : 'lightgrey')
 
 
             edgeLabel
                 .attr('x', (d: any) => (d.source.x + d.target.x) / 2.01)
                 .attr('y', (d: any) => (d.source.y + d.target.y) / 2.02);
 
-            
             node.attr('transform', (d) => `translate(${d.x},${d.y})`);
         }
 
@@ -306,7 +330,7 @@ onMount(() => {
 
 <style>
     svg {
-        background-color: lightyellow;
+        background-color: snow;
         width: 100%;
         height: 600px;
         border: 1px solid #ccc;
