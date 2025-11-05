@@ -21,7 +21,6 @@ const config = {
 		}),
 		paths: {
 			base: dev ? '' : '/dissertation',
-			assets: dev ? '' : '/dissertation'
 		},
 		prerender: {
       		handleHttpError: 'warn'
