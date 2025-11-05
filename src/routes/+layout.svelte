@@ -1,5 +1,6 @@
 <script>
 	import favicon from '$lib/assets/favicon.svg';
+	import { base } from '$app/paths';
 
 	let { children } = $props();
 </script>
@@ -18,10 +19,12 @@
 	<a href="/holdsShape">Holds Shape</a>
 	<a href="/churchillFSM">My Churchill FSM</a>
 	<a href="/cambridgeFsm">My Cam FSM</a> -->
-	<a href="/algebraPage0">Algebra: Example 0</a>
-	<a href="/caPage1">Ca: Example 1</a>
-	<a href="/camPage2">Cam: Example 2</a>
-	<a href="/churPage3">Churchill: Example 3</a>
+	<!-- <a href="{base}/algebraPage0">Algebra: Example 0</a> -->
+	<a href={`${base}/algebraPage0`}>Algebra: Example 0</a>
+	<a href="{base}/caPage1">Ca: Example 1</a>
+	<a href={base + '/caPage1'}>Ca: Example 222</a>
+	<a href="{base}/camPage2">Cam: Example 2</a>
+	<a href="{base}/churPage3">Churchill: Example 3</a>
 
 	<!-- <a href="/markov1">Markov</a> -->
 	</div>
