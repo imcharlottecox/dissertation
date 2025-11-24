@@ -2,6 +2,9 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 
+float = 5.
+
+
 with open("ASDiv.xml", "r", encoding="utf-8") as f:
     soup = BeautifulSoup(f, "xml")
 
@@ -19,3 +22,5 @@ print(f"extracted {len(formulae)} formulae")
 
 df = pd.DataFrame(formulae, columns=["expression"])
 df.to_csv("algebraicExpressions.csv", index=False)
+
+

@@ -22,7 +22,7 @@
     let graphNodes: StateNode[] = [];
     let graphEdges: fTransition[] = [];
 
-    // Computes BFS numeric levels (depths)
+    // BFS levels computing (depths)
     function computeLevelsMap(edges: fTransition[]): Map<string, number> {
         const adjacency = new Map<string, string[]>();
         edges.forEach(e => {
@@ -38,16 +38,16 @@
             const current = queue.shift()!;
             const neighbours = adjacency.get(current) || [];
             for (const n of neighbours) {
-            if (!levels.has(n)) {
-                levels.set(n, (levels.get(current)! + 1));
-                queue.push(n);
-            }
+                if (!levels.has(n)) {
+                    levels.set(n, (levels.get(current)! + 1));
+                    queue.push(n);
+                }
             }
         }
         return levels;
     }
 
-    // Converts those levels to actual coordinates
+    //converts levels to actual coordinates
     function computeNodePositions(levels: Map<string, number>): Map<string, { x: number; y: number }> {
         const grouped = new Map<number, string[]>();
         for (const [node, lvl] of levels.entries()) {
@@ -64,9 +64,9 @@
         for (const [lvl, nodes] of grouped.entries()) {
             const ySpacing = innerHeight / (nodes.length + 1);
             const x = padding + lvl * levelSpacing;
-            nodes.forEach((n, i) => {
-            const y = padding + (i + 1) * ySpacing;
-            nodePositions.set(n, { x, y });
+            nodes.forEach((nodeId, index) => {
+                const y = padding + (index + 1) * ySpacing;
+                nodePositions.set(nodeId, { x, y });
             });
         }
         return nodePositions;

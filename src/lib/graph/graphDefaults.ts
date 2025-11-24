@@ -13,10 +13,6 @@
 //   markerBoxWidth: 10,
 //   markerBoxHeight: 10
 // };
-
-
-// src/lib/utils/graphDefaults.ts
-
 const isMobile = () => typeof window !== 'undefined' && window.innerWidth <= 768;
 
 export function getGraphDefaultsFSM() {
@@ -24,7 +20,7 @@ export function getGraphDefaultsFSM() {
   return {
     graphHeight: 300,
     nodeRadius: mobile ? 5 : 15,
-    padding: mobile ? 1 : 20,
+    padding: mobile ? 1 : 100,
     markerBoxWidth: 10,
     markerBoxHeight: 10,
   };

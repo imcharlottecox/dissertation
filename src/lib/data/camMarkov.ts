@@ -7,20 +7,20 @@ export function makeCamMarkov() {
    const markovStates = [
         'START',
         'C',
-        'Ca', // Central axis
+        'Ca',
         
-        'Cat',  // Top branch
-        'Cats', // Top branch 
+        'Cat',  
+        'Cats', 
         
-        'Car',  // Middle path 
-        'Cars', // Bottom branch (plurals)
+        'Car',  
+        'Cars', 
 
-        'Cart',  // Middle/Top path 
-        'Carts', // Bottom branch (plurals)
+        'Cart',  
+        'Carts', 
 
-        'Carto', // Middle path 
-        'Carton', // Middle path
-        'Cartons', // Middle path 
+        'Carto', 
+        'Carton', 
+        'Cartons', 
 
     ];
 

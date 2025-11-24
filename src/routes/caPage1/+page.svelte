@@ -3,10 +3,29 @@
     import MarkovView from "$lib/components/markovView.svelte";
     import { makeCaFSM } from '$lib/data/caFSM';
     import { makeCaMarkov } from "$lib/data/caLetterMarkov";
+    import {ComputeValidityFSM} from "$lib/components/computeValidityFSM";
+    import { ComputeProbabilityMarkov } from "$lib/components/computeProbabilityMarkov";
 
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
     let weighted = false;
+
+
+    let sequence: string = "";
+    let fsmResult: string | null = null;
+    let markovResult: string | null = null;
+
+
+    function testSequence(){
+        const fsmInput = sequence?.trim().split("");
+        const markovInput = sequence?.toUpperCase().trim().split("");
+
+        const isAccepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
+        fsmResult = isAccepted ? "Accepted" : "Rejected";
+
+        const prob = ComputeProbabilityMarkov(markovTransitions, markovInput);
+        markovResult = `P(${markovInput}) = ${prob.toFixed(5)}`;
+    }
 </script>
 
 <main>
@@ -39,13 +58,28 @@
             />
         </div>
     </div>  
+    <div>
+        <label for="sequenceInput">Input Sequence:</label>
+        <input
+            type = "text"
+            id = "sequenceInput"
+            placeholder= "Enter a sequence to test here"
+            bind:value={sequence}
+            on:input={testSequence}
+        />
+        <div>
+            {fsmResult}
+        </div>            
+            {markovResult}
+
+    </div>
 </main>
 
 
 <style>
   main {
     padding: 1rem;
-    background: #fafafa;
+    background: snow;
   }
     h3{
         margin: 0 0 4px 0; 

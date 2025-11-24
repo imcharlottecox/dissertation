@@ -22,7 +22,7 @@
 	<!-- <a href="{base}/algebraPage0">Algebra: Example 0</a> -->
 	<a href={`${base}/algebraPage0`}>Algebra: Example 0</a>
 	<a href="{base}/caPage1">Ca: Example 1</a>
-	<a href={base + '/caPage1'}>Ca: Example 222</a>
+	<a href="{base}/pythonPage4">Python: Example</a>
 	<a href="{base}/camPage2">Cam: Example 2</a>
 	<a href="{base}/churPage3">Churchill: Example 3</a>
 

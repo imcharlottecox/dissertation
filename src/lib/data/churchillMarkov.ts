@@ -64,7 +64,6 @@ export function makeChurchillMarkov() {
     // surrender
     { from: 'surrender', to: '$', probability: 1.0 },
 
-    // $ (absorbing)
     { from: '$', to: '$', probability: 1.0 }
   ];
 

@@ -1,10 +1,11 @@
 <script lang="ts">
     import Accordion from "$lib/components/Accordion.svelte";
-    import FsmViewer from "$lib/components/fsmView.svelte";
+    // import FsmViewer from "$lib/components/fsmView.svelte";
+    import FsmHierarchicalViewer from "$lib/components/fsmHierarchicalViewer.svelte";
     import { makeLetFSM } from '$lib/data/letFSM';
 
 
-    const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeLetFSM();
+    const { fsmStates, fsmTransitions, acceptingStates, startingStates, warps, subgraphs } = makeLetFSM();
 
     let weighted = false;
     let showPanel = true;
@@ -18,12 +19,14 @@
     </Accordion>
     <div style="display: flex; gap: 4px; flex-direction:row;">
         <div style="width:100%; height:600px;">
-            <FsmViewer 
-            {fsmStates}
-            {fsmTransitions}
-            {acceptingStates}
-            {startingStates}
-            {weighted}
+            <FsmHierarchicalViewer 
+              {fsmStates}
+              {fsmTransitions}
+              {acceptingStates}
+              {startingStates}
+              {subgraphs}
+              {warps}
+              {weighted}
             />
         </div>
     </div>  
