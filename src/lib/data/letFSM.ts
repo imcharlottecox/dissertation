@@ -6,6 +6,9 @@ export function makeLetFSM() {
     // VARIABLE = [name, age, snowing]
     // VALUE = ["Anna", 17, true]
 
+    //TODO: ALLOW FOR NEGATIVE NUMBERS
+    //ALLOW FOR ARRAY ACCESS
+
     const acceptingStates = ['4:END'];
     const startingStates = ['0:START'];
 
@@ -28,20 +31,6 @@ export function makeLetFSM() {
     ];
 
     const subgraphs = {
-        // '1:VARIABLE_IDENTIFIER': {
-        //     states: ['0:START', 'A: REDUNDANT_SPACES', 'B: FIRST_CHAR', 'C: IDENTIFIER', 'D: ID_CHARS'],
-        //     acceptingStates: ['C: IDENTIFIER'],
-        //     startingStates: ['0:START'],
-        //     transitions: [
-        //         { from: '0:START', to: 'A: REDUNDANT_SPACES', label: 'space'},
-        //         { from: 'A: REDUNDANT_SPACES', to: 'A: REDUNDANT_SPACES', label: 'space'},
-        //         { from: 'A: START', to: 'B: FIRST_CHAR', label: '([A-Za-z] | _)'},
-        //         { from: 'B: FIRST_CHAR', to: 'D: ID_CHARS', label: '([A-Za-z] | _)'},
-        //         { from: 'D: ID_CHARS', to: 'D: ID_CHARS', label: '([A-Za-z] | _)'},
-        //         { from: 'D: ID_CHARS', to: 'C: IDENTIFIER', label: 'space'},
-        //         { from: 'B: FIRST_CHAR', to: 'C: IDENTIFIER', label: 'space'}
-        //     ],
-        // }
         '1:VARIABLE_IDENTIFIER': {
             level: 1,
             entry: 'START_PORT',
@@ -61,18 +50,21 @@ export function makeLetFSM() {
             level: 1,
             entry: 'START_PORT',
             exit: 'EXIT_PORT',
-            acceptingStates: ['BOOL', 'STRING', 'INTEGER', 'FLOAT'],
+            acceptingStates: ['BOOL', 'STRING', 'INTEGER', 'FLOAT', 'EXPR'],
             startingStates: ['START_PORT'],
-            states: ['START_PORT', 'BOOL', 'STRING', 'INTEGER', 'FLOAT', 'EXIT_PORT'],
+            states: ['START_PORT', 'BOOL', 'STRING', 'INTEGER', 'FLOAT', 'EXPR', 'EXIT_PORT'],
             transitions: [
                 { from: 'START_PORT', to:'BOOL', label: 'True | False'},
                 { from: 'START_PORT', to:'STRING', label: '"text"'},
                 { from: 'START_PORT', to:'INTEGER', label: '[0-9]+'},
+                { from: 'START_PORT', to:'EXPR', label: '[0-9]+ | "\\("'},
                 { from: 'START_PORT', to:'FLOAT', label: '[0-9]*.[0-9]+ | [0-9]+.[0-9]*'},
                 { from: 'BOOL', to: 'EXIT_PORT', label: 'New Line'},
                 { from: 'STRING', to: 'EXIT_PORT', label: 'New Line'},
                 { from: 'INTEGER', to: 'EXIT_PORT', label: 'New Line'},
                 { from: 'FLOAT', to: 'EXIT_PORT', label: 'New Line'},
+                { from: 'EXPR', to: 'EXIT_PORT', label: 'New Line'},
+
             ]
         },
 
@@ -98,6 +90,34 @@ export function makeLetFSM() {
                 { from: 'e', to: 'end', label: 'newline' }
             ]
         },
+        '3:VALUE.EXPR': {
+            level: 2,
+            parentState: 'EXPR',
+            entry: 'START',
+            exit: 'END',
+            startingStates: ['START'],
+            acceptingStates: ['END'],
+            states: [
+                'START', 'NUM', 'OP', 'AFTER_OP', 'OPEN_PAREN', 'CLOSE_PAREN', 'END'
+            ],
+            transitions: [
+                // number
+                { from: 'START', to: 'NUM', label: '[0-9]+' },
+                { from: 'NUM', to: 'OP', label: '(\\+|\\-|\\*|/)' },
+                { from: 'OP', to: 'AFTER_OP', label: '[0-9]+' },
+                { from: 'AFTER_OP', to: 'OP', label: '(\\+|\\-|\\*|/)' },
+                { from: 'AFTER_OP', to: 'END', label: ')"? | newline' },
+
+                // parentheses
+                { from: 'START', to: 'OPEN_PAREN', label: '\\(' },
+                { from: 'OPEN_PAREN', to: 'NUM', label: '[0-9]+' },
+                { from: 'OPEN_PAREN', to: 'OPEN_PAREN', label: '\\(' },
+                { from: 'NUM', to: 'CLOSE_PAREN', label: '\\)' },
+                { from: 'CLOSE_PAREN', to: 'OP', label: '(\\+|\\-|\\*|/)' },
+                { from: 'CLOSE_PAREN', to: 'END', label: 'newline' }
+            ]
+        },
+
     };
     const warps = [
         { from: '0:START', into: '1:VARIABLE_IDENTIFIER.START_PORT'},
@@ -109,6 +129,8 @@ export function makeLetFSM() {
         // { from: 'BOOL.end', backto: '3:VALUE.EXIT_PORT' },
         { from: '2:EQUAL', into: '3:VALUE.BOOL.space' },
         { from: '3:VALUE.BOOL.end', backto: '4:END' },
+        { from: '2:EQUAL', into: '3:VALUE.EXPR.START' },
+        { from: '3:VALUE.EXPR.END', backto: '4:END' },
     ];
 
     return { fsmStates, fsmTransitions, acceptingStates, startingStates, subgraphs, warps };

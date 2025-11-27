@@ -20,7 +20,7 @@
     const cleanId = (id: string) => id.replace(/[^a-zA-Z0-9_-]/g, "_");
 
     let hiddenNodes = new Set<string>();
-
+    let currentZoomTransform = d3.zoomIdentity;
     let graphNodes: StateNode[] = [];
     let baseEdges: fTransition[] = [];
     let visibleEdges: fTransition[] = [];
@@ -74,7 +74,6 @@
             warpEntryExit: parts[parts.length - 1]
         };
     }
-
 
     function computeLevelsMap(edges: fTransition[], root: string, allStates: string[]): Map<string, number> {
         const adjacency = new Map<string, string[]>();
@@ -245,7 +244,6 @@
             .selectAll<SVGPathElement, EdgeRenderDatum>("path")
             .data(data, d => d.key)
             .join(
-                // "path"
                 enter => enter.append("path"),
                 update => update,
                 exit => exit.remove() 
@@ -288,13 +286,8 @@
                     .on("click", (_, d: StateNode) => handleNodeClick(d.id));
                 n.append("circle")
                 .attr("r", nodeRadius)
-                .attr("fill", d =>
-                    acceptingStates.includes(d.id)
-                    ? "lightgreen"
-                    : startingStates.includes(d.id)
-                    ? "lightgrey"
-                    : "lightblue"
-                )
+                .attr("fill", d => acceptingStates.includes(d.id) ? "lightgreen" : startingStates.includes(d.id) ? "lightgrey" :"lightblue")
+
                 .attr("stroke", "black")
                 .attr("stroke-width", d => (acceptingStates.includes(d.id) ? 3 : 0.5));
 
@@ -308,6 +301,7 @@
             });
 
         nodeRender.attr("transform", d => `translate(${d.x},${d.y})`);
+    
     }
 
     function drawSubgraph(parentId: string) {
@@ -322,11 +316,6 @@
             }
         }
 
-        if (!parentNode) {
-            console.warn("No parentNode found for", parentId);
-            return;
-        }
-
         const entryWarp = warps.find(w => {
             const { warpParent, warpEntryExit } = splitWarp(w.into);
             return warpParent === parentId && warpEntryExit === subgraph.entry;
@@ -335,50 +324,33 @@
             const { warpParent, warpEntryExit } = splitWarp(w.from);
             return warpParent === parentId && warpEntryExit === subgraph.exit;
         });
-
         const entryNode = entryWarp ? lookupNode(entryWarp.from) : parentNode;
         const exitNode = lookupNode(exitWarp?.backto ?? "") ?? parentNode;
 
         //only draw within parent's graph bounds todo: maybe implement layoutheight for y as well in case of busier graphs
         const minX = Math.min(entryNode?.x ?? 0, exitNode?.x ?? graphWidth);
+        
         const maxX = Math.max(entryNode?.x ?? graphWidth, exitNode?.x ?? graphWidth);
         const layoutWidth = maxX - minX;
         const layoutHeight = 120; 
         const centerY = parentNode.y;
-        const minY = centerY - layoutHeight / 2;
-
         const yBase = subgraph.level > 1 ? (centerY - layoutHeight / 2) : entryNode!.y;   
 
         const insideStates = subgraph.states.filter(s => s !== subgraph.entry && s !== subgraph.exit);
         const levels = computeLevelsMap(subgraph.transitions, subgraph.entry, subgraph.states);
-        const allPositions = computeNodePositions(levels, layoutWidth, layoutHeight , 10); //subgraph relative xy positions
-
+        //get subgraph relative xy positions by calling compute node pos
+        const allPositions = computeNodePositions(levels, layoutWidth, layoutHeight , 10); 
         const entryPortPos = allPositions.get(subgraph.entry);
         const entryX = entryPortPos?.x ?? padding;
         const entryY = entryPortPos?.y ?? padding;
                 
         const pos = new Map();
         insideStates.forEach(id => {
-            // If computeLevelsMap didn't assign a position, create one manually
             if (!allPositions.has(id)) {
-                allPositions.set(id, {
-                    x: entryX + Math.random() * 40,  // fallback layout
-                    y: entryY + Math.random() * 40
-                });
+                allPositions.set(id, {x: entryX + Math.random() * 40, y: entryY + Math.random() * 40});
             }
             pos.set(id, allPositions.get(id)!);
         });
-
-        const rename = `subgraph-${cleanId(parentId)}`;
-        if (subgraph.parentState) {
-            hideNode(subgraph.parentState);
-        } else {
-            hideNode(parentId);
-        }
-
-        const group = g.append("g").attr("class", rename).attr("opacity", 0);
-        group.append("g").attr("class", "edges");
-        group.append("g").attr("class", "labels");
 
         //transform x y into parent relative global positions
         const subNodes = insideStates.map(id => {
@@ -393,19 +365,9 @@
                 accepting: subgraph.acceptingStates.includes(id)
             };
         });
-
-        // subNodePositions = {};
-        for (const id of Object.keys(subNodePositions)) {
-            if (subNodePositions[id].parent === parentId) {
-                delete subNodePositions[id];
-            }
-        }
         subNodes.forEach(n => (subNodePositions[n.id] = { x: n.x, y: n.y, parent: parentId })); //global nodestates needed for sub edge drawing
         
-        console.log("Positions computed:", allPositions);
-        console.log("Final subNodes:", subNodes);
-        
-        const drag = createDragSubgraph(drawEdges, subNodePositions);
+        const drag = createDragSubgraph(drawEdges, subNodePositions, () => currentZoomTransform);
         const xs = subNodes.map(n => n.x);
         const ys = subNodes.map(n => n.y);
 
@@ -420,6 +382,18 @@
             2: "rgba(210,210,255,0.25)", 
             3: "rgba(200,255,200,0.20)",
         };
+        
+        const rename = `subgraph-${cleanId(parentId)}`;
+        //hide node where came from
+        if (subgraph.parentState) {
+            hideNode(subgraph.parentState);
+        } else {
+            hideNode(parentId);
+        }
+
+        const group = g.append("g").attr("class", rename).attr("opacity", 0);
+        group.append("g").attr("class", "edges");
+        group.append("g").attr("class", "labels");
 
         group.insert("rect", ":first-child")
             .attr("class", "halo-rect")
@@ -469,6 +443,7 @@
                 return sn;
             });
 
+
         activeSubgraphs.add(parentId);
         applyWarpsFor();
         drawEdges();
@@ -503,8 +478,8 @@
     function handleSemanticZoom(k: number, transform: any) {
         const width = graphWidth; //curent viewport size - may change
         const height = graphHeight;
-        const threshold1 = 1.0;  
-        const threshold2 = 2.0;  
+        const threshold1 = 1.1;  
+        const threshold2 = 1.6;  
         const threshold3 = 3.0; 
 
         for (const parentId of Object.keys(subgraphs)) {
@@ -581,7 +556,6 @@
         g.append("g").attr("class", "nodes");
         
         let zoomLevel = 1;
-        let zoomNeedsEval = false;
         let evaluating = false;
         let lastTransform = null;
 
@@ -589,18 +563,18 @@
             .on('zoom', (event) => {
                 zoomLevel = event.transform.k;
                 g.attr('transform', event.transform);
+                lastTransform = event.transform;
+                currentZoomTransform = event.transform;
+
                 // handleSemanticZoom(zoomLevel, event.transform);
 
-                lastTransform = event.transform;
-                zoomNeedsEval = true;
                 requestAnimationFrame(semanticTickGuard);
             });
         svg.call(zoom);
         
         function semanticTickGuard() {
-            if (evaluating || !zoomNeedsEval) return;
+            if (evaluating) return;
             evaluating = true;
-            zoomNeedsEval = false;
             handleSemanticZoom(lastTransform.k, lastTransform);
             evaluating = false;
         }

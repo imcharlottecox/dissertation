@@ -161,8 +161,8 @@
         svg.append("svg:defs")
         const defs = svg.append("defs");
         [
-        { id: "arrow-black", color: "black" },
-        { id: "arrow-blue", color: "lightgrey" }
+            { id: "arrow-black", color: "black" },
+            { id: "arrow-blue", color: "lightgrey" }
         ].forEach(({ id, color }) => {
         defs.append("marker")
             .attr("id", id)
@@ -248,7 +248,7 @@
 					const dist = Math.hypot(dx, dy);
 					return d.target.y - (dy * nodeRadius) / dist;
 				})
-				.attr('stroke', d => (d.target.y >= d.source.y ? 'black' : 'lightgrey'))
+				.attr('stroke', d => (d.target.y >= d.source.y ? 'black' : 'lightpink'))
                 .attr('marker-end', d =>
                     d.target.y >= d.source.y ? 'url(#arrow-black)' : 'url(#arrow-blue)'
                 );

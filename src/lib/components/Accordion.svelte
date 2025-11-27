@@ -65,5 +65,7 @@
         flex-wrap: wrap;
         gap: 6px;
         align-items: flex-start;
+        max-height: 100px; 
+        overflow-y: auto; 
     }
 </style>
