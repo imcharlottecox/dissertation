@@ -22,17 +22,17 @@
         padding: 0;
         margin:0;
         line-height: 1;
+        font-weight: 200;
     }
     .box {
         border: 1.5px solid lightgrey;
         border-radius: 0px;
         margin-bottom: 4px;
-        background-color: snow;
         width:100%;
     }
     .accordion {
-        padding: 10px 6px;
-        background-color: snow;
+        padding: 5px 6px;
+        /* background-color: snow; */
         color: #444;
         cursor: pointer;
         width: 100%;

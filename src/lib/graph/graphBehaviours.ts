@@ -95,12 +95,7 @@ export function computeEdgePoints(source: { x: number; y: number }, target: { x:
     };
 }
 
-export function computeCurvedPath(
-    source: { x: number; y: number },
-    target: { x: number; y: number },
-    nodeRadius: number,
-    curvature: number
-) {
+export function computeCurvedPath(source: { x: number; y: number }, target: { x: number; y: number }, nodeRadius: number, curvature: number) {
     const dx = target.x - source.x;
     const dy = target.y - source.y;
     const dist = Math.hypot(dx, dy);
@@ -128,6 +123,7 @@ export function computeCurvedPath(
 
     return `M ${x1},${y1} Q ${cx},${cy} ${x2},${y2}`;
   }
+  
   export function computeSelfLoopPath(node, r) {
         const LOOP = Math.max(r + 12, 24);
         const x = node.x;
@@ -140,3 +136,16 @@ export function computeCurvedPath(
             ${x + 2}, ${y - r}
         `;
     }
+
+export function createDragSelective(onDragged: (nodeId: string) => void) {
+    return d3.drag<SVGGElement, any>()
+        .on("start", function () {
+        d3.select(this).raise();
+        })
+        .on("drag", function (event, d) {
+        d.x = event.x;
+        d.y = event.y;
+        d3.select(this).attr("transform", `translate(${event.x},${event.y})`);
+        onDragged(d.id);
+        });
+}

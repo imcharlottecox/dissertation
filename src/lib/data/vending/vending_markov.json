@@ -1,0 +1,91 @@
+{
+  "markovStates": [
+    "10p",
+    "PRESSED_PAY",
+    "20p",
+    "5p",
+    "50p"
+  ],
+  "mStartingStates": [],
+  "startDistribution": {
+    "5p": 0.04,
+    "20p": 0.33,
+    "10p": 0.62,
+    "50p": 0.01
+  },
+  "endState": [
+    "PRESSED_PAY"
+  ],
+  "markovTransitions": [
+    {
+      "from": "5p",
+      "to": "10p",
+      "probability": 0.556
+    },
+    {
+      "from": "5p",
+      "to": "20p",
+      "probability": 0.444
+    },
+    {
+      "from": "10p",
+      "to": "20p",
+      "probability": 0.25
+    },
+    {
+      "from": "10p",
+      "to": "PRESSED_PAY",
+      "probability": 0.226
+    },
+    {
+      "from": "10p",
+      "to": "10p",
+      "probability": 0.495
+    },
+    {
+      "from": "10p",
+      "to": "5p",
+      "probability": 0.024
+    },
+    {
+      "from": "10p",
+      "to": "50p",
+      "probability": 0.005
+    },
+    {
+      "from": "20p",
+      "to": "10p",
+      "probability": 0.336
+    },
+    {
+      "from": "20p",
+      "to": "20p",
+      "probability": 0.182
+    },
+    {
+      "from": "20p",
+      "to": "PRESSED_PAY",
+      "probability": 0.473
+    },
+    {
+      "from": "20p",
+      "to": "50p",
+      "probability": 0.009
+    },
+    {
+      "from": "50p",
+      "to": "20p",
+      "probability": 0.333
+    },
+    {
+      "from": "50p",
+      "to": "PRESSED_PAY",
+      "probability": 0.333
+    },
+    {
+      "from": "50p",
+      "to": "10p",
+      "probability": 0.333
+    }
+  ]
+}

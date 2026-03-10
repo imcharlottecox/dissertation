@@ -1,0 +1,1231 @@
+{
+  "markovStates": [
+    "[\"'cause\", \"the\"]",
+    "[\"a\", \"beat\"]",
+    "[\"about\", \"the\"]",
+    "[\"alright\", \"'cause\"]",
+    "[\"and\", \"out\"]",
+    "[\"and\", \"that's\"]",
+    "[\"and\", \"the\"]",
+    "[\"and\", \"to\"]",
+    "[\"as\", \"i\"]",
+    "[\"at\", \"least\"]",
+    "[\"baby\", \"i'm\"]",
+    "[\"baby\", \"we\"]",
+    "[\"be\", \"alright\"]",
+    "[\"beat\", \"i'm\"]",
+    "[\"beat\", \"my\"]",
+    "[\"been\", \"gettin'\"]",
+    "[\"brain\", \"that's\"]",
+    "[\"break\", \"and\"]",
+    "[\"break\", \"break\"]",
+    "[\"brought\", \"his\"]",
+    "[\"but\", \"i\"]",
+    "[\"but\", \"i'm\"]",
+    "[\"can\", \"shake\"]",
+    "[\"can't\", \"make\"]",
+    "[\"can't\", \"stop\"]",
+    "[\"cheats\", \"of\"]",
+    "[\"come\", \"on\"]",
+    "[\"could've\", \"been\"]",
+    "[\"cruisin'\", \"can't\"]",
+    "[\"dancin'\", \"on\"]",
+    "[\"dates\", \"but\"]",
+    "[\"dirty\", \"cheats\"]",
+    "[\"dirty\", \"dirty\"]",
+    "[\"don't\", \"know\"]",
+    "[\"don't\", \"see\"]",
+    "[\"down\", \"and\"]",
+    "[\"down\", \"to\"]",
+    "[\"ex-man\", \"brought\"]",
+    "[\"fake\", \"baby\"]",
+    "[\"fake\", \"fake\"]",
+    "[\"fakers\", \"gonna\"]",
+    "[\"feet\", \"and\"]",
+    "[\"fella\", \"over\"]",
+    "[\"gettin'\", \"down\"]",
+    "[\"girlfriend\", \"she's\"]",
+    "[\"go\", \"and\"]",
+    "[\"go\", \"on\"]",
+    "[\"god\", \"but\"]",
+    "[\"gonna\", \"be\"]",
+    "[\"gonna\", \"break\"]",
+    "[\"gonna\", \"fake\"]",
+    "[\"gonna\", \"hate\"]",
+    "[\"gonna\", \"play\"]",
+    "[\"gonna\", \"shake\"]",
+    "[\"good\", \"hair\"]",
+    "[\"got\", \"nothin'\"]",
+    "[\"got\", \"this\"]",
+    "[\"groovin'\", \"it's\"]",
+    "[\"hair\", \"won't\"]",
+    "[\"hate\", \"baby\"]",
+    "[\"hate\", \"hate\"]",
+    "[\"haters\", \"gonna\"]",
+    "[\"heartbreakers\", \"gonna\"]",
+    "[\"hella\", \"good\"]",
+    "[\"hey\", \"hey\"]",
+    "[\"hey\", \"just\"]",
+    "[\"his\", \"new\"]",
+    "[\"i\", \"can't\"]",
+    "[\"i\", \"go\"]",
+    "[\"i\", \"got\"]",
+    "[\"i\", \"i\"]",
+    "[\"i\", \"keep\"]",
+    "[\"i\", \"make\"]",
+    "[\"i\", \"never\"]",
+    "[\"i\", \"shake\"]",
+    "[\"i\", \"stay\"]",
+    "[\"i'm\", \"dancin'\"]",
+    "[\"i'm\", \"just\"]",
+    "[\"i'm\", \"lightnin'\"]",
+    "[\"in\", \"my\"]",
+    "[\"it\", \"off\"]",
+    "[\"it's\", \"gonna\"]",
+    "[\"it's\", \"like\"]",
+    "[\"just\", \"gonna\"]",
+    "[\"just\", \"think\"]",
+    "[\"keep\", \"cruisin'\"]",
+    "[\"know\", \"mm-mm\"]",
+    "[\"late\", \"got\"]",
+    "[\"least\", \"that's\"]",
+    "[\"liars\", \"and\"]",
+    "[\"lightnin'\", \"on\"]",
+    "[\"like\", \"i\"]",
+    "[\"like\", \"oh\"]",
+    "[\"make\", \"the\"]",
+    "[\"make\", \"them\"]",
+    "[\"many\", \"dates\"]",
+    "[\"mind\", \"sayin'\"]",
+    "[\"miss\", \"a\"]",
+    "[\"mm-mm\", \"but\"]",
+    "[\"mm-mm\", \"i\"]",
+    "[\"mm-mm\", \"i'm\"]",
+    "[\"mm-mm\", \"that's\"]",
+    "[\"moves\", \"up\"]",
+    "[\"movin'\", \"it's\"]",
+    "[\"music\", \"in\"]",
+    "[\"my\", \"brain\"]",
+    "[\"my\", \"ex-man\"]",
+    "[\"my\", \"feet\"]",
+    "[\"my\", \"god\"]",
+    "[\"my\", \"mind\"]",
+    "[\"my\", \"own\"]",
+    "[\"never\", \"miss\"]",
+    "[\"new\", \"girlfriend\"]",
+    "[\"nothin'\", \"in\"]",
+    "[\"of\", \"the\"]",
+    "[\"off\", \"heartbreakers\"]",
+    "[\"off\", \"hey\"]",
+    "[\"off\", \"i\"]",
+    "[\"oh\", \"'cause\"]",
+    "[\"oh\", \"my\"]",
+    "[\"oh-oh\", \"oh\"]",
+    "[\"on\", \"my\"]",
+    "[\"on\", \"over\"]",
+    "[\"on\", \"too\"]",
+    "[\"out\", \"about\"]",
+    "[\"out\", \"too\"]",
+    "[\"over\", \"baby\"]",
+    "[\"over\", \"there\"]",
+    "[\"own\", \"i\"]",
+    "[\"people\", \"say\"]",
+    "[\"play\", \"and\"]",
+    "[\"play\", \"play\"]",
+    "[\"players\", \"gonna\"]",
+    "[\"say\", \"mm-mm\"]",
+    "[\"sayin'\", \"it's\"]",
+    "[\"see\", \"mm-mm\"]",
+    "[\"shake\", \"and\"]",
+    "[\"shake\", \"i\"]",
+    "[\"shake\", \"it\"]",
+    "[\"shake\", \"shake\"]",
+    "[\"shake\", \"yeah\"]",
+    "[\"she's\", \"like\"]",
+    "[\"sick\", \"beat\"]",
+    "[\"stay\", \"at\"]",
+    "[\"stay\", \"out\"]",
+    "[\"stop\", \"groovin'\"]",
+    "[\"stop\", \"movin'\"]",
+    "[\"stop\", \"won't\"]",
+    "[\"that's\", \"what\"]",
+    "[\"the\", \"dirty\"]",
+    "[\"the\", \"fakers\"]",
+    "[\"the\", \"fella\"]",
+    "[\"the\", \"haters\"]",
+    "[\"the\", \"hella\"]",
+    "[\"the\", \"liars\"]",
+    "[\"the\", \"moves\"]",
+    "[\"the\", \"players\"]",
+    "[\"the\", \"world\"]",
+    "[\"them\", \"stay\"]",
+    "[\"there\", \"with\"]",
+    "[\"they\", \"don't\"]",
+    "[\"think\", \"while\"]",
+    "[\"this\", \"music\"]",
+    "[\"this\", \"sick\"]",
+    "[\"to\", \"the\"]",
+    "[\"to\", \"this\"]",
+    "[\"too\", \"late\"]",
+    "[\"too\", \"many\"]",
+    "[\"up\", \"as\"]",
+    "[\"we\", \"can\"]",
+    "[\"what\", \"people\"]",
+    "[\"what\", \"they\"]",
+    "[\"while\", \"you've\"]",
+    "[\"with\", \"the\"]",
+    "[\"won't\", \"stop\"]",
+    "[\"won't\", \"you\"]",
+    "[\"world\", \"you\"]",
+    "[\"yeah\", \"oh-oh\"]",
+    "[\"you\", \"come\"]",
+    "[\"you\", \"could've\"]",
+    "[\"you've\", \"been\"]"
+  ],
+  "mStartingStates": [
+    "[\"that's\", \"what\"]"
+  ],
+  "endState": [],
+  "markovTransitions": [
+    {
+      "from": "[\"i\", \"stay\"]",
+      "to": "[\"stay\", \"out\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"stay\", \"out\"]",
+      "to": "[\"out\", \"too\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"out\", \"too\"]",
+      "to": "[\"too\", \"late\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"too\", \"late\"]",
+      "to": "[\"late\", \"got\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"late\", \"got\"]",
+      "to": "[\"got\", \"nothin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"got\", \"nothin'\"]",
+      "to": "[\"nothin'\", \"in\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"nothin'\", \"in\"]",
+      "to": "[\"in\", \"my\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"in\", \"my\"]",
+      "to": "[\"my\", \"brain\"]",
+      "probability": 0.33
+    },
+    {
+      "from": "[\"in\", \"my\"]",
+      "to": "[\"my\", \"mind\"]",
+      "probability": 0.67
+    },
+    {
+      "from": "[\"my\", \"brain\"]",
+      "to": "[\"brain\", \"that's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"brain\", \"that's\"]",
+      "to": "[\"that's\", \"what\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"that's\", \"what\"]",
+      "to": "[\"what\", \"people\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"that's\", \"what\"]",
+      "to": "[\"what\", \"they\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"what\", \"people\"]",
+      "to": "[\"people\", \"say\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"people\", \"say\"]",
+      "to": "[\"say\", \"mm-mm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"say\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"that's\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"say\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"i\"]",
+      "probability": 0.25
+    },
+    {
+      "from": "[\"say\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"but\"]",
+      "probability": 0.25
+    },
+    {
+      "from": "[\"mm-mm\", \"that's\"]",
+      "to": "[\"that's\", \"what\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"mm-mm\", \"i\"]",
+      "to": "[\"i\", \"go\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"go\"]",
+      "to": "[\"go\", \"on\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"i\", \"go\"]",
+      "to": "[\"go\", \"and\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"go\", \"on\"]",
+      "to": "[\"on\", \"too\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"on\", \"too\"]",
+      "to": "[\"too\", \"many\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"too\", \"many\"]",
+      "to": "[\"many\", \"dates\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"many\", \"dates\"]",
+      "to": "[\"dates\", \"but\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"dates\", \"but\"]",
+      "to": "[\"but\", \"i\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"but\", \"i\"]",
+      "to": "[\"i\", \"can't\"]",
+      "probability": 0.33
+    },
+    {
+      "from": "[\"but\", \"i\"]",
+      "to": "[\"i\", \"keep\"]",
+      "probability": 0.67
+    },
+    {
+      "from": "[\"i\", \"can't\"]",
+      "to": "[\"can't\", \"make\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"can't\", \"make\"]",
+      "to": "[\"make\", \"them\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"make\", \"them\"]",
+      "to": "[\"them\", \"stay\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"them\", \"stay\"]",
+      "to": "[\"stay\", \"at\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"stay\", \"at\"]",
+      "to": "[\"at\", \"least\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"at\", \"least\"]",
+      "to": "[\"least\", \"that's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"least\", \"that's\"]",
+      "to": "[\"that's\", \"what\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"mm-mm\", \"but\"]",
+      "to": "[\"but\", \"i\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"keep\"]",
+      "to": "[\"keep\", \"cruisin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"keep\", \"cruisin'\"]",
+      "to": "[\"cruisin'\", \"can't\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"cruisin'\", \"can't\"]",
+      "to": "[\"can't\", \"stop\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"can't\", \"stop\"]",
+      "to": "[\"stop\", \"won't\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"stop\", \"won't\"]",
+      "to": "[\"won't\", \"stop\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"won't\", \"stop\"]",
+      "to": "[\"stop\", \"movin'\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"won't\", \"stop\"]",
+      "to": "[\"stop\", \"groovin'\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"stop\", \"movin'\"]",
+      "to": "[\"movin'\", \"it's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"movin'\", \"it's\"]",
+      "to": "[\"it's\", \"like\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"it's\", \"like\"]",
+      "to": "[\"like\", \"i\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"like\", \"i\"]",
+      "to": "[\"i\", \"got\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"got\"]",
+      "to": "[\"got\", \"this\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"got\", \"this\"]",
+      "to": "[\"this\", \"music\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"this\", \"music\"]",
+      "to": "[\"music\", \"in\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"music\", \"in\"]",
+      "to": "[\"in\", \"my\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"my\", \"mind\"]",
+      "to": "[\"mind\", \"sayin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"mind\", \"sayin'\"]",
+      "to": "[\"sayin'\", \"it's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"sayin'\", \"it's\"]",
+      "to": "[\"it's\", \"gonna\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"it's\", \"gonna\"]",
+      "to": "[\"gonna\", \"be\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gonna\", \"be\"]",
+      "to": "[\"be\", \"alright\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"be\", \"alright\"]",
+      "to": "[\"alright\", \"'cause\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"alright\", \"'cause\"]",
+      "to": "[\"'cause\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"'cause\", \"the\"]",
+      "to": "[\"the\", \"players\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"players\"]",
+      "to": "[\"players\", \"gonna\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"players\", \"gonna\"]",
+      "to": "[\"gonna\", \"play\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gonna\", \"play\"]",
+      "to": "[\"play\", \"play\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"play\", \"play\"]",
+      "to": "[\"play\", \"play\"]",
+      "probability": 0.75
+    },
+    {
+      "from": "[\"play\", \"play\"]",
+      "to": "[\"play\", \"and\"]",
+      "probability": 0.25
+    },
+    {
+      "from": "[\"play\", \"and\"]",
+      "to": "[\"and\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"and\", \"the\"]",
+      "to": "[\"the\", \"haters\"]",
+      "probability": 0.43
+    },
+    {
+      "from": "[\"and\", \"the\"]",
+      "to": "[\"the\", \"fakers\"]",
+      "probability": 0.43
+    },
+    {
+      "from": "[\"and\", \"the\"]",
+      "to": "[\"the\", \"dirty\"]",
+      "probability": 0.14
+    },
+    {
+      "from": "[\"the\", \"haters\"]",
+      "to": "[\"haters\", \"gonna\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"haters\", \"gonna\"]",
+      "to": "[\"gonna\", \"hate\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gonna\", \"hate\"]",
+      "to": "[\"hate\", \"hate\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"hate\", \"hate\"]",
+      "to": "[\"hate\", \"hate\"]",
+      "probability": 0.75
+    },
+    {
+      "from": "[\"hate\", \"hate\"]",
+      "to": "[\"hate\", \"baby\"]",
+      "probability": 0.25
+    },
+    {
+      "from": "[\"hate\", \"baby\"]",
+      "to": "[\"baby\", \"i'm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"baby\", \"i'm\"]",
+      "to": "[\"i'm\", \"just\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i'm\", \"just\"]",
+      "to": "[\"just\", \"gonna\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"just\", \"gonna\"]",
+      "to": "[\"gonna\", \"shake\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gonna\", \"shake\"]",
+      "to": "[\"shake\", \"shake\"]",
+      "probability": 0.86
+    },
+    {
+      "from": "[\"gonna\", \"shake\"]",
+      "to": "[\"shake\", \"and\"]",
+      "probability": 0.14
+    },
+    {
+      "from": "[\"shake\", \"shake\"]",
+      "to": "[\"shake\", \"shake\"]",
+      "probability": 0.73
+    },
+    {
+      "from": "[\"shake\", \"shake\"]",
+      "to": "[\"shake\", \"i\"]",
+      "probability": 0.23
+    },
+    {
+      "from": "[\"shake\", \"shake\"]",
+      "to": "[\"shake\", \"yeah\"]",
+      "probability": 0.04
+    },
+    {
+      "from": "[\"shake\", \"i\"]",
+      "to": "[\"i\", \"shake\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"shake\"]",
+      "to": "[\"shake\", \"it\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"shake\", \"it\"]",
+      "to": "[\"it\", \"off\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"it\", \"off\"]",
+      "to": "[\"off\", \"i\"]",
+      "probability": 0.89
+    },
+    {
+      "from": "[\"it\", \"off\"]",
+      "to": "[\"off\", \"heartbreakers\"]",
+      "probability": 0.09
+    },
+    {
+      "from": "[\"it\", \"off\"]",
+      "to": "[\"off\", \"hey\"]",
+      "probability": 0.03
+    },
+    {
+      "from": "[\"off\", \"i\"]",
+      "to": "[\"i\", \"shake\"]",
+      "probability": 0.68
+    },
+    {
+      "from": "[\"off\", \"i\"]",
+      "to": "[\"i\", \"never\"]",
+      "probability": 0.03
+    },
+    {
+      "from": "[\"off\", \"i\"]",
+      "to": "[\"i\", \"i\"]",
+      "probability": 0.29
+    },
+    {
+      "from": "[\"off\", \"heartbreakers\"]",
+      "to": "[\"heartbreakers\", \"gonna\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"heartbreakers\", \"gonna\"]",
+      "to": "[\"gonna\", \"break\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gonna\", \"break\"]",
+      "to": "[\"break\", \"break\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"break\", \"break\"]",
+      "to": "[\"break\", \"break\"]",
+      "probability": 0.75
+    },
+    {
+      "from": "[\"break\", \"break\"]",
+      "to": "[\"break\", \"and\"]",
+      "probability": 0.25
+    },
+    {
+      "from": "[\"break\", \"and\"]",
+      "to": "[\"and\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"fakers\"]",
+      "to": "[\"fakers\", \"gonna\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"fakers\", \"gonna\"]",
+      "to": "[\"gonna\", \"fake\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gonna\", \"fake\"]",
+      "to": "[\"fake\", \"fake\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"fake\", \"fake\"]",
+      "to": "[\"fake\", \"fake\"]",
+      "probability": 0.75
+    },
+    {
+      "from": "[\"fake\", \"fake\"]",
+      "to": "[\"fake\", \"baby\"]",
+      "probability": 0.25
+    },
+    {
+      "from": "[\"fake\", \"baby\"]",
+      "to": "[\"baby\", \"i'm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"never\"]",
+      "to": "[\"never\", \"miss\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"never\", \"miss\"]",
+      "to": "[\"miss\", \"a\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"miss\", \"a\"]",
+      "to": "[\"a\", \"beat\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"a\", \"beat\"]",
+      "to": "[\"beat\", \"i'm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"beat\", \"i'm\"]",
+      "to": "[\"i'm\", \"lightnin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i'm\", \"lightnin'\"]",
+      "to": "[\"lightnin'\", \"on\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"lightnin'\", \"on\"]",
+      "to": "[\"on\", \"my\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"on\", \"my\"]",
+      "to": "[\"my\", \"feet\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"on\", \"my\"]",
+      "to": "[\"my\", \"own\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"my\", \"feet\"]",
+      "to": "[\"feet\", \"and\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"feet\", \"and\"]",
+      "to": "[\"and\", \"that's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"and\", \"that's\"]",
+      "to": "[\"that's\", \"what\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"what\", \"they\"]",
+      "to": "[\"they\", \"don't\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"they\", \"don't\"]",
+      "to": "[\"don't\", \"see\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"they\", \"don't\"]",
+      "to": "[\"don't\", \"know\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"don't\", \"see\"]",
+      "to": "[\"see\", \"mm-mm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"see\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"that's\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"see\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"i'm\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"mm-mm\", \"i'm\"]",
+      "to": "[\"i'm\", \"dancin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i'm\", \"dancin'\"]",
+      "to": "[\"dancin'\", \"on\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"dancin'\", \"on\"]",
+      "to": "[\"on\", \"my\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"my\", \"own\"]",
+      "to": "[\"own\", \"i\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"own\", \"i\"]",
+      "to": "[\"i\", \"make\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"make\"]",
+      "to": "[\"make\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"make\", \"the\"]",
+      "to": "[\"the\", \"moves\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"moves\"]",
+      "to": "[\"moves\", \"up\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"moves\", \"up\"]",
+      "to": "[\"up\", \"as\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"up\", \"as\"]",
+      "to": "[\"as\", \"i\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"as\", \"i\"]",
+      "to": "[\"i\", \"go\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"go\", \"and\"]",
+      "to": "[\"and\", \"that's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"don't\", \"know\"]",
+      "to": "[\"know\", \"mm-mm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"know\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"that's\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"know\", \"mm-mm\"]",
+      "to": "[\"mm-mm\", \"but\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"stop\", \"groovin'\"]",
+      "to": "[\"groovin'\", \"it's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"groovin'\", \"it's\"]",
+      "to": "[\"it's\", \"like\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"i\", \"i\"]",
+      "to": "[\"i\", \"i\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"i\", \"i\"]",
+      "to": "[\"i\", \"shake\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"off\", \"hey\"]",
+      "to": "[\"hey\", \"hey\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"hey\", \"hey\"]",
+      "to": "[\"hey\", \"hey\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"hey\", \"hey\"]",
+      "to": "[\"hey\", \"just\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"hey\", \"just\"]",
+      "to": "[\"just\", \"think\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"just\", \"think\"]",
+      "to": "[\"think\", \"while\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"think\", \"while\"]",
+      "to": "[\"while\", \"you've\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"while\", \"you've\"]",
+      "to": "[\"you've\", \"been\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"you've\", \"been\"]",
+      "to": "[\"been\", \"gettin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"been\", \"gettin'\"]",
+      "to": "[\"gettin'\", \"down\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"gettin'\", \"down\"]",
+      "to": "[\"down\", \"and\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"gettin'\", \"down\"]",
+      "to": "[\"down\", \"to\"]",
+      "probability": 0.5
+    },
+    {
+      "from": "[\"down\", \"and\"]",
+      "to": "[\"and\", \"out\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"and\", \"out\"]",
+      "to": "[\"out\", \"about\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"out\", \"about\"]",
+      "to": "[\"about\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"about\", \"the\"]",
+      "to": "[\"the\", \"liars\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"liars\"]",
+      "to": "[\"liars\", \"and\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"liars\", \"and\"]",
+      "to": "[\"and\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"dirty\"]",
+      "to": "[\"dirty\", \"dirty\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"dirty\", \"dirty\"]",
+      "to": "[\"dirty\", \"cheats\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"dirty\", \"cheats\"]",
+      "to": "[\"cheats\", \"of\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"cheats\", \"of\"]",
+      "to": "[\"of\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"of\", \"the\"]",
+      "to": "[\"the\", \"world\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"world\"]",
+      "to": "[\"world\", \"you\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"world\", \"you\"]",
+      "to": "[\"you\", \"could've\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"you\", \"could've\"]",
+      "to": "[\"could've\", \"been\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"could've\", \"been\"]",
+      "to": "[\"been\", \"gettin'\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"down\", \"to\"]",
+      "to": "[\"to\", \"this\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"to\", \"this\"]",
+      "to": "[\"this\", \"sick\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"this\", \"sick\"]",
+      "to": "[\"sick\", \"beat\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"sick\", \"beat\"]",
+      "to": "[\"beat\", \"my\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"beat\", \"my\"]",
+      "to": "[\"my\", \"ex-man\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"my\", \"ex-man\"]",
+      "to": "[\"ex-man\", \"brought\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"ex-man\", \"brought\"]",
+      "to": "[\"brought\", \"his\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"brought\", \"his\"]",
+      "to": "[\"his\", \"new\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"his\", \"new\"]",
+      "to": "[\"new\", \"girlfriend\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"new\", \"girlfriend\"]",
+      "to": "[\"girlfriend\", \"she's\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"girlfriend\", \"she's\"]",
+      "to": "[\"she's\", \"like\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"she's\", \"like\"]",
+      "to": "[\"like\", \"oh\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"like\", \"oh\"]",
+      "to": "[\"oh\", \"my\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"oh\", \"my\"]",
+      "to": "[\"my\", \"god\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"my\", \"god\"]",
+      "to": "[\"god\", \"but\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"god\", \"but\"]",
+      "to": "[\"but\", \"i'm\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"but\", \"i'm\"]",
+      "to": "[\"i'm\", \"just\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"shake\", \"and\"]",
+      "to": "[\"and\", \"to\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"and\", \"to\"]",
+      "to": "[\"to\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"to\", \"the\"]",
+      "to": "[\"the\", \"fella\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"fella\"]",
+      "to": "[\"fella\", \"over\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"fella\", \"over\"]",
+      "to": "[\"over\", \"there\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"over\", \"there\"]",
+      "to": "[\"there\", \"with\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"there\", \"with\"]",
+      "to": "[\"with\", \"the\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"with\", \"the\"]",
+      "to": "[\"the\", \"hella\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"the\", \"hella\"]",
+      "to": "[\"hella\", \"good\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"hella\", \"good\"]",
+      "to": "[\"good\", \"hair\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"good\", \"hair\"]",
+      "to": "[\"hair\", \"won't\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"hair\", \"won't\"]",
+      "to": "[\"won't\", \"you\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"won't\", \"you\"]",
+      "to": "[\"you\", \"come\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"you\", \"come\"]",
+      "to": "[\"come\", \"on\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"come\", \"on\"]",
+      "to": "[\"on\", \"over\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"on\", \"over\"]",
+      "to": "[\"over\", \"baby\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"over\", \"baby\"]",
+      "to": "[\"baby\", \"we\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"baby\", \"we\"]",
+      "to": "[\"we\", \"can\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"we\", \"can\"]",
+      "to": "[\"can\", \"shake\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"can\", \"shake\"]",
+      "to": "[\"shake\", \"shake\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"shake\", \"yeah\"]",
+      "to": "[\"yeah\", \"oh-oh\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"yeah\", \"oh-oh\"]",
+      "to": "[\"oh-oh\", \"oh\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"oh-oh\", \"oh\"]",
+      "to": "[\"oh\", \"'cause\"]",
+      "probability": 1.0
+    },
+    {
+      "from": "[\"oh\", \"'cause\"]",
+      "to": "[\"'cause\", \"the\"]",
+      "probability": 1.0
+    }
+  ]
+}

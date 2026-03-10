@@ -1,3 +1,5 @@
+import type { StringToBoolean } from "class-variance-authority/types";
+
 export type StateNode = {
   id: string;
   x: number;
@@ -22,7 +24,7 @@ export type fTransition = {
 
 //from fsmhierarchical viewer
 export type Subgraph = {
-  level: number;
+  depthLevel: number;
   parentState?: string;
   entry: string;
   exit: string;
@@ -49,4 +51,46 @@ export type EdgeRenderDatum = {
     isLoop: boolean;
 };
 
+export type EdgeRenderingData = {
+    key: string;
+    label: string | undefined;
+    sourceNode: HStateNode;
+    targetNode: HStateNode;
+    path: string;
+    labelX: number;
+    labelY: number;
+    isSelfLoop: boolean;
+    angle: number;
+};
 
+
+export type HStateNode = {
+  id: string;
+  displayName: string;
+  x: number;
+  y: number;
+  parent: string | null; //sgs parent id
+  depth: number; //which nest
+  visible: boolean;
+  kind: "base" | "sub" | "hiddenPort";
+}
+export interface HEdge {
+    id: string;
+    from: string;
+    to: string;
+    label?: string;
+    visible: boolean;
+    kind: "base" | "warp" | "sub";
+    // parent: string;
+    parent: string | null;
+    cachedPath?: string;
+    cachedLabelX?: number;
+    cachedLabelY?: number;
+    cachedAngle?: number;
+    cachedIsSelfLoop?: boolean;
+  }
+export interface HGraph {
+    nodes: Map<string, HStateNode>;
+    edges: Map<string, HEdge>;
+    activeSubgraphs: Set<string>; 
+}
