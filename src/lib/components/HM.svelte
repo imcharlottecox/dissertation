@@ -18,6 +18,8 @@
         markovTransitions: { from: string; to: string; probability: number }[];
     }> = {};
     export let renderKey: string = "";
+    /** Live sequence string from the compute box — drives path highlighting */
+    export let inputSequence: string = "";
 
     // -------------------------------------------------------------------------
     // Constants
@@ -863,6 +865,7 @@
         drawSectionEdges();
         drawEdges();
         drawNodes();
+        if (inputSequence && inputSequence.trim()) drawPathHighlight();
     }
 
     // -------------------------------------------------------------------------
@@ -891,6 +894,8 @@
         g.append("g").attr("class", "halos");
         g.append("g").attr("class", "section-edges");
         g.append("g").attr("class", "edges");
+        // path-highlight sits above edges but below labels and nodes
+        g.append("g").attr("class", "path-highlight").attr("pointer-events", "none");
         g.append("g").attr("class", "labels");
         g.append("g").attr("class", "nodes");
 
@@ -916,7 +921,12 @@
             .attr("orient", "auto")
             .append("path").attr("d", "M 0 0 L 10 5 L 0 10 z").attr("fill", "#888");
 
-        dragBehaviour = createDragNoSim(() => { drawEdges(); drawHalos(); drawSectionEdges(); });
+        dragBehaviour = createDragNoSim(() => {
+            drawEdges();
+            drawHalos();
+            drawSectionEdges();
+            if (inputSequence && inputSequence.trim()) drawPathHighlight();
+        });
 
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .on("zoom", event => {
@@ -944,6 +954,254 @@
     $: if (mounted && renderKey !== lastRenderKey) {
         lastRenderKey = renderKey;
         init();
+    }
+
+    // -------------------------------------------------------------------------
+    // Path highlighting — driven by inputSequence prop
+    // -------------------------------------------------------------------------
+
+    const HIGHLIGHT_COLOUR = "#f72585";
+    const TRAVEL_MS        = 350;
+    const FADE_MS          = 600;
+    const STAGGER_MS       = 40;
+
+    type WalkedStep = { from: string; to: string; pathD: string };
+
+    /**
+     * Walk the Markov graph with the current input.
+     *
+     * When subgraphs are collapsed (base view): walk section-level nodes.
+     * When any subgraph is expanded: walk word-chain nodes inside it.
+     *
+     * Token splitting is auto-detected:
+     *   - Single-character state names → split by character ("Car" → ["C","a","r"])
+     *   - Multi-character state names  → split by space ("verse chorus" → ["verse","chorus"])
+     */
+    function computeWalkedPath(seq: string): { steps: WalkedStep[]; litNodeIds: Set<string> } {
+        const steps: WalkedStep[] = [];
+        const litNodeIds = new Set<string>();
+        if (!seq) return { steps, litNodeIds };
+
+        // ── Decide which transition set to use ────────────────────────────────
+        //
+        // A) "Flat Markov" — wordChains is empty, markovTransitions are the
+        //    actual typed-token transitions (possibly with a START node).
+        //
+        // B) "Hierarchical Markov" — markovStates are section names, and typed
+        //    tokens walk word-chains. Always use a word-chain regardless of
+        //    expansion state (the section may still be collapsed).
+        //
+        const hasWordChains = Object.keys(wordChains).length > 0;
+
+        if (!hasWordChains) {
+            // ── Case A: flat Markov ───────────────────────────────────────────
+            // Exclude START/END from charLevel detection — they are infrastructure
+            // nodes, not typed tokens, and their length > 1 would break the check.
+            const typedStates = markovStates.filter(s => s !== "START" && s !== "END");
+            const charLevel = typedStates.length > 0 && typedStates.every(s => s.length === 1);
+            const tokens = charLevel ? seq.split("") : seq.split(" ").filter(Boolean);
+
+            const hasStartNode = markovTransitions.some(t => t.from === "START");
+            let current = hasStartNode ? "START" : (mStartingStates[0] ?? markovStates[0]);
+
+            const startNode = hg.nodes.get(current);
+            if (startNode?.visible) litNodeIds.add(current);
+
+            for (const token of tokens) {
+                const match = markovTransitions.find(tr => tr.from === current && tr.to === token)
+                           ?? markovTransitions.find(tr =>
+                                tr.from === current &&
+                                tr.to.toLowerCase().startsWith(token.toLowerCase())
+                              );
+                if (!match) break;
+                steps.push({ from: match.from, to: match.to, pathD: buildBaseLevelPath(match.from, match.to) });
+                litNodeIds.add(match.to);
+                current = match.to;
+            }
+        } else {
+            // ── Case B: hierarchical — walk the relevant word-chain ──────────
+            // Use the active expanded section if any, else the first chain.
+            const sectionId = hg.activeSubgraphs.size > 0
+                ? Array.from(hg.activeSubgraphs)[0]
+                : Object.keys(wordChains)[0];
+
+            const chain = wordChains[sectionId];
+            if (!chain) return { steps, litNodeIds };
+
+            const charLevel = chain.markovStates.every(s => s.length === 1);
+            const tokens = charLevel ? seq.split("") : seq.split(" ").filter(Boolean);
+
+            const chainHasStart = chain.markovTransitions.some(t => t.from === "START");
+            let current = chainHasStart ? "START"
+                        : (chain.mStartingStates[0] ?? chain.markovStates[0]);
+
+            const expanded = hg.activeSubgraphs.has(sectionId);
+
+            // Seed the start node ring
+            if (expanded) {
+                const startNodeId = `${sectionId}.${current}`;
+                const n = hg.nodes.get(startNodeId);
+                if (n?.visible) litNodeIds.add(startNodeId);
+            } else {
+                // Section collapsed: highlight the anchor bubble
+                const anchor = hg.nodes.get(sectionId);
+                if (anchor?.visible) litNodeIds.add(sectionId);
+            }
+
+            for (const token of tokens) {
+                const match = chain.markovTransitions.find(tr => tr.from === current && tr.to === token)
+                           ?? chain.markovTransitions.find(tr =>
+                                tr.from === current &&
+                                tr.to.toLowerCase().startsWith(token.toLowerCase())
+                              );
+                if (!match) break;
+
+                if (expanded) {
+                    const fromId = `${sectionId}.${match.from}`;
+                    const toId   = `${sectionId}.${match.to}`;
+                    const pathD  = buildSubLevelPath(fromId, toId);
+                    if (pathD) steps.push({ from: fromId, to: toId, pathD });
+                    litNodeIds.add(toId);
+                }
+                // When collapsed we still advance `current` so the walk is correct,
+                // but there are no sub-nodes to render — just the anchor ring.
+                current = match.to;
+            }
+        }
+
+        return { steps, litNodeIds };
+    }
+
+    function buildBaseLevelPath(fromId: string, toId: string): string {
+        const src = hg.nodes.get(fromId);
+        const tgt = hg.nodes.get(toId);
+        if (!src || !tgt) return "";
+        if (fromId === toId) return computeSelfLoopPath(src, BASE_NODE_RADIUS);
+        const isBi = hg.edges.has(`base:${toId}->${fromId}`);
+        if (isBi) return computeCurvedPath(src, tgt, BASE_NODE_RADIUS, 1);
+        const { x1, y1, x2, y2 } = computeEdgePoints(src, tgt, BASE_NODE_RADIUS);
+        return `M ${x1},${y1} L ${x2},${y2}`;
+    }
+
+    function buildSubLevelPath(fromId: string, toId: string): string {
+        const src = hg.nodes.get(fromId);
+        const tgt = hg.nodes.get(toId);
+        if (!src || !tgt) return "";
+        if (fromId === toId) return computeSelfLoopPath(src, WORD_NODE_RADIUS);
+        const isBi = Array.from(hg.edges.values()).some(e =>
+            e.visible && e.from === toId && e.to === fromId
+        );
+        if (isBi) return computeCurvedPath(src, tgt, WORD_NODE_RADIUS, 1);
+        const { x1, y1, x2, y2 } = computeEdgePoints(src, tgt, WORD_NODE_RADIUS);
+        return `M ${x1},${y1} L ${x2},${y2}`;
+    }
+
+    function drawPathHighlight() {
+        if (!g) return;
+        const { steps, litNodeIds } = computeWalkedPath(inputSequence ?? "");
+        const layer = g.select<SVGGElement>("g.path-highlight");
+
+        // Edges
+        type HStep = { id: string; pathD: string; opacity: number; delay: number };
+        const stepData: HStep[] = steps.map((s, i) => ({
+            id: `hl:${s.from}>${s.to}:${i}`,
+            pathD: s.pathD,
+            opacity: steps.length === 1 ? 1.0 : 0.45 + 0.55 * ((i + 1) / steps.length),
+            delay: i * STAGGER_MS,
+        }));
+
+        layer.selectAll<SVGPathElement, HStep>("path.hl-edge")
+            .data(stepData, d => d.id)
+            .join(
+                enter => {
+                    const p = enter.append("path")
+                        .attr("class", "hl-edge")
+                        .attr("fill", "none")
+                        .attr("stroke", HIGHLIGHT_COLOUR)
+                        .attr("stroke-width", 4)
+                        .attr("stroke-linecap", "round")
+                        .attr("pointer-events", "none");
+                    p.each(function(d) {
+                        const el = this as SVGPathElement;
+                        el.setAttribute("d", d.pathD);
+                        const len = el.getTotalLength?.() ?? 80;
+                        d3.select(el)
+                            .attr("stroke-dasharray", len)
+                            .attr("stroke-dashoffset", len)
+                            .attr("opacity", 0)
+                            .transition()
+                            .delay(d.delay)
+                            .duration(TRAVEL_MS)
+                            .ease(d3.easeCubicOut)
+                            .attr("stroke-dashoffset", 0)
+                            .attr("opacity", d.opacity);
+                    });
+                    return p;
+                },
+                update => {
+                    // Recompute dasharray from the new path geometry so the full
+                    // stroke is always visible after a node drag repositions endpoints.
+                    update.each(function(d) {
+                        const el = this as SVGPathElement;
+                        el.setAttribute("d", d.pathD);
+                        const len = el.getTotalLength?.() ?? 80;
+                        d3.select(el)
+                            .attr("stroke-dasharray", len)
+                            .attr("stroke-dashoffset", 0)
+                            .attr("opacity", d.opacity);
+                    });
+                    return update;
+                },
+                exit => exit.transition().duration(FADE_MS).attr("opacity", 0).remove(),
+            );
+
+        // Nodes
+        type HNode = { id: string; x: number; y: number; r: number; opacity: number };
+        const litArr = Array.from(litNodeIds)
+            .map(nid => hg.nodes.get(nid))
+            .filter((n): n is HStateNode => !!n && n.visible);
+
+        const nodeData: HNode[] = litArr.map((n, i) => ({
+            id: `hl-node:${n.id}`,
+            x: n.x, y: n.y,
+            r: (n.kind === "base" ? BASE_NODE_RADIUS : WORD_NODE_RADIUS) + 5,
+            opacity: litArr.length === 1 ? 1.0 : 0.4 + 0.6 * ((i + 1) / litArr.length),
+        }));
+
+        layer.selectAll<SVGCircleElement, HNode>("circle.hl-node")
+            .data(nodeData, d => d.id)
+            .join(
+                enter => enter.append("circle")
+                    .attr("class", "hl-node")
+                    .attr("pointer-events", "none")
+                    .attr("fill", "none")
+                    .attr("stroke", HIGHLIGHT_COLOUR)
+                    .attr("stroke-width", 2.5)
+                    .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r)
+                    .attr("opacity", 0)
+                    .call(sel => sel.transition().duration(200).attr("opacity", d => d.opacity)),
+                update => update
+                    .attr("cx", d => d.x).attr("cy", d => d.y)
+                    .attr("opacity", d => d.opacity),
+                exit => exit.transition().duration(FADE_MS).attr("opacity", 0).remove(),
+            );
+    }
+
+    function fadeOutHighlight() {
+        if (!g) return;
+        g.select<SVGGElement>("g.path-highlight")
+            .selectAll("path.hl-edge, circle.hl-node")
+            .transition().duration(FADE_MS)
+            .attr("opacity", 0)
+            .on("end", function() { d3.select(this).remove(); });
+    }
+
+    $: if (mounted) {
+        if (!inputSequence || inputSequence.trim() === "") {
+            fadeOutHighlight();
+        } else {
+            drawPathHighlight();
+        }
     }
 </script>
 

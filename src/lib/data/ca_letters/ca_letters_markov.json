@@ -1,0 +1,91 @@
+{
+  "markovStates": [
+    "C",
+    "END",
+    "START",
+    "a",
+    "n",
+    "o",
+    "r",
+    "s",
+    "t"
+  ],
+  "mStartingStates": [
+    "START"
+  ],
+  "endState": [
+    "END"
+  ],
+  "markovTransitions": [
+    {
+      "from": "START",
+      "to": "C",
+      "probability": 1.0
+    },
+    {
+      "from": "C",
+      "to": "a",
+      "probability": 1.0
+    },
+    {
+      "from": "a",
+      "to": "t",
+      "probability": 0.25
+    },
+    {
+      "from": "a",
+      "to": "r",
+      "probability": 0.75
+    },
+    {
+      "from": "t",
+      "to": "END",
+      "probability": 0.333
+    },
+    {
+      "from": "t",
+      "to": "s",
+      "probability": 0.333
+    },
+    {
+      "from": "t",
+      "to": "o",
+      "probability": 0.333
+    },
+    {
+      "from": "s",
+      "to": "END",
+      "probability": 1.0
+    },
+    {
+      "from": "r",
+      "to": "t",
+      "probability": 0.667
+    },
+    {
+      "from": "r",
+      "to": "END",
+      "probability": 0.167
+    },
+    {
+      "from": "r",
+      "to": "s",
+      "probability": 0.167
+    },
+    {
+      "from": "o",
+      "to": "n",
+      "probability": 1.0
+    },
+    {
+      "from": "n",
+      "to": "END",
+      "probability": 0.5
+    },
+    {
+      "from": "n",
+      "to": "s",
+      "probability": 0.5
+    }
+  ]
+}

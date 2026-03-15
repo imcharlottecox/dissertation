@@ -21,6 +21,7 @@
     export let showDepthBox: boolean = true;
     let depthText = "";
     export let renderKey: string = "";
+    export let inputSequence: string = "";
     let lastRenderKey = "";
     let lastViewportKey = "";
     let g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -61,6 +62,8 @@
         edges: new Map<string, HEdge>(),
         activeSubgraphs: new Set<string>()
     };
+
+    
 
     function resetBaseNodesToCanon(){
         for (const n of hg.nodes.values()){
@@ -751,6 +754,9 @@
         drawEdges(context);
         drawNodes(context, dragBehaviour);
 
+        if (inputSequence && inputSequence.trim()) drawPathHighlight();
+    }
+
         // context.g.select("g.nodes")
         //     .selectAll<SVGGElement, HStateNode>("g.node")
         //     .on("click", (event, d) => {
@@ -765,7 +771,7 @@
 
         // applyFocusOpacity(context);
         // drawDebugNodeRects();
-    }
+    // }
 
     function runBenchmark(n: number){
         measure("buildBaseHGraph", n, () => buildBaseHGraph());
@@ -797,9 +803,16 @@
         //initial render and props sorted here
         const svg = d3.select(svgElement);
         drawArrowheads(svg);
-        g = addContentGroup(svg);        
+        g = addContentGroup(svg);
+        if (g.select("g.path-highlight").empty()) {
+            g.insert("g", "g.labels").attr("class", "path-highlight").attr("pointer-events", "none");
+        }
         measureHeight();
-        dragBehaviour = createDragNoSim(() => { drawEdges(makeContext()); drawHalos(); });
+        dragBehaviour = createDragNoSim(() => {
+            drawEdges(makeContext());
+            drawHalos();
+            if (inputSequence && inputSequence.trim()) drawPathHighlight();
+        });
 
         
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
@@ -835,6 +848,159 @@
     }
     $: showDepthBox = Object.keys(subgraphs ?? {}).length > 0;
     $: if (!showDepthBox) depthText = "";
+
+ 
+    const HIGHLIGHT_COLOUR = "#f72585";
+    const TRAVEL_MS        = 350;
+    const FADE_MS          = 600;
+    const STAGGER_MS       = 40;
+
+    type WalkedStep = { from: string; to: string; pathD: string };
+
+    function buildFallbackPath(fromId: string, toId: string): string {
+        const src = hg.nodes.get(fromId);
+        const tgt = hg.nodes.get(toId);
+        if (!src || !tgt) return "";
+        if (fromId === toId) {
+            const r = LOOP_RADIUS;
+            return `M ${src.x} ${src.y} C ${src.x - r},${src.y - r * 2} ${src.x + r},${src.y - r * 2} ${tgt.x + 3},${tgt.y}`;
+        }
+        return `M ${src.x},${src.y} L ${tgt.x},${tgt.y}`;
+    }
+
+    function computeWalkedPath(seq: string): { steps: WalkedStep[]; litNodes: Set<string> } {
+        const steps: WalkedStep[] = [];
+        const litNodes = new Set<string>();
+        if (!seq) return { steps, litNodes };
+
+        // Infer token granularity from transition labels
+        const hasSpaceLabel = fsmTransitions.some(t => (t.label ?? "").includes(" "));
+        const tokens = hasSpaceLabel ? seq.split(" ").filter(Boolean) : seq.split("");
+
+        let current = startingStates[0] ?? fsmStates[0];
+        litNodes.add(current);
+
+        for (const token of tokens) {
+            const t = fsmTransitions.find(tr => tr.from === current && tr.label === token);
+            if (!t) break;
+
+            const edgeId = `base:${t.from}-${t.to}-${t.label ?? "undefined"}`;
+            const edge   = hg.edges.get(edgeId);
+            const pathD  = edge?.cachedPath ?? buildFallbackPath(t.from, t.to);
+
+            steps.push({ from: t.from, to: t.to, pathD });
+            litNodes.add(t.to);
+            current = t.to;
+        }
+        return { steps, litNodes };
+    }
+
+    function drawPathHighlight() {
+        if (!g) return;
+        const { steps, litNodes } = computeWalkedPath(inputSequence ?? "");
+        const layer = g.select<SVGGElement>("g.path-highlight");
+
+        // Edges
+        type HStep = { id: string; pathD: string; opacity: number; delay: number };
+        const stepData: HStep[] = steps.map((s, i) => ({
+            id: `hl:${s.from}>${s.to}:${i}`,
+            pathD: s.pathD,
+            opacity: steps.length === 1 ? 0.8 : 0.4 + 0.4 * ((i + 1) / steps.length),
+            delay: i * STAGGER_MS,
+        }));
+
+        layer.selectAll<SVGPathElement, HStep>("path.hl-edge")
+            .data(stepData, d => d.id)
+            .join(
+                enter => {
+                    const p = enter.append("path")
+                        .attr("class", "hl-edge")
+                        .attr("fill", "none")
+                        .attr("stroke", HIGHLIGHT_COLOUR)
+                        .attr("stroke-width", 4)
+                        .attr("stroke-linecap", "round")
+                        .attr("pointer-events", "none");
+                    p.each(function(d) {
+                        const el = this as SVGPathElement;
+                        el.setAttribute("d", d.pathD);
+                        const len = el.getTotalLength?.() ?? 80;
+                        d3.select(el)
+                            .attr("stroke-dasharray", len)
+                            .attr("stroke-dashoffset", len)
+                            .attr("opacity", 0)
+                            .transition()
+                            .delay(d.delay)
+                            .duration(TRAVEL_MS)
+                            .ease(d3.easeCubicOut)
+                            .attr("stroke-dashoffset", 0)
+                            .attr("opacity", d.opacity);
+                    });
+                    return p;
+                },
+                // update => update.attr("d", d => d.pathD).attr("opacity", d => d.opacity),
+                update => {
+                    update.each(function (d){
+                    const el = this as SVGPathElement;
+                    el.setAttribute("d", d.pathD);
+                        const len = el.getTotalLength?.() ?? 80;
+                        d3.select(el)
+                            .attr("stroke-dasharray", len)
+                            .attr("stroke-dashoffset", 0)
+                            .attr("opacity", d.opacity);
+                    });
+                    return update;
+                },                
+                exit => exit.transition().duration(FADE_MS).attr("opacity", 0).remove(),
+            );
+
+        // Nodes
+        type HNode = { id: string; x: number; y: number; r: number; opacity: number };
+        const litArr = Array.from(litNodes)
+            .map(nid => hg.nodes.get(nid))
+            .filter((n): n is HStateNode => !!n && n.visible);
+
+        const nodeData: HNode[] = litArr.map((n, i) => ({
+            id: `hl-node:${n.id}`,
+            x: n.x, y: n.y,
+            r: nodeRadius + 5,
+            opacity: litArr.length === 1 ? 0.8 : 0.4 + 0.4 * ((i + 1) / litArr.length),
+        }));
+
+        layer.selectAll<SVGCircleElement, HNode>("circle.hl-node")
+            .data(nodeData, d => d.id)
+            .join(
+                enter => enter.append("circle")
+                    .attr("class", "hl-node")
+                    .attr("pointer-events", "none")
+                    .attr("fill", "none")
+                    .attr("stroke", HIGHLIGHT_COLOUR)
+                    .attr("stroke-width", 2.5)
+                    .attr("cx", d => d.x).attr("cy", d => d.y).attr("r", d => d.r)
+                    .attr("opacity", 0)
+                    .call(sel => sel.transition().duration(200).attr("opacity", d => d.opacity)),
+                update => update
+                    .attr("cx", d => d.x).attr("cy", d => d.y)
+                    .attr("opacity", d => d.opacity),
+                exit => exit.transition().duration(FADE_MS).attr("opacity", 0).remove(),
+            );
+    }
+
+    function fadeOutHighlight() {
+        if (!g) return;
+        g.select<SVGGElement>("g.path-highlight")
+            .selectAll("path.hl-edge, circle.hl-node")
+            .transition().duration(FADE_MS)
+            .attr("opacity", 0)
+            .on("end", function() { d3.select(this).remove(); });
+    }
+
+    $: if (mounted) {
+        if (!inputSequence || inputSequence.trim() === "") {
+            fadeOutHighlight();
+        } else {
+            drawPathHighlight();
+        }
+    }
 </script> 
 
 <div class="graphWrapper" bind:this={wrapperElement}>

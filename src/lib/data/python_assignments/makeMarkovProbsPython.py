@@ -1,8 +1,13 @@
 import json
 from collections import defaultdict
+import sys
+from pathlib import Path
 
-INPUT_FILE = "real_dataset/real_python_assignments.txt"
-OUTPUT_FILE = "real_markov_transitions.json"
+BASE_DIR = Path(__file__).parent.parent / "ca_letters"
+
+# INPUT_FILE = "real_dataset/real_python_assignments.txt"
+INPUT_FILE = BASE_DIR / "ca_words.txt"
+OUTPUT_FILE = BASE_DIR / "ca_letters_markov.json"
 
 def normalise_probabilities(counts):
     total = sum(counts.values())
@@ -15,7 +20,7 @@ def main():
 
     states = set()
     states.add("START")
-    states.add("$")
+    states.add("END")
 
     with open(INPUT_FILE) as f:
         for line in f:
@@ -35,7 +40,7 @@ def main():
                 states.add(b)
 
             last = chars[-1]
-            transition_counts[last]["$"] += 1
+            transition_counts[last]["END"] += 1
 
     transitions = []
     for src, dests in transition_counts.items():
@@ -50,7 +55,7 @@ def main():
     data = {
         "markovStates": sorted(states),
         "mStartingStates": ["START"],
-        "endState": ["$"],
+        "endState": ["END"],
         "markovTransitions": transitions
     }
 

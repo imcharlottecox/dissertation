@@ -2,9 +2,12 @@
     // import FsmViewer from "$lib/components/fsmView.svelte";
     // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
     import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
-    import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
+    // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
+    import MarkovView from "$lib/components/HM.svelte";
+
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
+    // import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
     import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
     import PageIntro from "$lib/components/pageIntro.svelte";
@@ -17,14 +20,14 @@
     let showEdgeLabels =true;
     let weightedThickness = true;
 
-    let sequence: string = "";
+    let inputSequence: string = "";
     let fsmResult: string | null = null;
     let markovResult: string | null = null;
 
 
-    function testSequence(){
-        const fsmInput = sequence?.trim().split("");
-        const markovInput = sequence?.toUpperCase().trim().split("");
+    function testinputSequence(){
+        const fsmInput = inputSequence?.trim().split("");
+        const markovInput = inputSequence?.trim().split("");
 
         const isAccepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
         fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
@@ -39,24 +42,54 @@
     const questions: TaskQuestion[] = [
         {
             id: "Q1",
-            prompt: "Can you find a word rejected by the FSM that the Markov Chain still assigns a probability to?",
+            prompt: "Can you find a word rejected by the Finite State Machine that the Markov Chain still assigns a probability to? What is the lowest probability you can find for such a word?",
             check: ({accepted, probability}) => !accepted && probability>0
         },
         {
             id: "Q2",
-            prompt: "Can you find a word with probability of exactly 0.125?",
-            check: ({accepted, probability}) => accepted && probability === 0.125
+            prompt: "Can you find a four-letter word accepted by the FSM with probability of exactly 0.125?",
+            check: ({accepted, probability, input}) => accepted && probability === 0.125 && input.length === 4
         },
         {
             id: "Q3",
             prompt: "'Cacao' is a valid anagram of the letters starting with Ca, but it isn't accepted by the FSM. Can you explain why this is the case?",
-            check: ({accepted, probability}) => accepted && probability === 0.125
+            check: ()=> false,
+            correctChoice: "dataset",
+            choices: [
+                {id: "MarkovLink", label: "The Markov chain assigns 'Cacao' a probability of 0, so the Finite State Machine has to reject it"},
+                {id: "length", label: "The word is too long for the FSM to accept it"},
+                {id: "dataset", label: "The FSM was designed to only accept the words in our 'accepting dataset' and 'Cacao' isn't in that dataset"},
+                {id: "trick", label: "The question is wrong! 'Cacao' is accepted by the FSM because it is a valid anagram of the letters the FSM accepts"},
+            ]
+        },
+        {
+            id: "Q4",
+            prompt: "What is the longest word assigned a probability by the Markov chain?",
+            check: ({input}) => input === "Cartons"
+            
+        },
+        {
+        id: "Q5",
+            prompt: "How do you calculate the probability of a sequence in the Markov chain?",
+            check: ()=> false,
+            correctChoice: "multiply",
+            choices: [
+                {id: "MarkovLink", label: "You add each transition's probability in the sequence together"},
+                {id: "length", label: "It is just what the final transition edge's probability is"},
+                {id: "multiply", label: "You multiply the probabilities of each transition in the sequence"},
+            ]
+        },
+        {
+            id: "Q6",
+            prompt: "Compare with your friends - what is the highest and lowest probability sequences you can find?",
+            check: ()=> true,
         },
     ];
 
     function evaluate(sequence: string): Evaluation{
+        console.log("Evaluating sequence:", sequence, "length:", sequence.length);
         const fsmInput = sequence?.trim().split("");
-        const markovInput = sequence?.toUpperCase().trim().split("");
+        const markovInput = sequence?.trim().split("");
 
         const accepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
         const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
@@ -64,6 +97,7 @@
         return{
             accepted,
             probability,
+            sequence,
             fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
             markovText: `P(${markovInput}) = ${probability.toFixed(5)}`
         };
@@ -120,6 +154,7 @@
                 {weighted}      
                 {showDepth}        
                 renderKey = {fsmRenderKey}
+                {inputSequence}
               />
           </div>
         </div>
@@ -165,6 +200,7 @@
               {showDirectionalColours}
               {showEdgeLabels}
               {weightedThickness}
+              {inputSequence}
             />
           </div>
         </div>
@@ -183,7 +219,7 @@
             {fsmResult}
         </div>            
             {markovResult} -->
-        <ChallengePanel {questions} {evaluate}/>
+        <ChallengePanel {questions} {evaluate} on:sequenceChange={(e) => { inputSequence = e.detail; }}/>
     </div>
 </main>
 

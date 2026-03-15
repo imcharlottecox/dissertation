@@ -4,12 +4,18 @@
     import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
     import { makeLetFSM } from '$lib/data/python_assignments/letFSM2';
     import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
+    // import MarkovView from "$lib/components/HM.svelte";
+
     // import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/pythonMarkov";
     // import pythonAssignments from "$lib/data/python_assignments/python_assignments.txt?raw"; 
     import PageIntro from "$lib/components/pageIntro.svelte";
     import pythonAssignments from "$lib/data/python_assignments/real_dataset/real_python_assignments.txt?raw"; 
     import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/real_dataset/real_pythonMarkov";
-
+    import { computeMarkovCompletion } from "$lib/components/compute/computeCompletePredictedMarkov";
+    import { ComputeValidityFSM } from '$lib/components/compute/computeValidityFSM';
+    import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbabilityMarkov';
+    import ChallengePanel from "$lib/components/compute/computeBox.svelte"
+    import type { TaskQuestion, Evaluation } from "$lib/components/compute/computeBox.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates, warps, subgraphs } = makeLetFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makePythonAssignmentMarkov();
 
@@ -18,12 +24,13 @@
     let showDirectionalColours = true;
     let showEdgeLabels = false;
     let weightedThickness = true;
-
+    let inputSequence = "";
     const assignmentDataset: string[] =
         pythonAssignments.split("\n").map(s => s.trim()).filter(Boolean);
 
     let markovFilter: [string,string][] = [];
     let selectedStatement = "";
+    
     function extractCharacterPairs(statement: string): [string,string][] {
         const chars = Array.from(statement); 
         const pairs: [string,string][] = [];
@@ -50,13 +57,146 @@
         markovFilter = extractCharacterPairs(stmt);
     }
 
+    // function evaluate(sequenceInput: string):Evaluation{
+    //     const inputTokens = sequenceInput.split("");
+    //     const completionPrediction = computeMarkovCompletion(inputTokens, markovStates, markovTransitions, mStartingStates, endState);
+
+    //     const probability = ComputeProbabilityMarkov(markovTransitions, inputTokens);
+    //     const fsmInput = completionPrediction.fullSequence;
+    //     const accepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
+    //     const predictedStr = completionPrediction.predictedTokens.join("");
+    //     const markovText = completionPrediction.terminatedNaturally ? `Markov predicts "${sequenceInput}[${predictedStr}]"` :` Markov predicts "${sequenceInput}[${predictedStr}]" - incomplete seqeunce`;
+    //     const fsmText = accepted ? "FSM accepted the predicted seqeunce" : "FSM rejected the predicted seqeunce";
+    //     return {accepted, probability, fsmText, markovText};
+    // }
+
+    // ---------------------------------------------------------------------------
+    // evaluate — passed to ComputeBox
+    // Auto-appends \n so the FSM can reach its accepting state via "new line"
+    // transitions without the student needing to press Enter.
+    // ---------------------------------------------------------------------------
+
+    // function evaluate(sequenceInput: string): Evaluation {
+    //     // Split into individual characters (this dataset is char-level)
+    //     const typedTokens = sequenceInput.split("");
+
+    //     // Auto-append \n so "new line" / "newline" transitions can fire
+    //     const tokensForFSM = [...typedTokens, "\n"];
+
+    //     // 1. Markov: greedily complete from the typed prefix
+    //     //    Pass typedTokens (without \n) — the Markov model doesn't know about \n
+    //     const completion = computeMarkovCompletion(
+    //         typedTokens,
+    //         markovStates,
+    //         markovTransitions,
+    //         endState,
+    //     );
+
+    //     // Build the full sequence the FSM will validate:
+    //     // typed + Markov-predicted + \n
+    //     const fsmInput = [...typedTokens, ...completion.predictedTokens, "\n"];
+
+    //     // 2. FSM: validate the completed + newline-terminated sequence
+    //     const accepted = ComputeValidityFSM(
+    //         fsmTransitions,
+    //         fsmInput,
+    //         acceptingStates,
+    //         subgraphs,
+    //         warps,
+    //     );
+
+    //     // 3. Markov probability of the typed prefix alone
+    //     const probability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
+
+    //     // 4. Human-readable result strings
+    //     const predictedStr = completion.predictedTokens.join("");
+    //     const markovText = completion.terminatedNaturally
+    //         ? `Predicts: "${sequenceInput}[${predictedStr}]"`
+    //         : `Predicts: "${sequenceInput}[${predictedStr}]" (no clean end)`;
+
+    //     const fsmText = accepted
+    //         ? `FSM: ✅ Valid`
+    //         : `FSM: ❌ Invalid`;
+
+    //     return {
+    //         accepted,
+    //         probability,
+    //         fsmText,
+    //         markovText,
+    //         typedTokens,
+    //         predictedTokens: completion.predictedTokens,
+    //     };
+    // }
+
+    // ---------------------------------------------------------------------------
+    // evaluate — passed to ComputeBox
+    // Auto-appends \n so the FSM can reach its accepting state via "new line"
+    // transitions without the student needing to press Enter.
+    // ---------------------------------------------------------------------------
+
+    function evaluate(sequenceInput: string): Evaluation {
+        // Split into individual characters (this dataset is char-level)
+        const typedTokens = sequenceInput.split("");
+
+        // 1. Beam-search Markov completion from the typed prefix
+        const completion = computeMarkovCompletion(
+            typedTokens,
+            markovStates,
+            markovTransitions,
+            endState,
+        );
+
+        const best = completion.best;
+
+        // 2. FSM: validate typed + best-beam prediction + \n
+        const fsmInput = [...typedTokens, ...best.predictedTokens, "\n"];
+        const accepted = ComputeValidityFSM(
+            fsmTransitions,
+            fsmInput,
+            acceptingStates,
+            subgraphs,
+            warps,
+        );
+
+        // 3. Human-readable result strings
+        const predictedStr = best.predictedTokens.join("");
+        const markovText = best.terminatedNaturally
+            ? `Predicts: "${sequenceInput}[${predictedStr}]"`
+            : `Predicts: "${sequenceInput}[${predictedStr}]" (no clean end)`;
+
+        const fsmText = accepted ? `FSM: ✅ Valid` : `FSM: ❌ Invalid`;
+
+        return {
+            accepted,
+            probability:       best.totalProbability,
+            prefixProbability: completion.prefixProbability,
+            confidenceLabel:   completion.confidenceLabel,
+            fsmText,
+            markovText,
+            typedTokens,
+            predictedTokens:   best.predictedTokens,
+            allBeams:          completion.beams.map(b => ({
+                predictedTokens:    b.predictedTokens,
+                totalProbability:   b.totalProbability,
+                terminatedNaturally: b.terminatedNaturally,
+            })),
+        };
+    }
+    const questions: TaskQuestion[] = [
+        {
+            id: "q1",
+            prompt: "Type",
+            check: ({accepted}) => accepted,
+        }
+    ];
+
+
     $: fsmRenderKey = [
         fsmStates.length,
         fsmTransitions.length,
         acceptingStates.join('|'),
         startingStates.join('|'),
-  ].join('::');
-      $: console.log("fsmRenderKey", fsmRenderKey);
+    ].join('::');
 
 </script>
 
@@ -91,69 +231,76 @@
                     {startingStates}
                     {subgraphs}
                     {warps}
-                    {weighted}              
+                    {weighted}       
+                    {inputSequence}       
                     renderKey = {fsmRenderKey}
 
+                />
+            </div>
+        </div>
+        <div class="markovPane"style="width:40%;">
+            <div class="paneHeader">
+                <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
+                    <input
+                    type="checkbox"
+                    bind:checked={showDirectionalColours}
+                    />
+                    Show Directional Colours
+                </label>
+                <label class="check" title="Displays edge probabilities">
+                    <input
+                        type="checkbox"
+                        bind:checked={showEdgeLabels}
+                    />
+                    Show Edge Labels
+                </label>
+                <label class="check" title="Edge thickness corresponds to the probability of the edge">
+                    <input
+                        type="checkbox"
+                        bind:checked={weightedThickness}
+                    />
+                    Weighted Thickness
+                </label>
+
+        </div>
+        <div class="markovGraph">
+            <MarkovView 
+                {markovStates}
+                {markovTransitions}
+                {mStartingStates}
+                {endState}
+                filterPairs={markovFilter}
+                {showDirectionalColours}
+                {showEdgeLabels}
+                {weightedThickness}
+                { inputSequence}
+                renderKey = {fsmRenderKey}
             />
         </div>
-    </div>
-    <div class="markovPane"style="width:40%;">
-        <div class="paneHeader">
-            <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
-                <input
-                  type="checkbox"
-                  bind:checked={showDirectionalColours}
-                />
-                Show Directional Colours
-            </label>
-            <label class="check" title="Displays edge probabilities">
-                <input
-                    type="checkbox"
-                    bind:checked={showEdgeLabels}
-                />
-                Show Edge Labels
-            </label>
-            <label class="check" title="Edge thickness corresponds to the probability of the edge">
-                <input
-                    type="checkbox"
-                    bind:checked={weightedThickness}
-                />
-                Weighted Thickness
-            </label>
-
-      </div>
-      <div class="markovGraph">
-          <MarkovView 
-              {markovStates}
-              {markovTransitions}
-              {mStartingStates}
-              {endState}
-              filterPairs={markovFilter}
-              {showDirectionalColours}
-              {showEdgeLabels}
-              {weightedThickness}
-              renderKey = {fsmRenderKey}
-          />
-      </div>
-    </div>
+        </div>
     </div>  
+    <div>
+        <ChallengePanel {questions} {evaluate} on:sequenceChange={(e) => { inputSequence = e.detail; }}/>
+    </div>
 </main>
 
 
 <style>
     .page{
-        height: 95dvh;
+        min-height: 100dvh;
+        height: auto;
         display: flex;
         flex-direction: column;
         gap: 8px;
         padding: 1rem;
         background: #fafafa;  
         box-sizing: border-box;
-        overflow: hidden;
+        /* overflow: hidden; */
+        /* overflow-y:auto; */
     }
     .graphRow{
-        flex: 1 1 auto;
-        min-height: 0;
+        flex: 1 1 0;
+        min-height: 60dvh;
         display: flex;
         gap: 8px;
     }
