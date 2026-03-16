@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import type { StateNode } from './graphTypes';
-
+import {logEvent} from '../supabase/logging';
 export function createZoom(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
   return d3.zoom<SVGSVGElement, unknown>()
     .on('zoom', (event) => g.attr('transform', event.transform));
@@ -38,6 +38,7 @@ export function createDragNoSim(updateEdges: () => void) {
       d.x = event.x;
       d.y = event.y;
       d3.select(this).attr("transform", `translate(${event.x},${event.y})`);
+      logEvent('drag_node', { nodeId: d.id, x: d.x, y: d.y });
       updateEdges();
     });
 }
@@ -58,7 +59,6 @@ export function createDragSubgraph(updateEdges, subNodePositions) {
         pt.y = event.sourceEvent.clientY;
         const local = pt.matrixTransform(parentCTM);
 
-        // update data
         d.x = local.x;
         d.y = local.y;
 
@@ -66,8 +66,6 @@ export function createDragSubgraph(updateEdges, subNodePositions) {
             subNodePositions[d.id].x = local.x;
             subNodePositions[d.id].y = local.y;
         }
-
-        // draw
         d3.select(this).attr("transform", `translate(${local.x},${local.y})`);
         updateEdges();
         });
