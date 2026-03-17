@@ -29,9 +29,9 @@
 	<a href="{base}/cartons_letters">2: Letters!</a>
 	<a href="{base}/python">3: Python Assignments</a>
 	<a href="{base}/shakeItOff">4: Shake It Off</a>
-	<a href="{base}/benchmark">5: Benchmark</a>
+	<!-- <a href="{base}/benchmark">5: Benchmark</a>
 	<a href="{base}/not_using/camPage2">Cam: Example 2</a>
-	<a href="{base}/not_using/churPage3">Churchill: Example 3</a>
+	<a href="{base}/not_using/churPage3">Churchill: Example 3</a> -->
 
 
 

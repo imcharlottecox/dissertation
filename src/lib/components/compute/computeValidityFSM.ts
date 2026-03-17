@@ -1,20 +1,20 @@
 // import type { builtFSM } from '$lib/data/shakeItOff/shakeitoff';
 // import type { fTransition } from '$lib/graph/graphTypes';
 
-// export function ComputeValidityFSM(fsmTransitions: fTransition[], input: string[], acceptingStates: string[]): boolean {
-//     let currentState = "START";
-//     if (input.length === 0) return false;
+export function ComputeSimpleValidityFSM(fsmTransitions: fTransition[], input: string[], acceptingStates: string[]): boolean {
+    let currentState = "START";
+    if (input.length === 0) return false;
 
-//     for (const token of input){
-//         const nextState = fsmTransitions.find(transition => transition.from === currentState && transition.label === token);
-//         if (nextState){
-//             currentState = nextState.to;
-//         } else {
-//             return false;
-//         }
-//     }
-//     return acceptingStates.includes(currentState);
-// }
+    for (const token of input){
+        const nextState = fsmTransitions.find(transition => transition.from === currentState && transition.label === token);
+        if (nextState){
+            currentState = nextState.to;
+        } else {
+            return false;
+        }
+    }
+    return acceptingStates.includes(currentState);
+}
 // computeValidityFSM.ts
 // Hierarchical NFA walker for letFSM2-style FSMs.
 //

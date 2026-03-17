@@ -115,8 +115,8 @@
     //         : `Predicts: "${sequenceInput}[${predictedStr}]" (no clean end)`;
 
     //     const fsmText = accepted
-    //         ? `FSM: ✅ Valid`
-    //         : `FSM: ❌ Invalid`;
+    //         ? `FSM:  Valid`
+    //         : `FSM:   Invalid`;
 
     //     return {
     //         accepted,
@@ -164,7 +164,7 @@
             ? `Predicts: "${sequenceInput}[${predictedStr}]"`
             : `Predicts: "${sequenceInput}[${predictedStr}]" (no clean end)`;
 
-        const fsmText = accepted ? `FSM: ✅ Valid` : `FSM: ❌ Invalid`;
+        const fsmText = accepted ? `FSM:  Valid` : `FSM:   Invalid`;
 
         return {
             accepted,

@@ -8,8 +8,8 @@
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
     // import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
-    import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
-    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
+    import {ComputeSimpleValidityFSM} from "$lib/components/compute/computeValidityFSM";
+    import { computePrefixProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
     import PageIntro from "$lib/components/pageIntro.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
@@ -29,10 +29,10 @@
         const fsmInput = inputSequence?.trim().split("");
         const markovInput = inputSequence?.trim().split("");
 
-        const isAccepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
+        const isAccepted = ComputeSimpleValidityFSM(fsmTransitions, fsmInput, acceptingStates);
         fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
 
-        const prob = ComputeProbabilityMarkov(markovTransitions, markovInput);
+        const prob = computePrefixProbabilityMarkov(markovTransitions, markovInput);
         markovResult = `P(${markovInput}) = ${prob.toFixed(5)}`;
     }
     let showDepth = false;
@@ -86,22 +86,38 @@
         },
     ];
 
-    function evaluate(sequence: string): Evaluation{
-        console.log("Evaluating sequence:", sequence, "length:", sequence.length);
-        const fsmInput = sequence?.trim().split("");
-        const markovInput = sequence?.trim().split("");
+    // function evaluate(sequence: string): Evaluation{
+    //     console.log("Evaluating sequence:", sequence, "length:", sequence.length);
+    //     const fsmInput = sequence?.trim().split("");
+    //     const markovInput = sequence?.trim().split("");
 
-        const accepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
-        const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
+    //     const accepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
+    //     const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
 
-        return{
-            accepted,
-            probability,
-            sequence,
-            fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
-            markovText: `P(${markovInput}) = ${probability.toFixed(5)}`
-        };
-    }
+    //     return{
+    //         accepted,
+    //         probability,
+    //         sequence,
+    //         fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
+    //         markovText: `P(${markovInput}) = ${probability.toFixed(5)}`
+    //     };
+    // }
+function evaluate(sequenceInput: string): Evaluation {
+    const raw = sequenceInput.trim();
+    const charTokens = raw.split("");                          // for FSM (case-sensitive)
+    const markovTokens = raw.toUpperCase().split("");          // for Markov (uppercase states)
+
+    const accepted = ComputeSimpleValidityFSM(fsmTransitions, charTokens, acceptingStates);
+    const probability = computePrefixProbabilityMarkov(markovTransitions, markovTokens);
+
+    return {
+        accepted,
+        probability,
+        sequence: sequenceInput,
+        fsmText:    accepted ? "FSM:   Accepted" : "FSM:   Rejected",
+        markovText: `P = ${probability.toFixed(5)}`,
+    };
+}
     $: fsmRenderKey = [
       fsmStates.length,
       fsmTransitions.length,
