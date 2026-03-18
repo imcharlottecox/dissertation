@@ -149,7 +149,8 @@
         const best = completion.best;
 
         // 2. FSM: validate typed + best-beam prediction + \n
-        const fsmInput = [...typedTokens, ...best.predictedTokens, "\n"];
+        // const fsmInput = [...typedTokens, ...best.predictedTokens, "\n"];
+        const fsmInput = [...typedTokens, "\n"];
         const accepted = ComputeValidityFSM(
             fsmTransitions,
             fsmInput,
@@ -166,9 +167,10 @@
 
         const fsmText = accepted ? `FSM:  Valid` : `FSM:   Invalid`;
 
+        const typeProbability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
         return {
             accepted,
-            probability:       best.totalProbability,
+            probability:       typeProbability,
             prefixProbability: completion.prefixProbability,
             confidenceLabel:   completion.confidenceLabel,
             fsmText,
@@ -273,7 +275,7 @@
                 {showDirectionalColours}
                 {showEdgeLabels}
                 {weightedThickness}
-                { inputSequence}
+                {inputSequence}
                 renderKey = {fsmRenderKey}
             />
         </div>

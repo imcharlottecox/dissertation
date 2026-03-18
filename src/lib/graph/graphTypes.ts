@@ -13,13 +13,13 @@ export type StateNode = {
 export type mTransition = {
   from: string;
   to: string;
-  probability?: number;  
+  probability: number;  
 };
 
 export type fTransition = {
   from: string;
   to: string;
-  label?: string;  
+  label: string;  
 };
 
 //from fsmhierarchical viewer

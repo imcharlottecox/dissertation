@@ -318,8 +318,8 @@
 
             if (!containerRect) return;
 
-            // Only clamp if the centred rect escapes the container bounds.
-            // This preserves vertical centering around the anchor whenever possible.
+            // Only clamp if the centred rect escapes the container bounds
+            // preserves vertical centering around the anchor whenever possible
             const PAD = 20;
             const escapes = rect.x < containerRect.x + PAD
                 || rect.x + rect.w > containerRect.x + containerRect.w - PAD
@@ -416,7 +416,7 @@
 
             //warp edges for entry exit skipping ports bc theyre invisible
         if (entryWarp) {
-            for (const t of sg.transitions.filter(t => t.from === sg.entry && t.to !== sg.exit)){
+            for (const t of sg.transitions.filter(t => t.from === sg.entry && t.to !== sg.exit && !/^\($/i.test(t.label ?? ""))){
                 const toId = mkNodeId(parentId, t.to);
                 const edgeId = `warpIn:${parentId}:${entryWarp.from}-${toId}-${t.label ?? "undefined"}`;
                 hg.edges.set(edgeId, {
@@ -428,6 +428,29 @@
                     kind: "warp",
                     parent: parentId
                 });
+            }
+            const entryOutgoing = sg.transitions.filter(t => t.from === sg.entry && t.to !== sg.exit);
+            for (const t of sg.transitions){
+                if (t.to !== sg.entry) continue;
+                if (t.from === sg.entry) continue;
+                const fromId = mkNodeId(parentId, t.from);
+                if (!hg.nodes.has(fromId)) continue;
+
+                for (const outTran of entryOutgoing){
+                    const toId = mkNodeId(parentId, outTran.to);
+                    if (!hg.nodes.has(toId)) continue;
+                    const edgeId = `warpInChain:${parentId}:${fromId}-${toId}-${t.label ?? "undefined"}`;
+                    if (hg.edges.has(edgeId)) continue;
+                    hg.edges.set(edgeId,{
+                        id: edgeId,
+                        from: fromId,
+                        to: toId,
+                        label: t.label,
+                        visible: true,
+                        kind: "sub",
+                        parent: parentId
+                    });
+                }
             }
         }
         if (exitWarp && exitWarp.backto) {

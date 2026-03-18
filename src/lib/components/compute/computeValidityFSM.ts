@@ -1,19 +1,32 @@
-// import type { builtFSM } from '$lib/data/shakeItOff/shakeitoff';
-// import type { fTransition } from '$lib/graph/graphTypes';
+import type { builtFSM } from '$lib/data/shakeItOff/shakeitoff';
+import type { fTransition } from '$lib/graph/graphTypes';
 
-export function ComputeSimpleValidityFSM(fsmTransitions: fTransition[], input: string[], acceptingStates: string[]): boolean {
-    let currentState = "START";
+
+
+export function ComputeFlatValidityFSM(
+    fsmTransitions: { from: string; to: string; label: string }[],
+    input: string[],
+    acceptingStates: string[],
+    startingStates: string[],
+): boolean {
     if (input.length === 0) return false;
 
-    for (const token of input){
-        const nextState = fsmTransitions.find(transition => transition.from === currentState && transition.label === token);
-        if (nextState){
-            currentState = nextState.to;
-        } else {
-            return false;
+    let currentStates = new Set(startingStates);
+
+    for (const token of input) {
+        const next = new Set<string>();
+        for (const state of currentStates) {
+            for (const t of fsmTransitions) {
+                if (t.from === state && t.label === token) {
+                    next.add(t.to);
+                }
+            }
         }
+        if (next.size === 0) return false;
+        currentStates = next;
     }
-    return acceptingStates.includes(currentState);
+
+    return [...currentStates].some(s => acceptingStates.includes(s));
 }
 // computeValidityFSM.ts
 // Hierarchical NFA walker for letFSM2-style FSMs.
@@ -28,11 +41,11 @@ export function ComputeSimpleValidityFSM(fsmTransitions: fTransition[], input: s
 //   - Abstract "Call/call" labels in EXPRESSION subgraph become epsilon warps into NUMBER
 //     subgraphs; operator/paren chars trigger an expr_exit back to EXPRESSION.After_op.
 
-export interface fTransition {
-    from: string;
-    to: string;
-    label: string;
-}
+// export interface fTransition {
+//     from: string;
+//     to: string;
+//     label: string;
+// }
 
 export interface Subgraph {
     depthLevel: number;
@@ -55,33 +68,148 @@ export interface WarpEntry {
 // Public API
 // ---------------------------------------------------------------------------
 
+// export function ComputeValidityFSM(
+//     fsmTransitions: fTransition[],
+//     input: string[],
+//     acceptingStates: string[],
+//     subgraphs: Record<string, Subgraph> = {},
+//     warps: WarpEntry[] = [],
+//     startingStates: string[] = ["S0:START"],
+// ): boolean {
+//     if (input.length === 0) return false;
+
+//     const { transitions: allTransitions, warpMap } = buildNamespacedGraph(subgraphs);
+//     let currentStates = epsilonClosure(new Set(startingStates), warpMap);
+
+//     for (const char of input) {
+//         const nextStates = new Set<string>();
+//         for (const state of currentStates) {
+//             const matching = allTransitions.filter(
+//                 t => t.from === state && labelMatchesChar(t.label, char)
+//             );
+//             for (const t of matching) {
+//                 epsilonClosure(new Set([t.to]), warpMap).forEach(s => nextStates.add(s));
+//             }
+//         }
+//         if (nextStates.size === 0) return false;
+//         currentStates = nextStates;
+//     }
+
+//     return [...currentStates].some(s => acceptingStates.includes(s));
+// }
+// ---------------------------------------------------------------------------
+// Configuration = state + call stack (for PDA-style call/return semantics)
+// ---------------------------------------------------------------------------
+
+type Config = {
+    state: string;
+    stack: string[]; // return addresses, top = stack[stack.length-1]
+};
+
+function configKey(c: Config): string {
+    return c.state + "|" + c.stack.join(",");
+}
+
+// ---------------------------------------------------------------------------
+// Public API — PDA-style hierarchical validator
+// ---------------------------------------------------------------------------
+
 export function ComputeValidityFSM(
     fsmTransitions: fTransition[],
     input: string[],
     acceptingStates: string[],
     subgraphs: Record<string, Subgraph> = {},
     warps: WarpEntry[] = [],
+    startingStates: string[] = ["S0:START"],
 ): boolean {
     if (input.length === 0) return false;
 
-    const { transitions: allTransitions, warpMap } = buildNamespacedGraph(subgraphs);
-    let currentStates = epsilonClosure(new Set(["S0:START"]), warpMap);
+    const { transitions, warpMap, callMap, returnStates } = buildGraph(subgraphs);
 
-    for (const char of input) {
-        const nextStates = new Set<string>();
-        for (const state of currentStates) {
-            const matching = allTransitions.filter(
-                t => t.from === state && labelMatchesChar(t.label, char)
-            );
-            for (const t of matching) {
-                epsilonClosure(new Set([t.to]), warpMap).forEach(s => nextStates.add(s));
-            }
-        }
-        if (nextStates.size === 0) return false;
-        currentStates = nextStates;
+    // Seed: one config per starting state, empty stack
+    let configs: Map<string, Config> = new Map();
+    for (const s of startingStates) {
+        const initial = epsilonClose({ state: s, stack: [] }, warpMap, callMap, returnStates);
+        for (const c of initial) configs.set(configKey(c), c);
     }
 
-    return [...currentStates].some(s => acceptingStates.includes(s));
+    for (const char of input) {
+        const next = new Map<string, Config>();
+
+        for (const config of configs.values()) {
+            // Find all transitions that consume this char from this state
+            const matching = transitions.filter(
+                t => t.from === config.state && labelMatchesChar(t.label, char)
+            );
+            for (const t of matching) {
+                // Move to t.to, same stack
+                const moved: Config = { state: t.to, stack: config.stack };
+                // Epsilon-close the new config (warps + call/return)
+                const closed = epsilonClose(moved, warpMap, callMap, returnStates);
+                for (const c of closed) {
+                    const k = configKey(c);
+                    if (!next.has(k)) next.set(k, c);
+                }
+            }
+
+            // // `)` as a return: if stack is non-empty, pop and resume at return address
+            // if (char === ")") {
+            //     const stack = config.stack;
+            //     if (stack.length > 0) {
+            //         const returnState = stack[stack.length - 1];
+            //         const newStack = stack.slice(0, -1);
+            //         // The return address is the state *after* the call (e.g. Wait),
+            //         // which then has a transition on ")" -> After_atom.
+            //         // We land at returnState and epsilon-close from there.
+            //         const resumed: Config = { state: returnState, stack: newStack };
+            //         const closed = epsilonClose(resumed, warpMap, callMap, returnStates);
+            //         for (const c of closed) {
+            //             const k = configKey(c);
+            //             if (!next.has(k)) next.set(k, c);
+            //         }
+            //     }
+            // }
+
+            if (char === ")") {
+                const stack = config.stack;
+                if (stack.length > 0) {
+                    const returnState = stack[stack.length - 1]; // "...EXPRESSION.Wait"
+                    const newStack = stack.slice(0, -1);
+                    // `)` is consumed by the return — now fire any transitions from
+                    // returnState that are labelled ")" to find the actual landing state
+                    const returnConfig: Config = { state: returnState, stack: newStack };
+                    const afterReturn = transitions.filter(
+                        t => t.from === returnState && labelMatchesChar(t.label, char)
+                    );
+                    if (afterReturn.length > 0) {
+                        for (const t of afterReturn) {
+                            const moved: Config = { state: t.to, stack: newStack };
+                            const closed = epsilonClose(moved, warpMap, callMap, returnStates);
+                            for (const c of closed) {
+                                const k = configKey(c);
+                                if (!next.has(k)) next.set(k, c);
+                            }
+                        }
+                    } else {
+                        // No labelled transition on ")" from return state — just land there
+                        const closed = epsilonClose(returnConfig, warpMap, callMap, returnStates);
+                        for (const c of closed) {
+                            const k = configKey(c);
+                            if (!next.has(k)) next.set(k, c);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (next.size === 0) return false;
+        configs = next;
+    }
+
+    // Accept only if we reach an accepting state with an empty stack
+    return [...configs.values()].some(
+        c => acceptingStates.includes(c.state) && c.stack.length === 0
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -195,12 +323,31 @@ const SUBGRAPH_TRANSITION_OVERRIDES: Record<string, fTransition[]> = {
         { from: "Int",     to: "expr_exit", label: "+ | - | * | / | %" },
         { from: "Int",     to: "expr_exit", label: ")" },
     ],
+    // "S3:VALUE.NUMBER.EXPRESSION": [
+    //     { from: "After_atom", to: "end",      label: "new line" },
+    //     { from: "After_atom", to: "After_op", label: "+ | - | * | / | %" },
+    //     { from: "After_op",   to: "Paren",    label: "(" },
+    //     { from: "expect_atom", to: "Paren",   label: "(" },
+    //     { from: "Wait",       to: "After_atom", label: ")" },
+    //     { from: "After_atom", to: "After_atom", label: ")" },
+        
+    // ],
+//     "S3:VALUE.NUMBER.EXPRESSION": [
+//     { from: "After_atom", to: "end",        label: "new line" },
+//     { from: "After_atom", to: "After_op",   label: "+ | - | * | / | %" },
+//     { from: "After_op",   to: "expect_atom", label: "null" },  // epsilon via warp
+//     // ( on After_op and expect_atom: handled by callMap from letFSM2 transitions
+//     // ) on Wait: handled by call/return stack pop + Wait -> After_atom
+//     { from: "Wait",       to: "After_atom", label: ")" },
+// ],
     "S3:VALUE.NUMBER.EXPRESSION": [
-        { from: "After_atom", to: "end",      label: "new line" },
-        { from: "After_atom", to: "After_op", label: "+ | - | * | / | %" },
-        { from: "After_op",   to: "Paren",    label: "(" },
-        { from: "expect_atom", to: "Paren",   label: "(" },
-        { from: "Wait",       to: "After_atom", label: ")" },
+        { from: "After_atom",  to: "end",        label: "new line" },
+        { from: "After_atom",  to: "After_op",   label: "+ | - | * | / | %" },
+        { from: "After_op",  to: "expect_atom",   label: "call S3:VALUE.NUMBER" },
+        { from: "expect_atom", to: "Paren",      label: "(" },
+        { from: "After_op",    to: "Paren",      label: "(" },
+        { from: "Paren",       to: "Wait",       label: "call S3:VALUE.NUMBER.EXPRESSION" },
+        { from: "Wait",        to: "After_atom", label: ")" },
     ],
 };
 
@@ -208,11 +355,94 @@ const SUBGRAPH_TRANSITION_OVERRIDES: Record<string, fTransition[]> = {
 // Graph construction — namespaced subgraph merge + warp map
 // ---------------------------------------------------------------------------
 
-function buildNamespacedGraph(subgraphs: Record<string, Subgraph>): {
+// function buildNamespacedGraph(subgraphs: Record<string, Subgraph>): {
+//     transitions: fTransition[];
+//     warpMap: Map<string, Set<string>>;
+// } {
+//     // Merge raw subgraphs with our overrides
+//     const mergedSubgraphs: Record<string, Subgraph> = {};
+//     for (const [key, sg] of Object.entries(subgraphs)) {
+//         mergedSubgraphs[key] = SUBGRAPH_TRANSITION_OVERRIDES[key]
+//             ? { ...sg, transitions: SUBGRAPH_TRANSITION_OVERRIDES[key] }
+//             : sg;
+//     }
+
+//     const transitions: fTransition[] = [...TOP_LEVEL_TRANSITIONS];
+//     const warpMap = new Map<string, Set<string>>();
+
+//     function addWarp(from: string, to: string) {
+//         if (!warpMap.has(from)) warpMap.set(from, new Set());
+//         warpMap.get(from)!.add(to);
+//     }
+
+//     for (const [sgKey, sg] of Object.entries(mergedSubgraphs)) {
+//         for (const t of sg.transitions) {
+//             if (/^call\s/i.test(t.label)) continue; // skip abstract call labels
+//             transitions.push({
+//                 from:  `${sgKey}.${t.from}`,
+//                 to:    `${sgKey}.${t.to}`,
+//                 label: t.label,
+//             });
+//         }
+//     }
+
+//     const WARPS: Array<[string, string]> = [
+//         ["S0:START",                                        "S1:VARIABLE_IDENTIFIER.START_PORT"],
+//         ["S1:VARIABLE_IDENTIFIER.EXIT_PORT",                "S2:EQUAL"],
+//         ["S2:EQUAL",                                        "S3:VALUE.BOOL.space"],
+//         ["S2:EQUAL",                                        "S3:VALUE.STRING.space"],
+//         ["S2:EQUAL",                                        "S3:VALUE.NUMBER.INTEGER.space"],
+//         ["S2:EQUAL",                                        "S3:VALUE.NUMBER.FLOAT.space"],
+//         ["S2:EQUAL",                                        "S3:VALUE.NUMBER.COMPLEX.space"],
+//         ["S2:EQUAL",                                        "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+//         ["S3:VALUE.BOOL.end",                               "S4:END"],
+//         ["S3:VALUE.STRING.end",                             "S4:END"],
+//         ["S3:VALUE.NUMBER.end",                             "S4:END"],
+//         ["S3:VALUE.NUMBER.FLOAT.end",                       "S4:END"],
+//         ["S3:VALUE.NUMBER.INTEGER.end",                     "S4:END"],
+//         ["S3:VALUE.NUMBER.COMPLEX.end",                     "S4:END"],
+//         ["S3:VALUE.NUMBER.EXPRESSION.end",                  "S4:END"],
+//         ["S3:VALUE.NUMBER.FLOAT",                           "S3:VALUE.NUMBER.FLOAT.space"],
+//         ["S3:VALUE.NUMBER.COMPLEX",                         "S3:VALUE.NUMBER.COMPLEX.space"],
+//         ["S3:VALUE.NUMBER.INTEGER",                         "S3:VALUE.NUMBER.INTEGER.space"],
+//         ["S3:VALUE.NUMBER.EXPRESSION",                      "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+//         ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.FLOAT.space"],
+//         ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.COMPLEX.space"],
+//         ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.INTEGER.space"],
+//         ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+//         ["S3:VALUE.NUMBER.INTEGER.Integer",      "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+//         ["S3:VALUE.NUMBER.FLOAT.Dec",            "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+//         ["S3:VALUE.NUMBER.FLOAT.Dot_ai",         "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+//         ["S3:VALUE.NUMBER.FLOAT.e_dig",          "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+//         ["S3:VALUE.NUMBER.COMPLEX.j",            "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+//         // EXPRESSION: abstract calls -> epsilon into NUMBER subgraphs
+//         ["S3:VALUE.NUMBER.EXPRESSION.expect_atom",          "S3:VALUE.NUMBER.INTEGER.space"],
+//         ["S3:VALUE.NUMBER.EXPRESSION.expect_atom",          "S3:VALUE.NUMBER.FLOAT.space"],
+//         ["S3:VALUE.NUMBER.EXPRESSION.expect_atom",          "S3:VALUE.NUMBER.COMPLEX.space"],
+//         // expr_exit (operator/paren consumed inside NUMBER) -> After_op -> expect_atom
+//         ["S3:VALUE.NUMBER.INTEGER.expr_exit",               "S3:VALUE.NUMBER.EXPRESSION.After_op"],
+//         ["S3:VALUE.NUMBER.FLOAT.expr_exit",                 "S3:VALUE.NUMBER.EXPRESSION.After_op"],
+//         ["S3:VALUE.NUMBER.COMPLEX.expr_exit",               "S3:VALUE.NUMBER.EXPRESSION.After_op"],
+//         ["S3:VALUE.NUMBER.EXPRESSION.After_op",             "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+//         // Paren entry
+//         ["S3:VALUE.NUMBER.EXPRESSION.Paren",                "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+//     ];
+
+//     for (const [from, to] of WARPS) addWarp(from, to);
+//     return { transitions, warpMap };
+// }
+// ---------------------------------------------------------------------------
+// Graph construction
+// ---------------------------------------------------------------------------
+
+type CallEdge = { from: string; callTarget: string; returnTo: string };
+
+function buildGraph(subgraphs: Record<string, Subgraph>): {
     transitions: fTransition[];
     warpMap: Map<string, Set<string>>;
+    callMap: CallEdge[];          // call transitions extracted from subgraphs
+    returnStates: Set<string>;    // states that are subgraph exit/end states
 } {
-    // Merge raw subgraphs with our overrides
     const mergedSubgraphs: Record<string, Subgraph> = {};
     for (const [key, sg] of Object.entries(subgraphs)) {
         mergedSubgraphs[key] = SUBGRAPH_TRANSITION_OVERRIDES[key]
@@ -222,15 +452,39 @@ function buildNamespacedGraph(subgraphs: Record<string, Subgraph>): {
 
     const transitions: fTransition[] = [...TOP_LEVEL_TRANSITIONS];
     const warpMap = new Map<string, Set<string>>();
+    const callMap: CallEdge[] = [];
+    const returnStates = new Set<string>();
 
     function addWarp(from: string, to: string) {
         if (!warpMap.has(from)) warpMap.set(from, new Set());
         warpMap.get(from)!.add(to);
     }
 
+    // Collect namespaced subgraph entry points for call resolution
+    const subgraphEntries: Record<string, string> = {};
+    for (const [sgKey, sg] of Object.entries(mergedSubgraphs)) {
+        subgraphEntries[sgKey] = `${sgKey}.${sg.entry}`;
+        // Mark the exit state of each subgraph as a return state
+        returnStates.add(`${sgKey}.${sg.exit}`);
+    }
+
     for (const [sgKey, sg] of Object.entries(mergedSubgraphs)) {
         for (const t of sg.transitions) {
-            if (/^call\s/i.test(t.label)) continue; // skip abstract call labels
+            const callMatch = t.label.match(/^call\s+(\S+)/i);
+            if (callMatch) {
+                // This is a call transition: from -> push returnTo, jump to callTarget.entry
+                const calledSG = callMatch[1];
+                const callTarget = subgraphEntries[calledSG];
+                const returnTo = `${sgKey}.${t.to}`; // the state to return to after call
+                if (callTarget) {
+                    callMap.push({
+                        from: `${sgKey}.${t.from}`,
+                        callTarget,
+                        returnTo,
+                    });
+                }
+                continue; // don't add as normal transition
+            }
             transitions.push({
                 from:  `${sgKey}.${t.from}`,
                 to:    `${sgKey}.${t.to}`,
@@ -239,65 +493,111 @@ function buildNamespacedGraph(subgraphs: Record<string, Subgraph>): {
         }
     }
 
+    // Warps (epsilon jumps, no stack effect)
     const WARPS: Array<[string, string]> = [
-        ["S0:START",                                        "S1:VARIABLE_IDENTIFIER.START_PORT"],
-        ["S1:VARIABLE_IDENTIFIER.EXIT_PORT",                "S2:EQUAL"],
-        ["S2:EQUAL",                                        "S3:VALUE.BOOL.space"],
-        ["S2:EQUAL",                                        "S3:VALUE.STRING.space"],
-        ["S2:EQUAL",                                        "S3:VALUE.NUMBER.INTEGER.space"],
-        ["S2:EQUAL",                                        "S3:VALUE.NUMBER.FLOAT.space"],
-        ["S2:EQUAL",                                        "S3:VALUE.NUMBER.COMPLEX.space"],
-        ["S2:EQUAL",                                        "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
-        ["S3:VALUE.BOOL.end",                               "S4:END"],
-        ["S3:VALUE.STRING.end",                             "S4:END"],
-        ["S3:VALUE.NUMBER.end",                             "S4:END"],
-        ["S3:VALUE.NUMBER.FLOAT.end",                       "S4:END"],
-        ["S3:VALUE.NUMBER.INTEGER.end",                     "S4:END"],
-        ["S3:VALUE.NUMBER.COMPLEX.end",                     "S4:END"],
-        ["S3:VALUE.NUMBER.EXPRESSION.end",                  "S4:END"],
-        ["S3:VALUE.NUMBER.FLOAT",                           "S3:VALUE.NUMBER.FLOAT.space"],
-        ["S3:VALUE.NUMBER.COMPLEX",                         "S3:VALUE.NUMBER.COMPLEX.space"],
-        ["S3:VALUE.NUMBER.INTEGER",                         "S3:VALUE.NUMBER.INTEGER.space"],
-        ["S3:VALUE.NUMBER.EXPRESSION",                      "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
-        ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.FLOAT.space"],
-        ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.COMPLEX.space"],
-        ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.INTEGER.space"],
-        ["S3:VALUE.NUMBER.SIGN",                            "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
-        // EXPRESSION: abstract calls -> epsilon into NUMBER subgraphs
-        ["S3:VALUE.NUMBER.EXPRESSION.expect_atom",          "S3:VALUE.NUMBER.INTEGER.space"],
-        ["S3:VALUE.NUMBER.EXPRESSION.expect_atom",          "S3:VALUE.NUMBER.FLOAT.space"],
-        ["S3:VALUE.NUMBER.EXPRESSION.expect_atom",          "S3:VALUE.NUMBER.COMPLEX.space"],
-        // expr_exit (operator/paren consumed inside NUMBER) -> After_op -> expect_atom
-        ["S3:VALUE.NUMBER.INTEGER.expr_exit",               "S3:VALUE.NUMBER.EXPRESSION.After_op"],
-        ["S3:VALUE.NUMBER.FLOAT.expr_exit",                 "S3:VALUE.NUMBER.EXPRESSION.After_op"],
-        ["S3:VALUE.NUMBER.COMPLEX.expr_exit",               "S3:VALUE.NUMBER.EXPRESSION.After_op"],
-        ["S3:VALUE.NUMBER.EXPRESSION.After_op",             "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
-        // Paren entry
-        ["S3:VALUE.NUMBER.EXPRESSION.Paren",                "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+        ["S0:START",                             "S1:VARIABLE_IDENTIFIER.START_PORT"],
+        ["S1:VARIABLE_IDENTIFIER.EXIT_PORT",     "S2:EQUAL"],
+        ["S2:EQUAL",                             "S3:VALUE.BOOL.space"],
+        ["S2:EQUAL",                             "S3:VALUE.STRING.space"],
+        ["S2:EQUAL",                             "S3:VALUE.NUMBER.INTEGER.space"],
+        ["S2:EQUAL",                             "S3:VALUE.NUMBER.FLOAT.space"],
+        ["S2:EQUAL",                             "S3:VALUE.NUMBER.COMPLEX.space"],
+        ["S2:EQUAL",                             "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+        ["S3:VALUE.BOOL.end",                    "S4:END"],
+        ["S3:VALUE.STRING.end",                  "S4:END"],
+        ["S3:VALUE.NUMBER.end",                  "S4:END"],
+        ["S3:VALUE.NUMBER.FLOAT.end",            "S4:END"],
+        ["S3:VALUE.NUMBER.INTEGER.end",          "S4:END"],
+        ["S3:VALUE.NUMBER.COMPLEX.end",          "S4:END"],
+        ["S3:VALUE.NUMBER.EXPRESSION.end",       "S4:END"],
+        ["S3:VALUE.NUMBER.FLOAT",                "S3:VALUE.NUMBER.FLOAT.space"],
+        ["S3:VALUE.NUMBER.COMPLEX",              "S3:VALUE.NUMBER.COMPLEX.space"],
+        ["S3:VALUE.NUMBER.INTEGER",              "S3:VALUE.NUMBER.INTEGER.space"],
+        ["S3:VALUE.NUMBER.EXPRESSION",           "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+        ["S3:VALUE.NUMBER.SIGN",                 "S3:VALUE.NUMBER.FLOAT.space"],
+        ["S3:VALUE.NUMBER.SIGN",                 "S3:VALUE.NUMBER.COMPLEX.space"],
+        ["S3:VALUE.NUMBER.SIGN",                 "S3:VALUE.NUMBER.INTEGER.space"],
+        ["S3:VALUE.NUMBER.SIGN",                 "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+        ["S3:VALUE.NUMBER.EXPRESSION.expect_atom", "S3:VALUE.NUMBER.INTEGER.space"],
+        ["S3:VALUE.NUMBER.EXPRESSION.expect_atom", "S3:VALUE.NUMBER.FLOAT.space"],
+        ["S3:VALUE.NUMBER.EXPRESSION.expect_atom", "S3:VALUE.NUMBER.COMPLEX.space"],
+        ["S3:VALUE.NUMBER.INTEGER.expr_exit",    "S3:VALUE.NUMBER.EXPRESSION.After_op"],
+        ["S3:VALUE.NUMBER.FLOAT.expr_exit",      "S3:VALUE.NUMBER.EXPRESSION.After_op"],
+        ["S3:VALUE.NUMBER.COMPLEX.expr_exit",    "S3:VALUE.NUMBER.EXPRESSION.After_op"],
+        ["S3:VALUE.NUMBER.EXPRESSION.After_op",  "S3:VALUE.NUMBER.EXPRESSION.expect_atom"],
+        // NUMBER completion -> EXPRESSION.After_atom (so ) and operators are seen)
+        ["S3:VALUE.NUMBER.INTEGER.Integer",      "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+        ["S3:VALUE.NUMBER.FLOAT.Dec",            "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+        ["S3:VALUE.NUMBER.FLOAT.Dot_ai",         "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+        ["S3:VALUE.NUMBER.FLOAT.e_dig",          "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+        ["S3:VALUE.NUMBER.COMPLEX.j",            "S3:VALUE.NUMBER.EXPRESSION.After_atom"],
+        // NOTE: Paren warp removed — ( now triggers a call, not an epsilon jump
     ];
 
     for (const [from, to] of WARPS) addWarp(from, to);
-    return { transitions, warpMap };
+    return { transitions, warpMap, callMap, returnStates };
 }
 
 // ---------------------------------------------------------------------------
 // NFA epsilon closure
 // ---------------------------------------------------------------------------
 
-function epsilonClosure(states: Set<string>, warpMap: Map<string, Set<string>>): Set<string> {
-    const closure = new Set(states);
-    const queue = [...states];
+// function epsilonClosure(states: Set<string>, warpMap: Map<string, Set<string>>): Set<string> {
+//     const closure = new Set(states);
+//     const queue = [...states];
+//     while (queue.length > 0) {
+//         const s = queue.pop()!;
+//         const targets = warpMap.get(s);
+//         if (!targets) continue;
+//         for (const t of targets) {
+//             if (!closure.has(t)) { closure.add(t); queue.push(t); }
+//         }
+//     }
+//     return closure;
+// }
+
+// ---------------------------------------------------------------------------
+// Epsilon closure over warps and call edges (no char consumed)
+// ---------------------------------------------------------------------------
+
+function epsilonClose(
+    start: Config,
+    warpMap: Map<string, Set<string>>,
+    callMap: CallEdge[],
+    returnStates: Set<string>,
+): Config[] {
+    const result = new Map<string, Config>();
+    const queue: Config[] = [start];
+
     while (queue.length > 0) {
-        const s = queue.pop()!;
-        const targets = warpMap.get(s);
-        if (!targets) continue;
-        for (const t of targets) {
-            if (!closure.has(t)) { closure.add(t); queue.push(t); }
+        const config = queue.pop()!;
+        const key = configKey(config);
+        if (result.has(key)) continue;
+        result.set(key, config);
+
+        // Warp edges (epsilon, no stack effect)
+        const warps = warpMap.get(config.state);
+        if (warps) {
+            for (const target of warps) {
+                const next: Config = { state: target, stack: config.stack };
+                if (!result.has(configKey(next))) queue.push(next);
+            }
+        }
+
+        // Call edges: push return address, jump to callee entry
+        for (const edge of callMap) {
+            if (edge.from === config.state) {
+                const next: Config = {
+                    state: edge.callTarget,
+                    stack: [...config.stack, edge.returnTo],
+                };
+                if (!result.has(configKey(next))) queue.push(next);
+            }
         }
     }
-    return closure;
-}
 
+    return [...result.values()];
+}
 // ---------------------------------------------------------------------------
 // Semantic label matcher — no regex exposed to students
 // ---------------------------------------------------------------------------

@@ -95,9 +95,10 @@
     }
 
     function onInput() {
+        const raw = sequenceInput;
         const trimmedSeq = sequenceInput.trim();
-        dispatch("sequenceChange", trimmedSeq);
-        const output = evaluate(trimmedSeq);
+        dispatch("sequenceChange", raw);
+        const output = evaluate(raw);
 
         fsmResult    = output.fsmText;
         markovResult = output.markovText;
@@ -241,8 +242,8 @@
             <div class="resultsRow">
                 <div
                     class="resultElement"
-                    class:accepted={fsmResult?.includes("Valid")}
-                    class:rejected={fsmResult?.includes("Invalid")}
+                    class:accepted={fsmResult?.includes("✅")}
+                    class:rejected={fsmResult?.includes("❌")}
                 >
                     {fsmResult ?? "FSM: —"}
                 </div>
@@ -269,267 +270,280 @@
     </div>
 {/if}
 
+
 <style>
-    .panel{
-        background-color: snow;
-        padding: 8px 12px;
-        border: 1.5px solid lightgrey;
+    .panel {
+        background-color: #fefefe;
+        padding: 10px 14px;
+        border: 1.5px solid #e0e0e0;
         width: 100%;
         box-sizing: border-box;
+        font-family: 'Georgia', serif;
     }
 
-    .header{
+    .header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        margin-bottom: 6px;
     }
 
-    .titleRow{
+    .titleRow {
         display: flex;
-        align-items: center;
+        align-items: baseline;
         gap: 8px;
-        margin: 0;
-        font-size: 16px;
-        line-height: 1;
-        font-weight: 200;
     }
 
-    h3{
+    h3 {
+        margin: 0;
         padding: 0;
-        margin: 0;
-        line-height: 1;
-        font-weight: 200;
-        font-size: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #333;
     }
 
-    .meta{
-        font-size: 12px;
-        padding: 6px 0 8px 0;
-        margin: 6px 0 8px 0;
-        color: #666;
+    .meta {
+        font-size: 11px;
+        color: #999;
+        font-family: 'Courier New', monospace;
     }
 
-    .nav{
+    .nav {
         display: flex;
-        gap: 8px;
+        gap: 6px;
     }
 
-    .btn{
+    .btn {
         border: 1px solid #ddd;
         background: #f8f8f8;
-        padding: 6px 10px;
-        border-radius: 8px;
+        padding: 4px 10px;
+        border-radius: 4px;
         cursor: pointer;
-        font-size: 13px;
+        font-size: 12px;
+        color: #444;
+        transition: background 0.1s, border-color 0.1s;
     }
 
-    .btn:hover:not(:disabled){
-        background: #eef4ff;
+    .btn:hover:not(:disabled) {
+        background: #eef;
         border-color: #aac4f0;
     }
 
-    .btn:disabled{
-        opacity: 0.5;
+    .btn:disabled {
+        opacity: 0.4;
         cursor: not-allowed;
     }
 
-    .prompt{
-        margin: 0 0 8px 0;
-        font-size: 14px;
+    .prompt {
+        margin: 0 0 10px 0;
+        font-size: 13px;
+        color: #222;
+        line-height: 1.5;
     }
 
-    .inputRow{
+    /* ── Side-by-side input row ── */
+    .inputRow {
         display: flex;
         align-items: flex-end;
         gap: 10px;
-        margin: 6px 0 8px 0;
-        flex-wrap: wrap;
+        margin-bottom: 8px;
     }
 
-    .inputWrap{
+    .inputWrap {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
         flex: 1 1 0;
         min-width: 0;
     }
 
-    .boxLabel{
-        font-size: 12px;
-        color: #666;
-        margin: 0;
-    }
-
-    .completionLabelRow{
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    input[type="text"]{
-        width: 100%;
-        box-sizing: border-box;
-        padding: 8px 10px;
-        font-size: 14px;
-        border: 1px solid #ddd;
-        margin: 0;
-        border-radius: 0;
-        background: white;
-    }
-
-    input[type="text"]:focus{
-        outline: none;
-        border-color: #aac4f0;
-    }
-
-    .completionBox{
-        width: 100%;
-        box-sizing: border-box;
-        padding: 8px 10px;
-        font-size: 14px;
-        border: 1px solid #ddd;
-        background: #f8f8f8;
-        min-height: 38px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        color: #111;
-    }
-
-    .placeholder{
+    .boxLabel {
+        font-size: 10px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
         color: #999;
+        font-family: 'Courier New', monospace;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 10px;
+        font-size: 13px;
+        font-family: 'Courier New', monospace;
+        border: 1.5px solid #ddd;
+        border-radius: 4px;
+        background: #fff;
+        color: #111;
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+        border-color: #7aabf0;
+    }
+
+    /* The read-only completion box — mirrors input height/padding exactly */
+    .completionBox {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 10px;
+        font-size: 13px;
+        font-family: 'Courier New', monospace;
+        border: 1.5px solid #e8e8e8;
+        border-radius: 4px;
+        background: #f9f9fb;
+        min-height: 34px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        color: #111;
+        line-height: 1.4;
+    }
+
+    .placeholder {
+        color: #bbb;
+        font-style: italic;
         font-size: 12px;
     }
 
-    .typed{
-        color: inherit;
+    /* Typed portion — normal weight, slightly muted */
+    .typed {
+        color: #333;
     }
 
-    .predicted{
+    /* Predicted portion — visually distinct: blue, slightly lighter */
+    .predicted {
         color: #4a7fd4;
         background: #eef4ff;
-        border-radius: 3px;
-        padding: 0 2px;
+        border-radius: 2px;
+        padding: 0 1px;
+        font-style: italic;
     }
 
-    .arrow{
+    /* Arrow between boxes */
+    .arrow {
         font-size: 16px;
-        color: #999;
-        padding-bottom: 8px;
+        color: #ccc;
+        padding-bottom: 7px; /* align with input baseline */
         flex: 0 0 auto;
         user-select: none;
     }
 
-    .resultsRow{
+    /* ── Result pills ── */
+    .resultsRow {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
+        margin-bottom: 4px;
     }
 
-    .resultElement{
-        border: 1px solid #ddd;
+    .resultElement {
+        border: 1px solid #e0e0e0;
         background: #f8f8f8;
-        padding: 6px 10px;
-        border-radius: 888px;
-        font-size: 12px;
-    }
-
-    .resultElement.accepted{
-        border-color: #6abf69;
-        background: #edfaed;
-        color: inherit;
-    }
-
-    .resultElement.rejected{
-        border-color: #e07070;
-        background: #fdeaea;
-        color: inherit;
-    }
-
-    .progressRow{
-        min-height: 20px;
-    }
-
-    .status{
-        font-size: 12px;
-        color: #666;
-    }
-
-    .status.correct{
-        color: #2a7a28;
-    }
-
-    .status.trying{
-        color: #666;
-    }
-
-    .confidencePill{
+        padding: 4px 10px;
+        border-radius: 999px;
         font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 888px;
-        border: 1px solid #ddd;
-        background: #f8f8f8;
-        color: #666;
+        font-family: 'Courier New', monospace;
+        color: #555;
+        transition: background 0.2s, border-color 0.2s;
     }
 
-    .confidence-high{
+    .resultElement.accepted {
         border-color: #6abf69;
         background: #edfaed;
         color: #2a7a28;
     }
 
-    .confidence-medium{
-        border-color: #e0c060;
-        background: #fdf9e0;
-        color: #7a6010;
-    }
-
-    .confidence-low{
+    .resultElement.rejected {
         border-color: #e07070;
         background: #fdeaea;
         color: #922;
     }
 
-    .beamToggle{
-        margin-top: 4px;
-        background: none;
-        border: none;
-        font-size: 12px;
-        color: #4a7fd4;
-        cursor: pointer;
-        padding: 0;
-        text-align: left;
+    /* ── Progress row ── */
+    .progressRow {
+        min-height: 18px;
     }
 
-    .beamToggle:hover{
-        color: #2f66c7;
+    .status {
+        font-size: 11px;
+        font-family: 'Courier New', monospace;
     }
 
-    .beamList{
-        margin-top: 6px;
+    .status.correct {
+        color: #2a7a28;
+    }
+
+    .status.trying {
+        color: #999;
+    }
+
+    /* ── Completion label row (label + confidence pill) ── */
+    .completionLabelRow {
         display: flex;
-        flex-direction: column;
+        align-items: center;
         gap: 6px;
     }
 
-    .beamRow{
+    .confidencePill {
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-family: 'Courier New', monospace;
+        padding: 1px 6px;
+        border-radius: 999px;
+        border: 1px solid #ddd;
+        background: #f4f4f4;
+        color: #888;
+    }
+    .confidence-high   { border-color: #6abf69; background: #edfaed; color: #2a7a28; }
+    .confidence-medium { border-color: #e0c060; background: #fdf9e0; color: #7a6010; }
+    .confidence-low    { border-color: #e07070; background: #fdeaea; color: #922; }
+
+    /* ── Alternate beams ── */
+    .beamToggle {
+        margin-top: 4px;
+        background: none;
+        border: none;
+        font-size: 10px;
+        color: #7aabf0;
+        cursor: pointer;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        letter-spacing: 0.04em;
+        text-align: left;
+    }
+    .beamToggle:hover { color: #4a7fd4; }
+
+    .beamList {
+        margin-top: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .beamRow {
         display: flex;
         align-items: baseline;
-        gap: 8px;
-        padding: 6px 10px;
-        background: #f8f8f8;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        gap: 6px;
+        padding: 4px 8px;
+        background: #f5f7fc;
+        border: 1px solid #e4eaf6;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
         font-size: 12px;
     }
 
-    .beamRank{
-        font-size: 11px;
-        color: #888;
+    .beamRank {
+        font-size: 9px;
+        color: #aaa;
         flex: 0 0 auto;
     }
 
-    .beamText{
+    .beamText {
         flex: 1 1 0;
         min-width: 0;
         overflow: hidden;
@@ -537,52 +551,44 @@
         white-space: nowrap;
     }
 
-    .beamProb{
-        font-size: 11px;
-        color: #888;
+    .beamProb {
+        font-size: 9px;
+        color: #aaa;
         flex: 0 0 auto;
     }
 
-    .prefixProb{
-        color: #666;
-        font-size: 12px;
+    /* ── Prefix probability pill ── */
+    .prefixProb {
+        font-style: italic;
+        color: #7a7a9a;
     }
 
-    .choiceList{
+
+    .choiceList {
         display: flex;
         flex-direction: column;
         gap: 6px;
         margin: 8px 0;
     }
 
-    .choice{
+    .choice {
         text-align: left;
         padding: 8px 12px;
         border: 1.5px solid #ddd;
-        border-radius: 8px;
+        border-radius: 6px;
         background: #f8f8f8;
         font-size: 13px;
         cursor: pointer;
         transition: background 0.15s, border-color 0.15s;
+        font-family: 'Courier New', monospace;
     }
 
-    .choice:hover{
+    .choice:hover {
         background: #eef4ff;
         border-color: #aac4f0;
     }
 
-    .choice.selected{
-        border-color: #aac4f0;
-        background: #e8f0fd;
-    }
-
-    .choice.correct{
-        border-color: #6abf69;
-        background: #edfaed;
-    }
-
-    .choice.wrong{
-        border-color: #e07070;
-        background: #fdeaea;
-    }
+    .choice.selected  { border-color: #aac4f0; background: #e8f0fd; }
+    .choice.correct   { border-color: #6abf69; background: #edfaed; }
+    .choice.wrong     { border-color: #e07070; background: #fdeaea; }
 </style>
