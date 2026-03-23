@@ -25,6 +25,7 @@
     let showEdgeLabels = false;
     let weightedThickness = true;
     let inputSequence = "";
+    let fullScreenPane: 'fsm' | 'markov' | null = null;
     const assignmentDataset: string[] =
         pythonAssignments.split("\n").map(s => s.trim()).filter(Boolean);
 
@@ -57,88 +58,10 @@
         markovFilter = extractCharacterPairs(stmt);
     }
 
-    // function evaluate(sequenceInput: string):Evaluation{
-    //     const inputTokens = sequenceInput.split("");
-    //     const completionPrediction = computeMarkovCompletion(inputTokens, markovStates, markovTransitions, mStartingStates, endState);
-
-    //     const probability = ComputeProbabilityMarkov(markovTransitions, inputTokens);
-    //     const fsmInput = completionPrediction.fullSequence;
-    //     const accepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
-    //     const predictedStr = completionPrediction.predictedTokens.join("");
-    //     const markovText = completionPrediction.terminatedNaturally ? `Markov predicts "${sequenceInput}[${predictedStr}]"` :` Markov predicts "${sequenceInput}[${predictedStr}]" - incomplete seqeunce`;
-    //     const fsmText = accepted ? "FSM accepted the predicted seqeunce" : "FSM rejected the predicted seqeunce";
-    //     return {accepted, probability, fsmText, markovText};
-    // }
-
-    // ---------------------------------------------------------------------------
-    // evaluate — passed to ComputeBox
-    // Auto-appends \n so the FSM can reach its accepting state via "new line"
-    // transitions without the student needing to press Enter.
-    // ---------------------------------------------------------------------------
-
-    // function evaluate(sequenceInput: string): Evaluation {
-    //     // Split into individual characters (this dataset is char-level)
-    //     const typedTokens = sequenceInput.split("");
-
-    //     // Auto-append \n so "new line" / "newline" transitions can fire
-    //     const tokensForFSM = [...typedTokens, "\n"];
-
-    //     // 1. Markov: greedily complete from the typed prefix
-    //     //    Pass typedTokens (without \n) — the Markov model doesn't know about \n
-    //     const completion = computeMarkovCompletion(
-    //         typedTokens,
-    //         markovStates,
-    //         markovTransitions,
-    //         endState,
-    //     );
-
-    //     // Build the full sequence the FSM will validate:
-    //     // typed + Markov-predicted + \n
-    //     const fsmInput = [...typedTokens, ...completion.predictedTokens, "\n"];
-
-    //     // 2. FSM: validate the completed + newline-terminated sequence
-    //     const accepted = ComputeValidityFSM(
-    //         fsmTransitions,
-    //         fsmInput,
-    //         acceptingStates,
-    //         subgraphs,
-    //         warps,
-    //     );
-
-    //     // 3. Markov probability of the typed prefix alone
-    //     const probability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
-
-    //     // 4. Human-readable result strings
-    //     const predictedStr = completion.predictedTokens.join("");
-    //     const markovText = completion.terminatedNaturally
-    //         ? `Predicts: "${sequenceInput}[${predictedStr}]"`
-    //         : `Predicts: "${sequenceInput}[${predictedStr}]" (no clean end)`;
-
-    //     const fsmText = accepted
-    //         ? `FSM:  Valid`
-    //         : `FSM:   Invalid`;
-
-    //     return {
-    //         accepted,
-    //         probability,
-    //         fsmText,
-    //         markovText,
-    //         typedTokens,
-    //         predictedTokens: completion.predictedTokens,
-    //     };
-    // }
-
-    // ---------------------------------------------------------------------------
-    // evaluate — passed to ComputeBox
-    // Auto-appends \n so the FSM can reach its accepting state via "new line"
-    // transitions without the student needing to press Enter.
-    // ---------------------------------------------------------------------------
-
+   
     function evaluate(sequenceInput: string): Evaluation {
-        // Split into individual characters (this dataset is char-level)
         const typedTokens = sequenceInput.split("");
 
-        // 1. Beam-search Markov completion from the typed prefix
         const completion = computeMarkovCompletion(
             typedTokens,
             markovStates,
@@ -148,8 +71,6 @@
 
         const best = completion.best;
 
-        // 2. FSM: validate typed + best-beam prediction + \n
-        // const fsmInput = [...typedTokens, ...best.predictedTokens, "\n"];
         const fsmInput = [...typedTokens, "\n"];
         const accepted = ComputeValidityFSM(
             fsmTransitions,
@@ -159,13 +80,12 @@
             warps,
         );
 
-        // 3. Human-readable result strings
         const predictedStr = best.predictedTokens.join("");
         const markovText = best.terminatedNaturally
-            ? `Predicts: "${sequenceInput}[${predictedStr}]"`
-            : `Predicts: "${sequenceInput}[${predictedStr}]" (no clean end)`;
+            ? `Predicts: ${sequenceInput}[${predictedStr}]`
+            : `Predicts: ${sequenceInput}[${predictedStr}] (no clean end)`;
 
-        const fsmText = accepted ? `FSM:  Valid` : `FSM:   Invalid`;
+        const fsmText = accepted ? "FSM: Accepted" : "FSM: Rejected";
 
         const typeProbability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
         return {
@@ -187,7 +107,7 @@
     const questions: TaskQuestion[] = [
         {
             id: "q1",
-            prompt: "Type",
+            prompt: "Type any Python variable assignment you want. Is the sequence that the Markov chain predicted what you wanted to type?",
             check: ({accepted}) => accepted,
         }
     ];
@@ -217,13 +137,13 @@
           </button>
         {/each}
     </Accordion> 
-    <Accordion title="Accepting States" initiallyOpen={false}>
+    <!-- <Accordion title="Accepting States" initiallyOpen={false}>
         {#each acceptingStates as word (word)}
             <span class="word">{word}</span>
         {/each}
-    </Accordion>
+    </Accordion> -->
     <div class="graphRow">
-        <div class="fsmPane" style="width:60%;">
+        <div class="fsmPane" class:hidden={fullScreenPane === 'markov'} style="width: {fullScreenPane === 'fsm' ? '100%' : '60%'};">
             <div class="paneHeader"></div>
             <div class="fsmGraph">
                 <FsmHierarchicalViewer 
@@ -236,11 +156,13 @@
                     {weighted}       
                     {inputSequence}       
                     renderKey = {fsmRenderKey}
+                    isFullScreen={fullScreenPane === 'fsm'}
+                    on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'}
 
                 />
             </div>
         </div>
-        <div class="markovPane"style="width:40%;">
+        <div class="markovPane" class:hidden={fullScreenPane === 'fsm'} style="width: {fullScreenPane === 'markov' ? '100%' : '40%'};">
             <div class="paneHeader">
                 <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
                     <input
@@ -277,6 +199,8 @@
                 {weightedThickness}
                 {inputSequence}
                 renderKey = {fsmRenderKey}
+                isFullScreen={fullScreenPane === 'markov'}
+                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'}
             />
         </div>
         </div>
@@ -290,64 +214,9 @@
 <style>
     .page{
         min-height: 100dvh;
-        height: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 1rem;
-        background: #fafafa;  
-        box-sizing: border-box;
-        /* overflow: hidden; */
-        /* overflow-y:auto; */
     }
     .graphRow{
-        flex: 1 1 0;
         min-height: 60dvh;
-        display: flex;
-        gap: 8px;
-    }
-
-
-    .word {
-        background-color: white;
-        border: 1px solid #f3d421;
-        border-radius: 1px;
-        padding: 4px 4px;
-        font-size: 12px;
-    }
-    .stmt {
-        padding: 4px 6px;
-        cursor: pointer;
-        border-radius: 4px;
-        margin-bottom: 2px;
-    }
-    .stmt:hover {
-          background: #eef;
-    }
-    .stmt.active {
-        background: #cde1ff; 
-        border: 1px solid #6aa0ff;
-        font-weight: 600;
-    }
-    .fsmPane, .markovPane{
-        display: flex;
-        flex: 1 1 auto;
-        min-width: 0;
-        min-height: 0;
-        flex-direction: column;
-    }
-    .paneHeader{
-        display: flex;
-        flex: 0 0 20px;
-        background: whitesmoke;
-        border-bottom: 1px solid #ddd;
-        gap: 12px;
-        align-items: center;
-    }
-
-    .fsmGraph, .markovGraph{
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
     }
 </style>
+

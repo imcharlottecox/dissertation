@@ -1,40 +1,7 @@
-#!/usr/bin/env python3
-"""
-find_invisible_chars.py
------------------------
-Scans a codebase for zero-width characters, unusual unicode, and other
-invisible characters that shouldn't appear in source code.
-
-Usage:
-    python find_invisible_chars.py [directory]         -- scan, report only
-    python find_invisible_chars.py src/                -- scan src/ folder
-    python find_invisible_chars.py . --fix             -- interactive delete,
-                                                          asks before every
-                                                          change
-    python find_invisible_chars.py . --strict          -- flag EVERY character
-                                                          outside plain ASCII
-                                                          (0x00-0x7F). Nothing
-                                                          is changed.
-    python find_invisible_chars.py . --strict --fix    -- strict scan, then
-                                                          interactive delete
-
-Severity levels:
-    RED    ZERO-WIDTH  -- invisible chars, zero-width spaces, BOM, etc.
-                          these should not exist in source code at all.
-    YELLOW LOOKALIKE   -- curly quotes, en/em dashes, non-breaking spaces.
-                          may be intentional in comments or strings.
-    YELLOW CONTROL     -- other unicode format/control characters.
-    YELLOW NON-ASCII   -- anything outside 0x00-0x7F (strict mode only).
-                          includes accented chars, emoji, CJK, etc.
-
-Nothing is ever changed without your explicit confirmation.
-"""
-
 import sys
 import os
 import unicodedata
 
-# ── Characters to flag ────────────────────────────────────────────────────────
 
 ZERO_WIDTH = {
     '\u200b': 'ZERO WIDTH SPACE',
@@ -64,7 +31,6 @@ ZERO_WIDTH = {
     '\ufe0f': 'VARIATION SELECTOR-16',
 }
 
-# Lookalike characters that could replace ASCII equivalents
 LOOKALIKES = {
     '\u2013': 'EN DASH (looks like hyphen)',
     '\u2014': 'EM DASH (looks like hyphen)',
@@ -85,20 +51,16 @@ LOOKALIKES = {
     '\u0440': 'CYRILLIC SMALL R (looks like r)',
 }
 
-# File extensions to scan
 SOURCE_EXTENSIONS = {
     '.ts', '.tsx', '.svelte', '.js', '.jsx',
     '.py', '.json', '.md', '.html', '.css', '.scss',
     '.txt', '.env', '.toml', '.yaml', '.yml'
 }
 
-# Directories to skip
 SKIP_DIRS = {
     'node_modules', '.git', '.svelte-kit', 'dist',
     'build', '__pycache__', '.venv', 'venv'
 }
-
-# ── Colours ───────────────────────────────────────────────────────────────────
 
 RESET  = '\033[0m'
 RED    = '\033[91m'
@@ -116,7 +78,6 @@ def severity_colour(severity: str) -> str:
         'NON-ASCII':  YELLOW,
     }.get(severity, RESET)
 
-# ── Scanners ──────────────────────────────────────────────────────────────────
 
 def scan_file(filepath: str) -> list[dict]:
     """
@@ -161,12 +122,6 @@ def scan_file(filepath: str) -> list[dict]:
 
 
 def scan_file_strict(filepath: str) -> list[dict]:
-    """
-    Strict scan: flags every character outside plain ASCII (0x00-0x7F).
-    Newlines and tabs are excluded as they are normal in source code.
-    Characters in our known lists get their specific severity label;
-    everything else gets NON-ASCII so you can decide what to do with it.
-    """
     findings = []
     try:
         with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
@@ -209,7 +164,6 @@ def walk_codebase(root: str):
             if ext in SOURCE_EXTENSIONS:
                 yield os.path.join(dirpath, filename)
 
-# ── Report printer ────────────────────────────────────────────────────────────
 
 def print_findings(filepath: str, findings: list[dict], root: str):
     rel = os.path.relpath(filepath, root)
@@ -238,14 +192,6 @@ def ask(prompt: str) -> str:
 
 def interactive_fix(filepath: str, findings: list[dict], root: str,
                     strict: bool) -> tuple[int, int]:
-    """
-    Walk through every deletable finding in this file and ask the user.
-
-    Standard mode : only ZERO-WIDTH chars are offered for deletion.
-    Strict mode   : ZERO-WIDTH and NON-ASCII chars are offered.
-    LOOKALIKE and CONTROL chars are shown as context but never auto-deleted --
-    the user must fix those manually in their editor.
-    """
     rel = os.path.relpath(filepath, root)
 
     deletable_severities = {'ZERO-WIDTH', 'NON-ASCII'} if strict else {'ZERO-WIDTH'}
@@ -306,7 +252,6 @@ def interactive_fix(filepath: str, findings: list[dict], root: str,
     if not approved:
         return 0, len(deletable)
 
-    # Apply deletions -- rebuild file tracking line/col position
     try:
         with open(filepath, 'r', encoding='utf-8', errors='replace') as fh:
             original = fh.read()
@@ -360,7 +305,6 @@ def main():
         print(f"{YELLOW}Fix mode : ON -- you will be asked before anything is deleted{RESET}")
     print()
 
-    # ── Phase 1: scan ──
     scanner = scan_file_strict if strict else scan_file
 
     total_files       = 0
@@ -378,11 +322,9 @@ def main():
     total_findings = sum(counts.values())
     flagged_files  = len(all_file_findings)
 
-    # ── Phase 2: full report ──
     for filepath, findings in all_file_findings:
         print_findings(filepath, findings, root)
 
-    # ── Summary ──
     print(f"{'─'*60}")
     print(f"{BOLD}Summary{RESET}")
     print(f"  Files scanned  : {total_files}")
@@ -408,7 +350,6 @@ def main():
 
     print()
 
-    # ── Phase 3: fix mode ──
     deletable_severities = {'ZERO-WIDTH', 'NON-ASCII'} if strict else {'ZERO-WIDTH'}
     deletable_total = sum(counts.get(s, 0) for s in deletable_severities)
 

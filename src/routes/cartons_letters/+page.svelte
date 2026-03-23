@@ -15,6 +15,7 @@
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
     import Accordion from "$lib/components/Accordion.svelte";
     import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte"
+    import { ChartNoAxesColumnDecreasing } from "lucide-react";
     let weighted = false;
     let showDirectionalColours = false;
     let showEdgeLabels =true;
@@ -23,6 +24,7 @@
     let inputSequence: string = "";
     let fsmResult: string | null = null;
     let markovResult: string | null = null;
+    let fullScreenPane: 'fsm' | 'markov' | null = null;
 
 
     function testinputSequence(){
@@ -48,7 +50,7 @@
         {
             id: "Q2",
             prompt: "Can you find a four-letter word accepted by the FSM with probability of exactly 0.1253?",
-            check: ({accepted, probability, input}) => accepted && probability === 0.1253 && input.length === 4
+            check: ({accepted, probability, input}) => accepted && probability == 0.1253 && input.length === 4
         },
         {
             id: "Q3",
@@ -94,9 +96,10 @@
         const accepted = ComputeFlatValidityFSM(fsmTransitions, fsmInput, acceptingStates, startingStates);
         const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
         const rounded_p = probability.toFixed(4);
+        console.log(parseFloat(rounded_p));
         return{
             accepted,
-            probability: rounded_p,
+            probability: parseFloat(rounded_p),
             sequence,
             fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
             markovText: `P(${markovInput}) = ${rounded_p}`
@@ -143,7 +146,7 @@
             renderKey = {fsmRenderKey}
             />
         </div> -->
-        <div class="fsmPane" style="width:50%;">
+        <div class="fsmPane" class:hidden={fullScreenPane === 'markov'} style="width: {fullScreenPane === 'fsm' ? '100%' : '50%'};">
           <div class="paneHeader"></div>
           <div class="fsmGraph">
             <FsmHierarchicalViewer 
@@ -155,6 +158,8 @@
                 {showDepth}        
                 renderKey = {fsmRenderKey}
                 {inputSequence}
+                isFullScreen={fullScreenPane === 'fsm'}
+                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'}
               />
           </div>
         </div>
@@ -166,7 +171,7 @@
             {endState}
             />
         </div> -->
-        <div class="markovPane"style="width:50%;">
+        <div class="markovPane" class:hidden={fullScreenPane === 'fsm'} style="width: {fullScreenPane === 'markov' ? '100%' : '50%'};">
           <div class="paneHeader">
             <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
               <input
@@ -193,14 +198,17 @@
           </div>
           <div class="markovGraph">
             <MarkovView 
-              {markovStates}
-              {markovTransitions}
-              {mStartingStates}
-              {endState}
-              {showDirectionalColours}
-              {showEdgeLabels}
-              {weightedThickness}
-              {inputSequence}
+                {markovStates}
+                {markovTransitions}
+                {mStartingStates}
+                {endState}
+                {showDirectionalColours}
+                {showEdgeLabels}
+                {weightedThickness}
+                {inputSequence}
+                isFullScreen={fullScreenPane === 'markov'}
+                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'}
+            
             />
           </div>
         </div>
@@ -219,7 +227,7 @@
             {fsmResult}
         </div>            
             {markovResult} -->
-        <ChallengePanel {questions} {evaluate} on:sequenceChange={(e) => { inputSequence = e.detail; }}/>
+        <ChallengePanel {questions} {evaluate} showPrediction={false} on:sequenceChange={(e) => { inputSequence = e.detail; }}/>
     </div>
 </main>
 
@@ -227,61 +235,19 @@
 <style>
     .page{
         min-height: 100dvh;
-        height: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 1rem;
-        background: #fafafa;  
-        box-sizing: border-box;
-        /* overflow: hidden; */
-        /* overflow-y:auto; */
+        overflow: hidden;
     }
     .graphRow{
-        flex: 1 1 0;
         min-height: 60dvh;
-        display: flex;
-        gap: 8px;
     }
-    .fsmPane, .markovPane{
-        display: flex;
-        flex: 1 1 auto;
-        min-width: 0;
-        min-height: 0;
-        flex-direction: column;
-    }
+
     .paneHeader{
-        display: flex;
+        /* display: flex;
         flex: 0 0 20px;
         background: whitesmoke;
         border-bottom: 1px solid #ddd;
         gap: 12px;
-        align-items: center;
+        align-items: center; */
     }
-    .fsmGraph, .markovGraph{
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
-    }
-    h3{
-        margin: 0 0 4px 0; 
-        font-size: 16px; 
-    }
-    .box {
-        border: 1.5px solid lightgrey;
-        border-radius: 4px;
-        padding: 8px;
-        margin: 8px;
-        background-color: snow;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-    .word {
-        background-color: white;
-        border: 1px solid #f3d421;
-        border-radius: 1px;
-        padding: 4px 4px;
-        font-size: 14px;
-    }
+   
 </style>

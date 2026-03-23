@@ -2,7 +2,9 @@ import * as d3 from "d3";
 import type { HGraph, HStateNode, EdgeRenderingData, HEdge} from "$lib/graph/graphTypes"
 // import { createDragNoSim } from "$lib/graph/graphBehaviours";
 import { benchRows, measure } from "$lib/benchmarking/profiler";
-    export type RenderContext = {
+import { NODE_COLOURS, NODE_STROKES } from "$lib/graph/nodeColours";
+
+export type RenderContext = {
     g: d3.Selection<SVGGElement, unknown, null, undefined>;
     hg: HGraph;
     nodeRadius: number;
@@ -73,28 +75,37 @@ export function drawNodes(context: RenderContext, drag: d3.DragBehavior<SVGGElem
                 .call(drag)
             n.append("circle")
                 .attr("r", nodeRadius)
-                .attr("fill", d => acceptingStates.includes(d.id) ? "lightgreen" : startingStates.includes(d.id) ? "lightgrey" :"lightblue")
-                .attr("stroke", "black")
-                .attr("stroke-width", d => (acceptingStates.includes(d.id) ? 3 : 0.5));
-
+                .attr("fill", d => acceptingStates.includes(d.id) ? NODE_COLOURS.accepting : startingStates.includes(d.id) ? NODE_COLOURS.starting : NODE_COLOURS.regular)
+                .attr("stroke", d => acceptingStates.includes(d.id) ? NODE_STROKES.accepting : startingStates.includes(d.id) ? NODE_STROKES.starting : NODE_STROKES.regular)
+                // .attr("stroke-width", d => (acceptingStates.includes(d.id) ? 2.5 : 0.5));
+                .attr("stroke-width", d => {
+                    if (d.kind !== "base") return 0.8;
+                    if (startingStates.includes(d.id) || acceptingStates.includes(d.id)) return 2.5;
+                    return 1.5;
+                });
             // n.append("text")
             //     .attr("text-anchor", "middle")
             //     .attr("dy", 4)
             //     .attr("font-size", 9)
             //     .text(d => d.displayName);
-
+            n.filter(d => d.kind === "base" && acceptingStates.includes(d.id))
+                .append("circle")
+                .attr("r", nodeRadius - 3)
+                .attr("fill", "none")
+                .attr("stroke", NODE_STROKES.accepting)
+                .attr("stroke-width", 1.5);
             const label = n.append("g").attr("class", "label");
-            label.append("text")
-            .attr("class", "label-stroke")
-            .attr("text-anchor", "middle")
-            .attr("font-size", 10)
-            .attr("x", 0)
-            .attr("y", 0)
-            .attr("stroke", "white")
-            .attr("stroke-width", 1)
-            .attr("fill", "none")
-                    .attr("dominant-baseline", "middle")
-            .attr("paint-order", "stroke");
+            // label.append("text")
+            // .attr("class", "label-stroke")
+            // .attr("text-anchor", "middle")
+            // .attr("font-size", 10)
+            // .attr("x", 0)
+            // .attr("y", 0)
+            // .attr("stroke", "white")
+            // .attr("stroke-width", 1)
+            // .attr("fill", "none")
+            //         .attr("dominant-baseline", "middle")
+            // .attr("paint-order", "stroke");
 
             label.append("text")
             .attr("class", "label-main")

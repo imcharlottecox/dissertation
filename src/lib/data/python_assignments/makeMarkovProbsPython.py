@@ -2,6 +2,8 @@ import json
 from collections import defaultdict
 import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "utilities"))
+from parse_helpers import normalise_probabilities
 
 BASE_DIR = Path(__file__).parent.parent / "ca_letters"
 
@@ -9,11 +11,11 @@ BASE_DIR = Path(__file__).parent.parent / "ca_letters"
 INPUT_FILE = BASE_DIR / "ca_words.txt"
 OUTPUT_FILE = BASE_DIR / "ca_letters_markov.json"
 
-def normalise_probabilities(counts):
-    total = sum(counts.values())
-    if total == 0: 
-        return {}
-    return {k: v / total for k, v in counts.items()}
+# def normalise_probabilities(counts):
+#     total = sum(counts.values())
+#     if total == 0: 
+#         return {}
+#     return {k: v / total for k, v in counts.items()}
 
 def main():
     transition_counts = defaultdict(lambda: defaultdict(int))

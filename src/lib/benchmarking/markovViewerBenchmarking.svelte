@@ -405,7 +405,7 @@
         t = performance.now();
         edgeLayer.select("title").remove(); // avoid duplicates
         edgeLayer.append("title").text(
-            (d: { source: StateNode; target: StateNode; probability: number }) => `${d.source.id} → ${d.target.id}\nP = ${d.probability}`);
+            (d: { source: StateNode; target: StateNode; probability: number }) => `${d.source.id} -> ${d.target.id}\nP = ${d.probability}`);
         benchmarkReport("edgeRender:edges_titles", performance.now() - t);
                 
         

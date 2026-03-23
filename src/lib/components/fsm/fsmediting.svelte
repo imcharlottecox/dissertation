@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
+    const dispatch = createEventDispatcher();
     import * as d3 from "d3";
     import type { fTransition, Subgraph, Warp, EdgeRenderDatum, StateNode, HGraph, HStateNode, HEdge, EdgeRenderingData } from "$lib/graph/graphTypes";
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
@@ -21,7 +22,8 @@
     export let showDepthBox: boolean = true;
     let depthText = "";
     export let renderKey: string = "";
-    export let inputSequence: string = "";
+    export let inputSequence: string ="";
+    export let isFullScreen: boolean = false;
     let lastRenderKey = "";
     let lastViewportKey = "";
     let g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -62,8 +64,6 @@
         edges: new Map<string, HEdge>(),
         activeSubgraphs: new Set<string>()
     };
-
-    
 
     function resetBaseNodesToCanon(){
         for (const n of hg.nodes.values()){
@@ -118,7 +118,6 @@
             .duration(150)
             .call(zoomBehaviour.transform as any, d3.zoomIdentity);  
     }
-    // Depth-indexed base colours — depth 1 lightest, deeper nests darken.
     const HALO_BASE_COLOURS: Record<number, string> = {
         1: "#bde0fe",
         2: "#c8b6e2",
@@ -267,6 +266,7 @@
         });
     }
 
+    //TODO EDIT
     function expandSubgraph(parentId: string){
         const sg = subgraphs[parentId];
         if (!sg) {
@@ -311,15 +311,11 @@
         let containerRect: Rect | null = null;
 
         if (sg.parentState){
-            // containerId = findContainingParentSubgraphId(anchorId); //the anchor node parent
-            // containerId = sg.parentState;
             containerId = hg.nodes.get(anchorId)?.parent ?? null;
             containerRect = subgraphRects.get(containerId) ?? null;
 
             if (!containerRect) return;
 
-            // Only clamp if the centred rect escapes the container bounds
-            // preserves vertical centering around the anchor whenever possible
             const PAD = 20;
             const escapes = rect.x < containerRect.x + PAD
                 || rect.x + rect.w > containerRect.x + containerRect.w - PAD
@@ -416,7 +412,7 @@
 
             //warp edges for entry exit skipping ports bc theyre invisible
         if (entryWarp) {
-            for (const t of sg.transitions.filter(t => t.from === sg.entry && t.to !== sg.exit && !/^\($/i.test(t.label ?? ""))){
+            for (const t of sg.transitions.filter(t => t.from === sg.entry && t.to !== sg.exit)){
                 const toId = mkNodeId(parentId, t.to);
                 const edgeId = `warpIn:${parentId}:${entryWarp.from}-${toId}-${t.label ?? "undefined"}`;
                 hg.edges.set(edgeId, {
@@ -469,24 +465,14 @@
             }
         }
 
-        // Cross-warps: handle warps like { from: 'S3:VALUE.NUMBER.SIGN', into: 'S3:VALUE.NUMBER.FLOAT.space' }
-        // These connect a sub-node from a sibling subgraph directly into this subgraph's entry.
-        //
-        // Key guard: source must be a visible SUB-node (parent !== null).
-        // Without this, base nodes like S2:EQUAL and the hidden anchor node also pass the
-        // intoParent/intoEntry filter, creating duplicate ghost edges on top of the real ones.
         for (const w of warps) {
             if (!w.into) continue;
             const { warpParent: intoParent, warpEntryExit: intoEntry } = splitWarp(w.into);
             if (intoParent !== parentId) continue;
             if (intoEntry !== sg.entry) continue;
             const sourceNode = hg.nodes.get(w.from);
-            // Only fire for visible sub-nodes — not base nodes or hidden anchors
             if (!sourceNode || !sourceNode.visible || sourceNode.parent === null) continue;
-            // Skip self-warps (anchor pointing into its own subgraph)
             if (w.from === parentId) continue;
-            // Mirror the entry transitions exactly — same targets and labels as the normal
-            // entryWarp fan-out, just sourced from w.from (e.g. SIGN) instead of S2:EQUAL.
             for (const t of sg.transitions.filter(t => t.from === sg.entry && t.to !== sg.exit)) {
                 const toId = mkNodeId(parentId, t.to);
                 if (!hg.nodes.has(toId)) continue;
@@ -776,9 +762,7 @@
         drawHalos();
         drawEdges(context);
         drawNodes(context, dragBehaviour);
-
-        if (inputSequence && inputSequence.trim()) drawPathHighlight();
-    }
+        if(inputSequence&& inputSequence.trim()) drawPathHighlight();
 
         // context.g.select("g.nodes")
         //     .selectAll<SVGGElement, HStateNode>("g.node")
@@ -794,7 +778,7 @@
 
         // applyFocusOpacity(context);
         // drawDebugNodeRects();
-    // }
+    }
 
     function runBenchmark(n: number){
         measure("buildBaseHGraph", n, () => buildBaseHGraph());
@@ -826,16 +810,9 @@
         //initial render and props sorted here
         const svg = d3.select(svgElement);
         drawArrowheads(svg);
-        g = addContentGroup(svg);
-        if (g.select("g.path-highlight").empty()) {
-            g.insert("g", "g.labels").attr("class", "path-highlight").attr("pointer-events", "none");
-        }
+        g = addContentGroup(svg);       
         measureHeight();
-        dragBehaviour = createDragNoSim(() => {
-            drawEdges(makeContext());
-            drawHalos();
-            if (inputSequence && inputSequence.trim()) drawPathHighlight();
-        });
+        dragBehaviour = createDragNoSim(() => { drawEdges(makeContext()); drawHalos(); });
 
         
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
@@ -850,7 +827,7 @@
                 lastZoomK = event.transform.k;
                 if (event.sourceEvent instanceof WheelEvent ){ //TODO: MORE SOPHISTICATED DIFFERENTIATION BETWEEN WHEEL AND BUTTON EVENT FOR MOBILE PINCH AND ZOOM
                     lastZoomK = event.transform.k;
-                    if (Math.abs(lastZoomK - lastSemanticZoomK) > 1e-3){
+                    if (Math.abs(lastZoomK - lastSemanticZoomK) > 0.05){
                         lastSemanticZoomK = lastZoomK;
                         requestAnimationFrame(semanticTickGuard); //for throttling
                     }
@@ -869,10 +846,12 @@
         lastRenderKey = renderKey;
         rerunHGraph();
     }
+    $: if(mounted && isFullScreen !== undefined){
+        requestAnimationFrame(() => { measureHeight(); rerenderGraph();});
+    } 
     $: showDepthBox = Object.keys(subgraphs ?? {}).length > 0;
     $: if (!showDepthBox) depthText = "";
 
- 
     const HIGHLIGHT_COLOUR = "#f72585";
     const TRAVEL_MS        = 350;
     const FADE_MS          = 600;
@@ -1030,6 +1009,7 @@
     <svg bind:this={svgElement}></svg>
 
     <div class="zoomControls">
+        <button type="button" class="zoomButton" title="{isFullScreen ? 'Exit fullscreen' : 'Expand'}" on:click={() => dispatch('toggleFullscreen')}>{isFullScreen ? '✕' : '⤢'}</button>
         <button type="button" class="zoomButton" on:click={zoomIn}>+</button>
         <button type="button" class="zoomButton" on:click={zoomOut}>-</button>
         <button type="button" class="zoomButton" on:click={zoomReset}>⟳</button>

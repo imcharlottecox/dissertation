@@ -1,13 +1,12 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
+    const dispatch = createEventDispatcher();
     import * as d3 from "d3";
     import type { HGraph, HStateNode, HEdge } from "$lib/graph/graphTypes";
-    import { getGraphDefaultsMarkov } from "$lib/graph/graphDefaults";
+    import { NODE_COLOURS, NODE_STROKES, sectionColour } from "$lib/graph/nodeColours";
     import { createDragNoSim, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from "$lib/graph/graphBehaviours";
 
-    // -------------------------------------------------------------------------
-    // Props
-    // -------------------------------------------------------------------------
+   
     export let markovStates: string[] = [];
     export let markovTransitions: { from: string; to: string; probability: number }[] = [];
     export let mStartingStates: string[] = [];
@@ -18,29 +17,23 @@
         markovTransitions: { from: string; to: string; probability: number }[];
     }> = {};
     export let renderKey: string = "";
-    /** Live sequence string from the compute box — drives path highlighting */
     export let inputSequence: string = "";
+    export let isFullScreen: boolean = false;
 
-    // -------------------------------------------------------------------------
-    // Constants
-    // -------------------------------------------------------------------------
-    const ZOOM_EXPAND_THRESHOLD = 1.8;
+    export let filterPairs: [string, string][] = [];
+    
+    export let expandSectionId: string = "";
+
+   
+   
+    const ZOOM_EXPAND_THRESHOLD = 1.2;
     const BASE_NODE_RADIUS = 15;
     const WORD_NODE_RADIUS = 12;
     const LABEL_OFFSET = 6;
 
-    const SECTION_COLOURS: Record<string, string> = {
-        verse:     "#bde0fe",
-        chorus:    "#ffc8dd",
-        prechorus: "#cdb4db",
-        bridge:    "#b9fbc0",
-        outro:     "#fde8b0",
-    };
-    const DEFAULT_COLOUR = "#e0e0e0";
 
-    // -------------------------------------------------------------------------
-    // DOM / D3 refs
-    // -------------------------------------------------------------------------
+   
+   
     let svgElement: SVGSVGElement;
     let wrapperElement: HTMLDivElement;
     let g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -56,9 +49,15 @@
     let mounted = false;
     let lastRenderKey = "";
 
-    // -------------------------------------------------------------------------
-    // HGraph state
-    // -------------------------------------------------------------------------
+    $: filterActiveNodes = filterPairs.length > 0
+        ? new Set<string>(filterPairs.flatMap(([a, b]) => [a, b]))
+        : null; 
+    $: filterActiveEdges = filterPairs.length > 0
+        ? new Set<string>(filterPairs.map(([a, b]) => `${a}|${b}`))
+        : null;
+
+   
+   
     let hg: HGraph = {
         nodes: new Map<string, HStateNode>(),
         edges: new Map<string, HEdge>(),
@@ -67,11 +66,12 @@
     let canonicalSectionPos = new Map<string, { x: number; y: number }>();
     let hiddenEdgesBySection = new Map<string, string[]>();
 
-    // -------------------------------------------------------------------------
+   
     // Helpers
-    // -------------------------------------------------------------------------
+   
     function measureHeight() {
-        const r = wrapperElement.getBoundingClientRect();
+        const container = wrapperElement.parentElement ?? wrapperElement;
+        const r = container.getBoundingClientRect();
         graphWidth = Math.max(1, Math.floor(r.width));
         graphHeight = Math.max(1, Math.floor(r.height));
         d3.select(svgElement).attr("width", graphWidth).attr("height", graphHeight);
@@ -82,14 +82,13 @@
     }
 
     function nodeColour(d: HStateNode): string {
-        if (d.kind === "base") return SECTION_COLOURS[d.id] ?? DEFAULT_COLOUR;
-        const base = SECTION_COLOURS[d.parent ?? ""] ?? DEFAULT_COLOUR;
+        if (d.kind === "base") return sectionColour(d.id);
+        const base = sectionColour(d.parent ?? "");
         return d3.color(base)?.brighter(0.7)?.formatHex() ?? "#f5f5f5";
     }
 
-    // -------------------------------------------------------------------------
-    // Layout — top-down BFS, matching old Markov viewer convention
-    // -------------------------------------------------------------------------
+   
+   
     function computeSectionLayout(): Map<string, { x: number; y: number }> {
         const adj = new Map<string, string[]>();
         for (const t of markovTransitions) {
@@ -119,30 +118,113 @@
             byLevel.get(l)!.push(s);
         }
 
-        // BFS level → Y, siblings spread horizontally (matches old Markov viewer)
-        const pad = 60;
-        const innerW = graphWidth - 2 * pad;
-        const innerH = graphHeight - 2 * pad;
-        const rowSpacing = innerH / Math.max(maxLvl, 1);
+        const pad    = 60;
+        const COL_W  = 56;   // px between nodes horizontally
+        const ROW_H  = 46;   // px between wrapped rows within the same BFS level
+        const LEVEL_GAP = 60; // px between distinct BFS levels
+        const maxNodesPerRow = Math.max(2, Math.floor((graphWidth - 2 * pad) / COL_W));
+
+        function intraLevelOrder(levelNodes: string[]): string[] {
+            const nodeSet = new Set(levelNodes);
+            const intraAdj = new Map<string, string[]>();
+            const intraDeg = new Map<string, number>();
+            for (const n of levelNodes) { intraAdj.set(n, []); intraDeg.set(n, 0); }
+            for (const t of markovTransitions) {
+                if (nodeSet.has(t.from) && nodeSet.has(t.to)) {
+                    intraAdj.get(t.from)!.push(t.to);
+                    intraAdj.get(t.to)!.push(t.from);
+                    intraDeg.set(t.from, (intraDeg.get(t.from) ?? 0) + 1);
+                    intraDeg.set(t.to,   (intraDeg.get(t.to)   ?? 0) + 1);
+                }
+            }
+            const seedOrder = [...levelNodes].sort((a, b) => (intraDeg.get(b) ?? 0) - (intraDeg.get(a) ?? 0));
+            const visited = new Set<string>();
+            const ordered: string[] = [];
+            const q: string[] = [];
+            for (const seed of seedOrder) {
+                if (visited.has(seed)) continue;
+                q.push(seed); visited.add(seed);
+                while (q.length) {
+                    const cur = q.shift()!;
+                    ordered.push(cur);
+                    const nbs = (intraAdj.get(cur) ?? [])
+                        .filter(n => !visited.has(n))
+                        .sort((a, b) => (intraDeg.get(b) ?? 0) - (intraDeg.get(a) ?? 0));
+                    for (const nb of nbs) { visited.add(nb); q.push(nb); }
+                }
+            }
+            return ordered;
+        }
+
+        // Build physical rows in BFS level order
+        type PhysRow = { nodes: string[]; level: number };
+        const physRows: PhysRow[] = [];
+        const allSingletons = Array.from(byLevel.values()).every(arr => arr.length === 1);
+
+        for (const lvl of Array.from(byLevel.keys()).sort((a, b) => a - b)) {
+            const nodes = byLevel.get(lvl)!;
+            if (nodes.length <= maxNodesPerRow || allSingletons) {
+                physRows.push({ nodes, level: lvl });
+            } else {
+                const ordered = intraLevelOrder(nodes);
+                for (let i = 0; i < ordered.length; i += maxNodesPerRow)
+                    physRows.push({ nodes: ordered.slice(i, i + maxNodesPerRow), level: lvl });
+            }
+        }
+
+        const proportionalLevelSpacing = (graphHeight - 2 * pad) / Math.max(maxLvl, 1);
+        const maxRowsInAnyLevel = Math.max(
+            ...Array.from(byLevel.keys()).map(lvl => {
+                const n = byLevel.get(lvl)!.length;
+                return Math.ceil(n / maxNodesPerRow);
+            })
+        );
+        const fits = proportionalLevelSpacing >= maxRowsInAnyLevel * ROW_H * 1.15; // 15% breathing room
 
         const positions = new Map<string, { x: number; y: number }>();
-        for (const [lvl, nodes] of byLevel) {
-            const y = pad + lvl * rowSpacing;
-            const colSpacing = innerW / (nodes.length + 1);
-            nodes.forEach((id, i) => {
-                positions.set(id, { x: pad + colSpacing * (i + 1), y });
+
+        if (fits) {
+            const innerH = graphHeight - 2 * pad;
+            const levelSpacing = innerH / Math.max(maxLvl, 1);
+            const levelRows = new Map<number, PhysRow[]>();
+            for (const row of physRows) {
+                if (!levelRows.has(row.level)) levelRows.set(row.level, []);
+                levelRows.get(row.level)!.push(row);
+            }
+            for (const [lvl, rows] of levelRows) {
+                const levelCentreY = pad + lvl * levelSpacing;
+                const totalRowsH   = (rows.length - 1) * ROW_H;
+                rows.forEach((row, ri) => {
+                    const y = levelCentreY - totalRowsH / 2 + ri * ROW_H;
+                    const innerW = graphWidth - 2 * pad;
+                    const colSpacing = innerW / (row.nodes.length + 1);
+                    row.nodes.forEach((id, i) => {
+                        positions.set(id, {
+                            x: pad + colSpacing * (i + 1),
+                            y,
+                        });
+                    });
+                });
+            }
+        } else {
+            let currentY = pad;
+            let lastLevel = -1;
+            physRows.forEach(row => {
+                if (lastLevel !== -1 && row.level !== lastLevel) currentY += LEVEL_GAP;
+                lastLevel = row.level;
+                const rowW = (row.nodes.length - 1) * COL_W;
+                row.nodes.forEach((id, i) => {
+                    positions.set(id, {
+                        x: graphWidth / 2 + (row.nodes.length === 1 ? 0 : -rowW / 2 + i * COL_W),
+                        y: currentY,
+                    });
+                });
+                currentY += ROW_H;
             });
         }
-        // Pin starting state to top centre
-        positions.set(start, { x: graphWidth / 2, y: pad });
 
-        // Subtle zigzag: when every BFS level has exactly one node (pure linear
-        // chain), all nodes are collinear and back/skip edges are invisible.
-        // Nudge odd levels slightly right so back-edges get a visible angle,
-        // without destroying the clean vertical feel.
-        const allSingletons = Array.from(byLevel.values()).every(arr => arr.length === 1);
         if (allSingletons && maxLvl >= 2) {
-            const ZIG = 55; // px — small enough to feel intentional, not accidental
+            const ZIG = 55;
             for (const [lvl, nodes] of byLevel) {
                 if (lvl === 0) continue;
                 const pos = positions.get(nodes[0])!;
@@ -150,13 +232,10 @@
             }
         }
 
+
         return positions;
     }
 
-    /**
-     * Top-down BFS layout for a word chain, centred around its anchor.
-     * Positions are keyed by raw word id (before namespacing).
-     */
     function computeWordChainLayout(
         sectionId: string,
         anchorX: number,
@@ -202,21 +281,9 @@
 
         const allSingletons = Array.from(byLevel.values()).every(arr => arr.length === 1);
 
-        /**
-         * For a wide level: reorder nodes using a mini BFS over *intra-level*
-         * edges only. This groups nodes that transition to each other adjacently
-         * so wrapped rows are locally meaningful rather than arbitrary chunks.
-         *
-         * Strategy:
-         *  1. Build a bidirectional adjacency restricted to this level's node set.
-         *  2. BFS from the node with the highest intra-level out-degree (most
-         *     connected = best "spine seed"), visit neighbours in degree order.
-         *  3. Any unreached nodes (isolated within the level) are appended at end.
-         */
         function intraLevelOrder(levelNodes: string[]): string[] {
             const nodeSet = new Set(levelNodes);
 
-            // Intra-level adjacency (directed, but we'll treat as undirected for BFS)
             const intraAdj = new Map<string, string[]>();
             const intraDeg = new Map<string, number>();
             for (const n of levelNodes) { intraAdj.set(n, []); intraDeg.set(n, 0); }
@@ -230,7 +297,6 @@
                 }
             }
 
-            // Seed from highest-degree node; if all isolated, keep original order
             const sorted = [...levelNodes].sort((a, b) => (intraDeg.get(b) ?? 0) - (intraDeg.get(a) ?? 0));
             const visited = new Set<string>();
             const ordered: string[] = [];
@@ -238,13 +304,11 @@
 
             for (const seed of sorted) {
                 if (visited.has(seed)) continue;
-                // Start a new connected component
                 bfsQ.push(seed);
                 visited.add(seed);
                 while (bfsQ.length) {
                     const cur = bfsQ.shift()!;
                     ordered.push(cur);
-                    // Visit neighbours in descending degree order for a denser-first spread
                     const neighbours = (intraAdj.get(cur) ?? [])
                         .filter(n => !visited.has(n))
                         .sort((a, b) => (intraDeg.get(b) ?? 0) - (intraDeg.get(a) ?? 0));
@@ -255,7 +319,6 @@
             return ordered;
         }
 
-        // Build physical rows
         type PhysRow = { nodes: string[]; xOffset: number };
         const physRows: PhysRow[] = [];
 
@@ -263,10 +326,8 @@
             const nodes = byLevel.get(lvl)!;
 
             if (allSingletons) {
-                // Linear chain: zigzag
                 physRows.push({ nodes, xOffset: lvl % 2 === 1 ? ZIG : -ZIG * 0.35 });
             } else if (nodes.length * COL_W > SQUEEZE_PX && nodes.length > MAX_ROW_NODES) {
-                // Wide level: reorder by intra-level connectivity, then wrap into rows
                 const ordered = intraLevelOrder(nodes);
                 for (let i = 0; i < ordered.length; i += MAX_ROW_NODES)
                     physRows.push({ nodes: ordered.slice(i, i + MAX_ROW_NODES), xOffset: 0 });
@@ -275,7 +336,6 @@
             }
         }
 
-        // Assign positions
         const totalH = Math.max(physRows.length * ROW_H, 80);
         const topY   = anchorY - totalH / 2;
         const positions = new Map<string, { x: number; y: number }>();
@@ -294,9 +354,9 @@
         return positions;
     }
 
-    // -------------------------------------------------------------------------
+   
     // HGraph build
-    // -------------------------------------------------------------------------
+   
     function buildBaseHGraph() {
         hg.nodes.clear();
         hg.edges.clear();
@@ -326,9 +386,9 @@
         }
     }
 
-    // -------------------------------------------------------------------------
+   
     // Expand / collapse
-    // -------------------------------------------------------------------------
+   
     function expandSection(sectionId: string) {
         if (hg.activeSubgraphs.has(sectionId)) return;
         const chain = wordChains[sectionId];
@@ -424,9 +484,8 @@
         evaluating = false;
     }
 
-    // -------------------------------------------------------------------------
-    // Halo collision avoidance (single-level)
-    // -------------------------------------------------------------------------
+   
+   
     type Rect = { x: number; y: number; w: number; h: number };
 
     function sectionHaloRect(sectionId: string, pad: number): Rect | null {
@@ -477,11 +536,9 @@
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Section-level transition edges — drawn between halo borders, never through them
-    // -------------------------------------------------------------------------
+   
+   
 
-    /** Live halo rect using the same padding as drawHalos. */
     function liveHaloRect(sectionId: string): (Rect & { cx: number; cy: number }) | null {
         const HALO_PAD = WORD_NODE_RADIUS * 2.5;
         const children = Array.from(hg.nodes.values()).filter(n => n.parent === sectionId && n.visible);
@@ -495,11 +552,6 @@
         return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
     }
 
-    /**
-     * Find the point on the border of rect r that lies on the ray from r's
-     * centre toward external point (tx, ty).  This is the true centre→exterior
-     * intersection — the arrow starts/ends flush with the halo edge.
-     */
     function rectBorderPoint(r: Rect & { cx: number; cy: number }, tx: number, ty: number): { x: number; y: number } {
         const dx = tx - r.cx;
         const dy = ty - r.cy;
@@ -522,27 +574,21 @@
             const allRects = new Map<string, ReturnType<typeof liveHaloRect>>();
             for (const sid of hg.activeSubgraphs) allRects.set(sid, liveHaloRect(sid));
 
-            // Label zones: the top-left corner of each halo hosts a text label (~80×20px).
-            // Treat this as a small extra obstacle rect.
             const labelZones: Rect[] = [];
             for (const rc of allRects.values()) {
                 if (!rc) continue;
                 labelZones.push({ x: rc.x, y: rc.y, w: 90, h: 22 });
             }
 
-            // All visible sub-nodes, used as point obstacles (expanded by node radius)
             const nodeObstacles = Array.from(hg.nodes.values())
                 .filter(n => n.visible && n.kind === "sub")
                 .map(n => ({ x: n.x - WORD_NODE_RADIUS, y: n.y - WORD_NODE_RADIUS,
                              w: WORD_NODE_RADIUS * 2,   h: WORD_NODE_RADIUS * 2 }));
 
-            /** Test if a point (px, py) is inside a rect */
             function inRect(px: number, py: number, r: Rect): boolean {
                 return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
             }
 
-            /** Sample N points along a cubic bezier and test against all obstacle rects.
-             *  Returns true if the path is clear. */
             function bezierClear(
                 x1: number, y1: number, cx1: number, cy1: number,
                 cx2: number, cy2: number, x2: number, y2: number,
@@ -559,8 +605,6 @@
                 }
                 return true;
             }
-
-            /** Midpoint of a cubic bezier at t=0.5 */
             function bezierMid(x1: number, y1: number, cx1: number, cy1: number,
                                cx2: number, cy2: number, x2: number, y2: number) {
                 return {
@@ -585,19 +629,15 @@
                 const x1 = p1.x + ux * MARGIN; const y1 = p1.y + uy * MARGIN;
                 const x2 = p2.x - ux * MARGIN; const y2 = p2.y - uy * MARGIN;
 
-                // All obstacles for this specific edge:
-                // other halo rects + their label zones + sub-nodes
                 const obstacles: Rect[] = [...labelZones, ...nodeObstacles];
                 for (const [sid, rc] of allRects) {
                     if (sid === t.from || sid === t.to || !rc) continue;
                     obstacles.push({ x: rc.x, y: rc.y, w: rc.w, h: rc.h });
                 }
 
-                // Perpendicular directions (left and right of travel)
                 const perpL = { x: -uy, y:  ux };
                 const perpR = { x:  uy, y: -ux };
 
-                // Try bulge magnitudes: small first, then larger if needed
                 const bulges = [
                     Math.max(ra.w, ra.h) * 0.5,
                     Math.max(ra.w, ra.h) * 0.8,
@@ -608,7 +648,6 @@
                 let midX: number, midY: number;
                 let found = false;
 
-                // First check straight line
                 const straightClear = bezierClear(x1, y1, x1, y1, x2, y2, x2, y2, obstacles);
                 if (straightClear) {
                     pathD = `M ${x1},${y1} L ${x2},${y2}`;
@@ -616,8 +655,6 @@
                     midY = (y1 + y2) / 2 - 7;
                     found = true;
                 }
-
-                // Try left then right, at increasing bulge magnitudes
                 if (!found) {
                     outer: for (const bulge of bulges) {
                         for (const perp of [perpL, perpR]) {
@@ -637,7 +674,6 @@
                     }
                 }
 
-                // Fallback: use largest left bulge regardless
                 if (!found) {
                     const bulge = Math.max(ra.w, ra.h) * 1.2;
                     const cx1b = x1 + perpL.x * bulge; const cy1b = y1 + perpL.y * bulge;
@@ -680,9 +716,6 @@
             .text(d => d.label);
     }
 
-    // -------------------------------------------------------------------------
-    // Rendering
-    // -------------------------------------------------------------------------
     function drawHalos() {
         type HaloData = { id: string; x: number; y: number; w: number; h: number; colour: string };
         const halos: HaloData[] = [];
@@ -698,7 +731,7 @@
                 x: Math.min(...xs) - pad, y: Math.min(...ys) - pad,
                 w: Math.max(...xs) - Math.min(...xs) + pad * 2,
                 h: Math.max(...ys) - Math.min(...ys) + pad * 2,
-                colour: SECTION_COLOURS[sectionId] ?? DEFAULT_COLOUR,
+                colour: sectionColour(sectionId),
             });
         }
 
@@ -744,24 +777,29 @@
                         .call(dragBehaviour as any);
                     n.append("circle")
                         .attr("r", d => nodeRadius(d))
-                        .attr("fill", d => nodeColour(d))
+                        .attr("fill", d => {
+                            if (d.kind !== "base") return nodeColour(d);
+                            if (mStartingStates.includes(d.id)) return NODE_COLOURS.starting;
+                            if (endState.includes(d.id)) return NODE_COLOURS.accepting;
+                            return NODE_COLOURS.regular;
+                        })
                         .attr("stroke", d => {
-                            if (d.kind !== "base") return "#555";
-                            if (mStartingStates.includes(d.id)) return "#3a86ff";
-                            if (endState.includes(d.id)) return "#2dc653";
-                            return "#555";
+                            if (d.kind !== "base") return "#777";
+                            if (mStartingStates.includes(d.id)) return NODE_STROKES.starting;
+                            if (endState.includes(d.id)) return NODE_STROKES.accepting;
+                            return NODE_STROKES.regular;
                         })
                         .attr("stroke-width", d => {
                             if (d.kind !== "base") return 0.8;
-                            if (mStartingStates.includes(d.id) || endState.includes(d.id)) return 3;
+                            if (mStartingStates.includes(d.id) || endState.includes(d.id)) return 2.5;
                             return 1.5;
                         });
                     // Double ring for end states
                     n.filter(d => d.kind === "base" && endState.includes(d.id))
                         .append("circle")
-                        .attr("r", d => nodeRadius(d) - 4)
+                        .attr("r", d => nodeRadius(d) - 3)
                         .attr("fill", "none")
-                        .attr("stroke", "#2dc653")
+                        .attr("stroke", NODE_STROKES.accepting)
                         .attr("stroke-width", 1.5);
                     n.append("text")
                         .attr("text-anchor", "middle")
@@ -774,7 +812,10 @@
                 },
                 update => update.attr("transform", d => `translate(${d.x},${d.y})`),
                 exit => exit.remove(),
-            );
+            )
+            .attr("opacity", d => filterActiveNodes
+                ? (filterActiveNodes.has(d.id) ? 1 : 0.15)
+                : 1);
     }
 
     function drawEdges() {
@@ -783,6 +824,7 @@
 
         type EdgeRender = {
             id: string; label: string | undefined;
+            from: string; to: string;
             path: string; labelX: number; labelY: number;
             angle: number; strokeWidth: number;
         };
@@ -822,6 +864,7 @@
 
             return [{
                 id: e.id, label: e.label,
+                from: e.from, to: e.to,
                 path, labelX, labelY,
                 angle: isSelfLoop ? 0 : angleDeg,
                 strokeWidth: Math.max(0.5, p * 2),
@@ -839,6 +882,9 @@
             .attr("fill", "none")
             .attr("stroke", "black")
             .attr("stroke-width", d => d.strokeWidth)
+            .attr("opacity", d => filterActiveEdges
+                ? (filterActiveEdges.has(`${d.from}|${d.to}`) ? 1 : 0.06)
+                : 1)
             .attr("marker-end", "url(#arrow-black)")
             .attr("d", d => d.path);
 
@@ -850,6 +896,9 @@
                 update => update,
                 exit => exit.remove(),
             )
+            .attr("opacity", d => filterActiveEdges
+                ? (filterActiveEdges.has(`${d.from}|${d.to}`) ? 1 : 0.06)
+                : 1)
             .attr("font-size", 7)
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "middle")
@@ -868,9 +917,9 @@
         if (inputSequence && inputSequence.trim()) drawPathHighlight();
     }
 
-    // -------------------------------------------------------------------------
+   
     // Init
-    // -------------------------------------------------------------------------
+   
     function init() {
         measureHeight();
         buildBaseHGraph();
@@ -879,14 +928,12 @@
         rerenderGraph();
     }
 
-    // Buttons use scaleBy — NOT WheelEvents, so semantic zoom gate ignores them.
     function zoomIn()    { d3.select(svgElement).transition().duration(150).call(zoomBehaviour.scaleBy as any, 1.2); }
     function zoomOut()   { d3.select(svgElement).transition().duration(150).call(zoomBehaviour.scaleBy as any, 1 / 1.2); }
     function zoomReset() { d3.select(svgElement).transition().duration(150).call(zoomBehaviour.transform as any, d3.zoomIdentity); }
 
-    // -------------------------------------------------------------------------
-    // Lifecycle
-    // -------------------------------------------------------------------------
+   
+   
     onMount(() => {
         const svg = d3.select(svgElement);
 
@@ -900,8 +947,6 @@
         g.append("g").attr("class", "nodes");
 
         const defs = svg.append("defs");
-
-        // Word-level arrowhead — scales with stroke width, kept small
         defs.append("marker")
             .attr("id", "arrow-black")
             .attr("viewBox", [0, 0, 10, 10])
@@ -911,7 +956,6 @@
             .attr("orient", "auto")
             .append("path").attr("d", "M 0 0 L 10 5 L 0 10 z").attr("fill", "black");
 
-        // Section-level arrowhead — fixed pixel size so thick edges don't get giant heads
         defs.append("marker")
             .attr("id", "arrow-section")
             .attr("viewBox", [0, 0, 10, 10])
@@ -932,7 +976,6 @@
             .on("zoom", event => {
                 currentZoomTransform = event.transform;
                 g.attr("transform", event.transform.toString());
-                // Only wheel events drive semantic zoom; button pans never change scale
                 if (event.sourceEvent instanceof WheelEvent) {
                     lastZoomK = event.transform.k;
                     if (Math.abs(lastZoomK - lastSemanticK) > 0.05) {
@@ -955,10 +998,45 @@
         lastRenderKey = renderKey;
         init();
     }
+    $: if (mounted && isFullScreen !== undefined) {
+        requestAnimationFrame(() => { measureHeight(); rerenderGraph(); });
+    }
 
-    // -------------------------------------------------------------------------
-    // Path highlighting — driven by inputSequence prop
-    // -------------------------------------------------------------------------
+    $: if (mounted && filterPairs !== undefined) {
+        rerenderGraph();
+    }
+
+    $: if (mounted && expandSectionId) {
+        const sectionId = expandSectionId;
+
+        let anyChanged = false;
+        for (const sid of markovStates) {
+            if (!wordChains[sid]) continue;
+            if (!hg.activeSubgraphs.has(sid)) {
+                expandSection(sid);
+                anyChanged = true;
+            }
+        }
+        if (anyChanged) {
+            if (hg.activeSubgraphs.size > 1) runHaloCollisionAvoidance();
+            rerenderGraph();
+        }
+
+        requestAnimationFrame(() => {
+            const subNode = Array.from(hg.nodes.values())
+                .find(n => n.parent === sectionId && n.visible);
+            if (!subNode || !zoomBehaviour) return;
+            const svg = d3.select(svgElement);
+            const tx = graphWidth  / 2 - subNode.x;
+            const ty = graphHeight / 2 - subNode.y;
+            svg.transition().duration(400)
+                .call(zoomBehaviour.transform,
+                    d3.zoomIdentity.translate(tx, ty).scale(1));
+            lastZoomK = 1;
+            lastSemanticK = 1;
+        });
+    }
+
 
     const HIGHLIGHT_COLOUR = "#f72585";
     const TRAVEL_MS        = 350;
@@ -967,36 +1045,14 @@
 
     type WalkedStep = { from: string; to: string; pathD: string };
 
-    /**
-     * Walk the Markov graph with the current input.
-     *
-     * When subgraphs are collapsed (base view): walk section-level nodes.
-     * When any subgraph is expanded: walk word-chain nodes inside it.
-     *
-     * Token splitting is auto-detected:
-     *   - Single-character state names → split by character ("Car" → ["C","a","r"])
-     *   - Multi-character state names  → split by space ("verse chorus" → ["verse","chorus"])
-     */
     function computeWalkedPath(seq: string): { steps: WalkedStep[]; litNodeIds: Set<string> } {
         const steps: WalkedStep[] = [];
         const litNodeIds = new Set<string>();
         if (!seq) return { steps, litNodeIds };
 
-        // ── Decide which transition set to use ────────────────────────────────
-        //
-        // A) "Flat Markov" — wordChains is empty, markovTransitions are the
-        //    actual typed-token transitions (possibly with a START node).
-        //
-        // B) "Hierarchical Markov" — markovStates are section names, and typed
-        //    tokens walk word-chains. Always use a word-chain regardless of
-        //    expansion state (the section may still be collapsed).
-        //
         const hasWordChains = Object.keys(wordChains).length > 0;
 
         if (!hasWordChains) {
-            // ── Case A: flat Markov ───────────────────────────────────────────
-            // Exclude START/END from charLevel detection — they are infrastructure
-            // nodes, not typed tokens, and their length > 1 would break the check.
             const typedStates = markovStates.filter(s => s !== "START" && s !== "END");
             const charLevel = typedStates.length > 0 && typedStates.every(s => s.length === 1);
             const tokens = charLevel ? seq.split("") : seq.split(" ").filter(Boolean);
@@ -1019,8 +1075,6 @@
                 current = match.to;
             }
         } else {
-            // ── Case B: hierarchical — walk the relevant word-chain ──────────
-            // Use the active expanded section if any, else the first chain.
             const sectionId = hg.activeSubgraphs.size > 0
                 ? Array.from(hg.activeSubgraphs)[0]
                 : Object.keys(wordChains)[0];
@@ -1037,13 +1091,11 @@
 
             const expanded = hg.activeSubgraphs.has(sectionId);
 
-            // Seed the start node ring
             if (expanded) {
                 const startNodeId = `${sectionId}.${current}`;
                 const n = hg.nodes.get(startNodeId);
                 if (n?.visible) litNodeIds.add(startNodeId);
             } else {
-                // Section collapsed: highlight the anchor bubble
                 const anchor = hg.nodes.get(sectionId);
                 if (anchor?.visible) litNodeIds.add(sectionId);
             }
@@ -1063,8 +1115,6 @@
                     if (pathD) steps.push({ from: fromId, to: toId, pathD });
                     litNodeIds.add(toId);
                 }
-                // When collapsed we still advance `current` so the walk is correct,
-                // but there are no sub-nodes to render — just the anchor ring.
                 current = match.to;
             }
         }
@@ -1101,7 +1151,8 @@
         const { steps, litNodeIds } = computeWalkedPath(inputSequence ?? "");
         const layer = g.select<SVGGElement>("g.path-highlight");
 
-        // Edges
+        layer.selectAll("path.hl-edge, circle.hl-node").interrupt();
+
         type HStep = { id: string; pathD: string; opacity: number; delay: number };
         const stepData: HStep[] = steps.map((s, i) => ({
             id: `hl:${s.from}>${s.to}:${i}`,
@@ -1139,8 +1190,6 @@
                     return p;
                 },
                 update => {
-                    // Recompute dasharray from the new path geometry so the full
-                    // stroke is always visible after a node drag repositions endpoints.
                     update.each(function(d) {
                         const el = this as SVGPathElement;
                         el.setAttribute("d", d.pathD);
@@ -1209,18 +1258,20 @@
     <svg bind:this={svgElement}></svg>
 
     <div class="zoomControls">
+        <button type="button" class="zoomButton" title="{isFullScreen ? 'Exit fullscreen' : 'Expand'}" on:click={() => dispatch('toggleFullscreen')}>{isFullScreen ? '✕' : '⤢'}</button>
+
         <button type="button" class="zoomButton" on:click={zoomIn}>+</button>
         <button type="button" class="zoomButton" on:click={zoomOut}>−</button>
         <button type="button" class="zoomButton" on:click={zoomReset}>⟳</button>
     </div>
 
-    <div class="zoomHint">
+    <!-- <div class="zoomHint">
         {#if hg.activeSubgraphs.size > 0}
-            Word chains visible · zoom out to collapse
+            Word chains visible - zoom out to collapse
         {:else}
             Zoom in to explore word-level chains
         {/if}
-    </div>
+    </div> -->
 </div>
 
 <style>

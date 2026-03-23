@@ -52,3 +52,49 @@ def best_start_node(transitions: List[dict]) -> str|None:
         return None
     
     return max(all_nodes, key=lambda s: (in_degree[s]+out_degree[s], out_degree[s]))
+
+
+def build_word_chain(tokens: list[str], min_prob = 0.00005, round_dp =4, use_start_end = False):
+    counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    # first_words: Dict[str, int] = defaultdict(int)
+
+    if not tokens:
+        return {
+        "markovStates": [],
+        "mStartingStates": ["START"],
+        "endState": ["END"],
+        "markovTransitions": []
+    }
+    if use_start_end:
+        counts["START"][tokens[0]] += 1
+        for a,b in zip(tokens, tokens[1:]):
+            counts[a][b] +=1
+
+        counts[tokens[-1]]["END"] += 1
+        starting = ["START"]
+        end_state = ["END"]
+        extra_states = {"START", "END"}
+    else: 
+        for a, b in zip(tokens, tokens[1:]):
+            counts[a][b] += 1
+        starting = [tokens[0]]
+        end_state =[]
+        extra_states = {tokens[0]}
+
+    states = set(extra_states)
+    transitions: List[dict] = []
+
+    for src, dests in counts.items():
+        for target, p in normalise_probabilities(dests).items():
+            if p < min_prob:
+                continue
+            states.add(src)
+            states.add(target)
+            transitions.append({"from": src, "to": target, "probability": round(p, round_dp)})
+
+    return {
+        "markovStates": sorted(states),
+        "mStartingStates": starting,
+        "endState": end_state, 
+        "markovTransitions": transitions
+    }

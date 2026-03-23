@@ -11,6 +11,7 @@ export function addContentGroup(svg: SvgSel): GSel {
         sel = svg.append("g").attr("class", "content-group");
         sel.append("g").attr("class", "halos");
         sel.append("g").attr("class", "debug").attr("pointer-events", "none");
+        sel.append("g").attr("class", "path-highlight").attr("pointer-events", "none");
 
         sel.append("g").attr("class", "edges");
         sel.append("g").attr("class", "labels");

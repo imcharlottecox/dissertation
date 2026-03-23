@@ -18,54 +18,59 @@
 
 
 <style>
-    h3{
+    h3 {
         padding: 0;
-        margin:0;
+        margin: 0;
         line-height: 1;
-        font-weight: 200;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
     }
     .box {
-        border: 1.5px solid lightgrey;
-        border-radius: 0px;
-        margin-bottom: 4px;
-        width:100%;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        margin-bottom: 6px;
+        width: 100%;
+        overflow: hidden;
     }
     .accordion {
-        padding: 5px 6px;
-        /* background-color: snow; */
-        color: #444;
+        padding: 7px 10px;
+        background: var(--bg-header);
+        color: var(--text-primary);
         cursor: pointer;
         width: 100%;
         border: none;
-        transition: 0.3s;
+        transition: background 100ms;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 8px;
     }
-
     .accordion:hover,
     .active {
-        background-color: #eee;
+        background: var(--bg-hover);
     }
-
-    .accordion:after {
-        content: '\02795'; /* plus */
+    .accordion::after {
+        content: '+';
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--text-muted);
+        flex-shrink: 0;
     }
-
-    .active:after {
-        content: '\2796'; /* minus*/
+    .active::after {
+        content: '-';
     }
     .panel {
         display: none;
-        background-color: snow;
-        padding: 8px 12px;
+        background: var(--bg-panel);
+        padding: 10px 12px;
     }
     .panel.open {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         align-items: flex-start;
-        max-height: 100px; 
-        overflow-y: auto; 
+        max-height: 200px;
+        overflow-y: auto;
     }
 </style>

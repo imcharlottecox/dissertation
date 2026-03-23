@@ -48,14 +48,11 @@ export function hopcroftMinimiseDFA(dfa: DFA): DFA {
         }
         const diff = difference(Y, X);
 
-        // Replace Y by inter and diff
         newP.push(inter);
         newP.push(diff);
 
-        // Update worklist: if Y was in W, replace it; else add smaller part
         const yIndexInW = indexOfSetInArray(W, Y);
         if (yIndexInW !== -1) {
-          // replace Y with both parts
           W.splice(yIndexInW, 1, inter, diff);
         } else {
           W.push(inter.size <= diff.size ? inter : diff);
@@ -65,16 +62,13 @@ export function hopcroftMinimiseDFA(dfa: DFA): DFA {
     }
   }
 
-  // Build mapping from old state -> block id
   const blockOf = new Map<string, number>();
   P.forEach((block, i) => {
     for (const s of block) blockOf.set(s, i);
   });
 
-  // Name each block deterministically (use smallest state id inside block)
   const blockNames = P.map((block) => canonicalName(block));
 
-  // Construct new DFA
   const newStates = blockNames.slice();
   const newStart = blockNames[blockOf.get(dfa.start)!];
 
@@ -115,25 +109,20 @@ export function hopcroftMinimiseDFA(dfa: DFA): DFA {
   };
 }
 
-/** Optional: return mapping old->new for debugging / animation */
 export function hopcroftMinimiseDFAWithMapping(dfa: DFA): { min: DFA; mapOldToNew: Map<string, string> } {
   const min = hopcroftMinimiseDFA(dfa);
 
-  // Rebuild mapping by re-running partitioning quickly is annoying; easiest is:
-  // compute by simulating canonical naming is not directly accessible here.
-  // If you want mapping, we can extend hopcroftMinimiseDFA to return it.
-  // For now provide a placeholder error to avoid silent misuse.
-  throw new Error("Use hopcroftMinimiseDFA() for now; ask and I’ll return a mapping-enabled variant cleanly.");
+
+  throw new Error("Use hopcroftMinimiseDFA() for now; ask and I'll return a mapping-enabled variant cleanly.");
 }
 
-/* ---------------- helpers ---------------- */
 
 function ensureTotal(dfa: DFA) {
   for (const s of dfa.states) {
     const row = dfa.transitions.get(s);
     if (!row) throw new Error(`DFA missing transition row for state ${s}`);
     for (const a of dfa.alphabet) {
-      if (!row.has(a)) throw new Error(`DFA is not total: missing δ(${s}, ${a})`);
+      if (!row.has(a)) throw new Error(`DFA is not total: missing del(${s}, ${a})`);
     }
   }
 }
@@ -185,13 +174,11 @@ function difference(A: Set<string>, B: Set<string>): Set<string> {
 }
 
 function indexOfSetInArray(arr: Set<string>[], target: Set<string>): number {
-  // Compare by reference (we reuse same Set objects in P)
   for (let i = 0; i < arr.length; i++) if (arr[i] === target) return i;
   return -1;
 }
 
 function canonicalName(block: Set<string>): string {
-  // deterministic: pick lexicographically smallest state id
   let best: string | null = null;
   for (const s of block) {
     if (best === null || s.localeCompare(best) < 0) best = s;

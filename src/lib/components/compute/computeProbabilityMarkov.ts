@@ -64,7 +64,6 @@ export function ComputeProbabilityMarkov(transitions: mTransition[], sequence: s
         probability *= edge.probability;
     }
 
-    // If this dataset has END, reward sequences that actually terminate
     const lastState = path[path.length - 1];
     const endToken = transitions.some(t => t.to === "END") ? "END"
                    : transitions.some(t => t.to === "$") ? "$"
@@ -73,7 +72,6 @@ export function ComputeProbabilityMarkov(transitions: mTransition[], sequence: s
     if (endToken) {
         const endEdge = transitions.find(t => t.from === lastState && t.to === endToken);
         if (endEdge) probability *= endEdge.probability;
-        // if no end edge, probability is left as-is — partial sequence, non-zero but not "complete"
     }
 
     return probability;

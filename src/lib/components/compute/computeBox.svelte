@@ -14,24 +14,19 @@
     };
     export type Evaluation = {
         accepted: boolean;
-        /** Cumulative probability of the full predicted sequence */
         probability: number;
-        /** Probability of the typed prefix alone — for confidence display */
         prefixProbability: number;
-        /** "high" | "medium" | "low" | "unknown" derived from prefixProbability */
         confidenceLabel: "high" | "medium" | "low" | "unknown";
         fsmText: string;
         markovText: string;
-        /** The typed prefix characters */
         typedTokens: string[];
-        /** Best beam predicted continuation */
         predictedTokens: string[];
-        /** All beam completions ranked best-first */
         allBeams: Array<{ predictedTokens: string[]; totalProbability: number; terminatedNaturally: boolean }>;
     };
 
     export let questions: TaskQuestion[] = [];
     export let evaluate: (sequenceInput: string) => Evaluation;
+    export let showPrediction: boolean = true;
 
     const dispatch = createEventDispatcher<{ sequenceChange: string }>();
 
@@ -43,7 +38,6 @@
     let maxUnlockedQ = 0;
     let selectedChoice: string | null = null;
 
-    // Completion preview state
     let typedTokens: string[] = [];
     let predictedTokens: string[] = [];
     let allBeams: Evaluation["allBeams"] = [];
@@ -56,14 +50,12 @@
     $: canGoBack = currentQIndex > 0;
     $: canGoNext = currentQIndex < questions.length - 1 && currentQIndex < maxUnlockedQ;
 
-    // Build the display string for the completion box
-    // Shows typed portion normally, predicted portion styled differently via spans
     $: typedDisplay = typedTokens.map(renderToken).join("");
     $: predictedDisplay = predictedTokens.map(renderToken).join("");
 
     function renderToken(t: string): string {
         if (t === "\n") return "↵";
-        if (t === " ")  return "\u00A0"; // non-breaking space to preserve spacing
+        if (t === " ")  return "\u00A0"; 
         return t;
     }
 
@@ -177,10 +169,9 @@
                     />
                 </div>
 
-                <!-- Divider arrow -->
-                <div class="arrow" aria-hidden="true">→</div>
+                {#if showPrediction}
+                <div class="arrow" aria-hidden="true">-></div>
 
-                <!-- Right: Markov completion preview (read-only) -->
                 <div class="inputWrap">
                     <div class="completionLabelRow">
                         <label class="boxLabel" for="completionBox">Markov prediction</label>
@@ -189,7 +180,7 @@
                                 {confidenceLabel === "high"    ? "confident"
                                 : confidenceLabel === "medium" ? "uncertain"
                                 : confidenceLabel === "low"    ? "low confidence"
-                                :                                "—"}
+                                :                                "-"}
                             </span>
                         {/if}
                     </div>
@@ -202,16 +193,13 @@
                         {#if typedTokens.length === 0}
                             <span class="placeholder">prediction will appear here</span>
                         {:else}
-                            <!-- Typed portion -->
                             <span class="typed">{typedDisplay}</span>
-                            <!-- Best beam predicted continuation -->
                             {#if predictedTokens.length > 0}
                                 <span class="predicted">{predictedDisplay}</span>
                             {/if}
                         {/if}
                     </div>
 
-                    <!-- Alternate beams (collapsed by default) -->
                     {#if allBeams.length > 1}
                         <button
                             class="beamToggle"
@@ -236,23 +224,24 @@
                         {/if}
                     {/if}
                 </div>
+                {/if}
             </div>
 
             <!-- Result pills -->
             <div class="resultsRow">
                 <div
                     class="resultElement"
-                    class:accepted={fsmResult?.includes("✅")}
-                    class:rejected={fsmResult?.includes("❌")}
+                    class:accepted={fsmResult?.includes("Accepted")}
+                    class:rejected={fsmResult?.includes("Rejected")}
                 >
-                    {fsmResult ?? "FSM: —"}
+                    {fsmResult ?? "FSM: -"}
                 </div>
                 <div class="resultElement">
-                    {markovResult ?? "Markov: —"}
+                    {markovResult ?? "Markov: -"}
                 </div>
                 {#if prefixProbability > 0}
                     <div class="resultElement prefixProb">
-                        P(prefix) = {prefixProbability.toExponential(2)}
+                        P(prefix) = {prefixProbability}
                     </div>
                 {/if}
             </div>
@@ -260,7 +249,7 @@
 
         <div class="progressRow">
             {#if isCorrect}
-                <span class="status correct">✓ Correct!</span>
+                <span class="status correct">Correct!</span>
             {:else if sequenceInput.trim().length === 0}
                 <div></div>
             {:else}
@@ -271,184 +260,169 @@
 {/if}
 
 
-<style>
-    .panel {
-        background-color: #fefefe;
-        padding: 10px 14px;
-        border: 1.5px solid #e0e0e0;
+    <style>
+    .panel{
+        background-color: var(--bg-panel);
+        padding: 8px 12px;
+        border: 1px solid var(--border-light);
         width: 100%;
         box-sizing: border-box;
-        font-family: 'Georgia', serif;
     }
 
-    .header {
+    .header{
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 6px;
     }
 
-    .titleRow {
+    .titleRow{
         display: flex;
-        align-items: baseline;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 16px;
+        line-height: 1;
+        font-weight: 200;
+    }
+
+    h3{
+        padding: 0;
+        margin: 0;
+        line-height: 1;
+        font-weight: 200;
+        font-size: 16px;
+    }
+
+    .meta{
+        font-size: 12px;
+        padding: 6px 0 8px 0;
+        margin: 6px 0 8px 0;
+        color: #666;
+    }
+
+    .nav{
+        display: flex;
         gap: 8px;
     }
 
-    h3 {
-        margin: 0;
-        padding: 0;
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #333;
-    }
-
-    .meta {
-        font-size: 11px;
-        color: #999;
-        font-family: 'Courier New', monospace;
-    }
-
-    .nav {
-        display: flex;
-        gap: 6px;
-    }
-
-    .btn {
-        border: 1px solid #ddd;
-        background: #f8f8f8;
-        padding: 4px 10px;
-        border-radius: 4px;
+    .btn{
+        border: 1px solid var(--border);
+        background: var(--bg-header);
+        padding: 6px 10px;
+        border-radius: var(--radius);
         cursor: pointer;
-        font-size: 12px;
-        color: #444;
-        transition: background 0.1s, border-color 0.1s;
+        font-size: 13px;
     }
 
-    .btn:hover:not(:disabled) {
-        background: #eef;
-        border-color: #aac4f0;
+    .btn:hover:not(:disabled){
+        background: var(--navy-light);
+        border-color: var(--accent-mid);
     }
 
-    .btn:disabled {
-        opacity: 0.4;
+    .btn:disabled{
+        opacity: 0.5;
         cursor: not-allowed;
     }
 
-    .prompt {
-        margin: 0 0 10px 0;
-        font-size: 13px;
-        color: #222;
-        line-height: 1.5;
+    .prompt{
+        margin: 0 0 8px 0;
+        font-size: 14px;
     }
 
-    /* ── Side-by-side input row ── */
-    .inputRow {
+    .inputRow{
         display: flex;
         align-items: flex-end;
         gap: 10px;
-        margin-bottom: 8px;
+        margin: 6px 0 8px 0;
+        flex-wrap: wrap;
     }
 
-    .inputWrap {
+    .inputWrap{
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 4px;
         flex: 1 1 0;
         min-width: 0;
     }
 
-    .boxLabel {
-        font-size: 10px;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-        color: #999;
-        font-family: 'Courier New', monospace;
+    .boxLabel{
+        font-size: 12px;
+        color: #666;
+        margin: 0;
     }
 
-    input[type="text"] {
+    .completionLabelRow{
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    input[type="text"]{
         width: 100%;
         box-sizing: border-box;
-        padding: 7px 10px;
-        font-size: 13px;
-        font-family: 'Courier New', monospace;
-        border: 1.5px solid #ddd;
-        border-radius: 4px;
-        background: #fff;
-        color: #111;
+        padding: 8px 10px;
+        font-size: 14px;
+        border: 1px solid var(--border);
+        margin: 0;
+        border-radius: 0;
+        background: white;
+    }
+
+    input[type="text"]:focus{
         outline: none;
-        transition: border-color 0.15s;
+        border-color: var(--accent-mid);
     }
 
-    input[type="text"]:focus {
-        border-color: #7aabf0;
-    }
-
-    /* The read-only completion box — mirrors input height/padding exactly */
-    .completionBox {
+    .completionBox{
         width: 100%;
         box-sizing: border-box;
-        padding: 7px 10px;
-        font-size: 13px;
-        font-family: 'Courier New', monospace;
-        border: 1.5px solid #e8e8e8;
-        border-radius: 4px;
-        background: #f9f9fb;
-        min-height: 34px;
+        padding: 8px 10px;
+        font-size: 14px;
+        border: 1px solid var(--border);
+        background: var(--bg-header);
+        min-height: 38px;
         white-space: pre-wrap;
-        word-break: break-all;
-        color: #111;
-        line-height: 1.4;
+        word-break: break-word;
+        color: var(--text-primary);
     }
 
-    .placeholder {
-        color: #bbb;
-        font-style: italic;
+    .placeholder{
+        color: var(--text-muted);
         font-size: 12px;
     }
 
-    /* Typed portion — normal weight, slightly muted */
-    .typed {
-        color: #333;
+    .typed{
+        color: inherit;
     }
 
-    /* Predicted portion — visually distinct: blue, slightly lighter */
-    .predicted {
-        color: #4a7fd4;
-        background: #eef4ff;
-        border-radius: 2px;
-        padding: 0 1px;
-        font-style: italic;
+    .predicted{
+        color: var(--navy);
+        background: var(--navy-light);
+        border-radius: 3px;
+        padding: 0 2px;
     }
 
-    /* Arrow between boxes */
-    .arrow {
+    .arrow{
         font-size: 16px;
-        color: #ccc;
-        padding-bottom: 7px; /* align with input baseline */
+        color: var(--text-muted);
+        padding-bottom: 8px;
         flex: 0 0 auto;
         user-select: none;
     }
 
-    /* ── Result pills ── */
-    .resultsRow {
+    .resultsRow{
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-        margin-bottom: 4px;
     }
 
-    .resultElement {
-        border: 1px solid #e0e0e0;
-        background: #f8f8f8;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-family: 'Courier New', monospace;
-        color: #555;
-        transition: background 0.2s, border-color 0.2s;
+    .resultElement{
+        border: 1px solid var(--border);
+        background: var(--bg-header);
+        padding: 6px 10px;
+        border-radius: 888px;
+        font-size: 12px;
     }
 
     .resultElement.accepted {
@@ -463,87 +437,90 @@
         color: #922;
     }
 
-    /* ── Progress row ── */
-    .progressRow {
-        min-height: 18px;
+    .progressRow{
+        min-height: 20px;
     }
 
-    .status {
-        font-size: 11px;
-        font-family: 'Courier New', monospace;
+    .status{
+        font-size: 12px;
+        color: #666;
     }
 
-    .status.correct {
+    .status.correct{
         color: #2a7a28;
     }
 
-    .status.trying {
-        color: #999;
+    .status.trying{
+        color: #666;
     }
 
-    /* ── Completion label row (label + confidence pill) ── */
-    .completionLabelRow {
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    .confidencePill{
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 888px;
+        border: 1px solid var(--border);
+        background: var(--bg-header);
+        color: #666;
     }
 
-    .confidencePill {
-        font-size: 9px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        font-family: 'Courier New', monospace;
-        padding: 1px 6px;
-        border-radius: 999px;
-        border: 1px solid #ddd;
-        background: #f4f4f4;
-        color: #888;
+    .confidence-high{
+        border-color: #6abf69;
+        background: #edfaed;
+        color: #2a7a28;
     }
-    .confidence-high   { border-color: #6abf69; background: #edfaed; color: #2a7a28; }
-    .confidence-medium { border-color: #e0c060; background: #fdf9e0; color: #7a6010; }
-    .confidence-low    { border-color: #e07070; background: #fdeaea; color: #922; }
 
-    /* ── Alternate beams ── */
-    .beamToggle {
+    .confidence-medium{
+        border-color: #e0c060;
+        background: #fdf9e0;
+        color: #7a6010;
+    }
+
+    .confidence-low{
+        border-color: #e07070;
+        background: #fdeaea;
+        color: #922;
+    }
+
+    .beamToggle{
         margin-top: 4px;
         background: none;
         border: none;
-        font-size: 10px;
-        color: #7aabf0;
+        font-size: 12px;
+        color: var(--navy);
         cursor: pointer;
         padding: 0;
-        font-family: 'Courier New', monospace;
-        letter-spacing: 0.04em;
         text-align: left;
     }
-    .beamToggle:hover { color: #4a7fd4; }
 
-    .beamList {
-        margin-top: 4px;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
+    .beamToggle:hover{
+        color: #2f66c7;
     }
 
-    .beamRow {
+    .beamList{
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .beamRow{
         display: flex;
         align-items: baseline;
-        gap: 6px;
-        padding: 4px 8px;
-        background: #f5f7fc;
-        border: 1px solid #e4eaf6;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
+        gap: 8px;
+        padding: 6px 10px;
+        background: var(--bg-header);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         font-size: 12px;
     }
 
-    .beamRank {
-        font-size: 9px;
-        color: #aaa;
+    .beamRank{
+        font-size: 11px;
+        color: #888;
         flex: 0 0 auto;
     }
 
-    .beamText {
+    .beamText{
         flex: 1 1 0;
         min-width: 0;
         overflow: hidden;
@@ -551,44 +528,53 @@
         white-space: nowrap;
     }
 
-    .beamProb {
-        font-size: 9px;
-        color: #aaa;
+    .beamProb{
+        font-size: 11px;
+        color: #888;
         flex: 0 0 auto;
     }
 
-    /* ── Prefix probability pill ── */
-    .prefixProb {
-        font-style: italic;
-        color: #7a7a9a;
+    .prefixProb{
+        color: #666;
+        font-size: 12px;
     }
 
-
-    .choiceList {
+    .choiceList{
         display: flex;
         flex-direction: column;
         gap: 6px;
         margin: 8px 0;
     }
 
-    .choice {
+    .choice{
         text-align: left;
         padding: 8px 12px;
-        border: 1.5px solid #ddd;
-        border-radius: 6px;
-        background: #f8f8f8;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg-header);
         font-size: 13px;
         cursor: pointer;
         transition: background 0.15s, border-color 0.15s;
-        font-family: 'Courier New', monospace;
     }
 
-    .choice:hover {
-        background: #eef4ff;
-        border-color: #aac4f0;
+    .choice:hover{
+        background: var(--navy-light);
+        border-color: var(--accent-mid);
     }
 
-    .choice.selected  { border-color: #aac4f0; background: #e8f0fd; }
-    .choice.correct   { border-color: #6abf69; background: #edfaed; }
-    .choice.wrong     { border-color: #e07070; background: #fdeaea; }
+    .choice.selected{
+        border-color: var(--accent-mid);
+        background: #e8f0fd;
+    }
+
+    .choice.correct{
+        border-color: #6abf69;
+        background: #edfaed;
+    }
+
+    .choice.wrong{
+        border-color: #e07070;
+        background: #fdeaea;
+    }
+
 </style>

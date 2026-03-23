@@ -4,6 +4,7 @@
     import type { StateNode, mTransition } from '$lib/graph/graphTypes';
     import { getGraphDefaultsMarkov } from '$lib/graph/graphDefaults';
     import { createDragNoSim, createZoom, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from '$lib/graph/graphBehaviours';
+    import {NODE_COLOURS, NODE_STROKES} from '$lib/graph/nodeColours';
 
     export let markovStates: string[] = [];
     export let markovTransitions: mTransition[] = [];
@@ -276,10 +277,9 @@
                     // });
                 n.append("circle")
                     .attr("r", nodeRadius)
-                    .attr("stroke", "black")
-                    .attr("stroke-width", d => (endState.includes(d.id) ? 3 : 0.5))
-                    .attr("fill", d => endState.includes(d.id) ? "lightgreen" : mStartingStates.includes(d.id) ? "lightgrey" :"rgb(245,245,245)")
-
+                    .attr("fill", d => endState.includes(d.id) ? NODE_COLOURS.accepting : mStartingStates.includes(d.id) ? NODE_COLOURS.starting : NODE_COLOURS.regular)
+                    .attr("stroke", d => endState.includes(d.id) ? NODE_STROKES.accepting : mStartingStates.includes(d.id) ? NODE_STROKES.starting : NODE_STROKES.regular)
+                    .attr("stroke-width", d => (endState.includes(d.id) ? 2.5 : 1.5))
                 n.append("text")
                     .attr("text-anchor", "middle")
                     .attr("dy", 4)
@@ -369,7 +369,7 @@
         //hover probability tooltip
         edgeLayer.select("title").remove(); // avoid duplicates
         edgeLayer.append("title").text(
-            (d: { source: StateNode; target: StateNode; probability: number }) => `${d.source.id} → ${d.target.id}\nP = ${d.probability}`);
+            (d: { source: StateNode; target: StateNode; probability: number }) => `${d.source.id} -> ${d.target.id}\nP = ${d.probability}`);
 
         function labelBumpCurved(d: EdgeDatum) {
             if (d.source.id === d.target.id) {

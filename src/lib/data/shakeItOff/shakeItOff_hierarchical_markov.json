@@ -90,38 +90,44 @@
         "what"
       ],
       "mStartingStates": [
-        "that's"
+        "i"
       ],
+      "endState": [],
       "markovTransitions": [
         {
           "from": "i",
           "to": "stay",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "i",
           "to": "go",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "i",
           "to": "can't",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "i",
           "to": "never",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "i",
           "to": "make",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "stay",
           "to": "out",
-          "probability": 1.0
+          "probability": 0.5
+        },
+        {
+          "from": "stay",
+          "to": "at",
+          "probability": 0.5
         },
         {
           "from": "out",
@@ -137,6 +143,11 @@
           "from": "too",
           "to": "many",
           "probability": 0.5
+        },
+        {
+          "from": "late",
+          "to": "got",
+          "probability": 1.0
         },
         {
           "from": "got",
@@ -156,17 +167,22 @@
         {
           "from": "my",
           "to": "brain",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "my",
           "to": "feet",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "my",
           "to": "own",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
+        },
+        {
+          "from": "brain",
+          "to": "that's",
+          "probability": 1.0
         },
         {
           "from": "that's",
@@ -194,23 +210,48 @@
           "probability": 1.0
         },
         {
+          "from": "mm-mm",
+          "to": "that's",
+          "probability": 0.5714
+        },
+        {
+          "from": "mm-mm",
+          "to": "i",
+          "probability": 0.2857
+        },
+        {
+          "from": "mm-mm",
+          "to": "i'm",
+          "probability": 0.1429
+        },
+        {
           "from": "go",
           "to": "on",
-          "probability": 1.0
+          "probability": 0.5
+        },
+        {
+          "from": "go",
+          "to": "and",
+          "probability": 0.5
         },
         {
           "from": "on",
           "to": "too",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "on",
           "to": "my",
-          "probability": 0.6666666666666666
+          "probability": 0.6667
         },
         {
           "from": "many",
           "to": "dates",
+          "probability": 1.0
+        },
+        {
+          "from": "dates",
+          "to": "but",
           "probability": 1.0
         },
         {
@@ -264,6 +305,11 @@
           "probability": 1.0
         },
         {
+          "from": "beat",
+          "to": "i'm",
+          "probability": 1.0
+        },
+        {
           "from": "i'm",
           "to": "lightnin'",
           "probability": 0.5
@@ -276,6 +322,11 @@
         {
           "from": "lightnin'",
           "to": "on",
+          "probability": 1.0
+        },
+        {
+          "from": "feet",
+          "to": "and",
           "probability": 1.0
         },
         {
@@ -306,6 +357,11 @@
         {
           "from": "dancin'",
           "to": "on",
+          "probability": 1.0
+        },
+        {
+          "from": "own",
+          "to": "i",
           "probability": 1.0
         },
         {
@@ -362,6 +418,7 @@
       "mStartingStates": [
         "but"
       ],
+      "endState": [],
       "markovTransitions": [
         {
           "from": "but",
@@ -381,6 +438,11 @@
         {
           "from": "keep",
           "to": "cruisin'",
+          "probability": 1.0
+        },
+        {
+          "from": "cruisin'",
+          "to": "can't",
           "probability": 1.0
         },
         {
@@ -406,6 +468,11 @@
         {
           "from": "won't",
           "to": "stop",
+          "probability": 1.0
+        },
+        {
+          "from": "movin'",
+          "to": "it's",
           "probability": 1.0
         },
         {
@@ -449,6 +516,11 @@
           "probability": 1.0
         },
         {
+          "from": "mind",
+          "to": "sayin'",
+          "probability": 1.0
+        },
+        {
           "from": "sayin'",
           "to": "it's",
           "probability": 1.0
@@ -461,6 +533,16 @@
         {
           "from": "be",
           "to": "alright",
+          "probability": 1.0
+        },
+        {
+          "from": "alright",
+          "to": "but",
+          "probability": 1.0
+        },
+        {
+          "from": "groovin'",
+          "to": "it's",
           "probability": 1.0
         }
       ]
@@ -488,8 +570,9 @@
         "the"
       ],
       "mStartingStates": [
-        "and"
+        "'cause"
       ],
+      "endState": [],
       "markovTransitions": [
         {
           "from": "'cause",
@@ -499,17 +582,17 @@
         {
           "from": "the",
           "to": "players",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "the",
           "to": "haters",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "the",
           "to": "fakers",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "players",
@@ -519,32 +602,37 @@
         {
           "from": "gonna",
           "to": "play",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "gonna",
           "to": "hate",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "gonna",
           "to": "shake",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "gonna",
           "to": "break",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "gonna",
           "to": "fake",
-          "probability": 0.16666666666666666
+          "probability": 0.1667
         },
         {
           "from": "play",
           "to": "play",
-          "probability": 1.0
+          "probability": 0.8
+        },
+        {
+          "from": "play",
+          "to": "and",
+          "probability": 0.2
         },
         {
           "from": "and",
@@ -559,7 +647,12 @@
         {
           "from": "hate",
           "to": "hate",
-          "probability": 1.0
+          "probability": 0.8
+        },
+        {
+          "from": "hate",
+          "to": "baby",
+          "probability": 0.2
         },
         {
           "from": "baby",
@@ -579,12 +672,22 @@
         {
           "from": "shake",
           "to": "shake",
-          "probability": 0.75
+          "probability": 0.6486
+        },
+        {
+          "from": "shake",
+          "to": "i",
+          "probability": 0.1081
         },
         {
           "from": "shake",
           "to": "it",
-          "probability": 0.25
+          "probability": 0.2162
+        },
+        {
+          "from": "shake",
+          "to": "'cause",
+          "probability": 0.027
         },
         {
           "from": "i",
@@ -599,7 +702,17 @@
         {
           "from": "off",
           "to": "i",
-          "probability": 1.0
+          "probability": 0.5
+        },
+        {
+          "from": "off",
+          "to": "heartbreakers",
+          "probability": 0.375
+        },
+        {
+          "from": "off",
+          "to": "'cause",
+          "probability": 0.125
         },
         {
           "from": "heartbreakers",
@@ -609,7 +722,12 @@
         {
           "from": "break",
           "to": "break",
-          "probability": 1.0
+          "probability": 0.8
+        },
+        {
+          "from": "break",
+          "to": "and",
+          "probability": 0.2
         },
         {
           "from": "fakers",
@@ -619,7 +737,12 @@
         {
           "from": "fake",
           "to": "fake",
-          "probability": 1.0
+          "probability": 0.8
+        },
+        {
+          "from": "fake",
+          "to": "baby",
+          "probability": 0.2
         }
       ]
     },
@@ -633,16 +756,17 @@
       "mStartingStates": [
         "i"
       ],
+      "endState": [],
       "markovTransitions": [
         {
           "from": "i",
           "to": "shake",
-          "probability": 0.6086956521739131
+          "probability": 0.6087
         },
         {
           "from": "i",
           "to": "i",
-          "probability": 0.391304347826087
+          "probability": 0.3913
         },
         {
           "from": "shake",
@@ -717,13 +841,19 @@
         "you've"
       ],
       "mStartingStates": [
-        "and"
+        "hey"
       ],
+      "endState": [],
       "markovTransitions": [
         {
           "from": "hey",
           "to": "hey",
-          "probability": 1.0
+          "probability": 0.6667
+        },
+        {
+          "from": "hey",
+          "to": "just",
+          "probability": 0.3333
         },
         {
           "from": "just",
@@ -763,22 +893,27 @@
         {
           "from": "down",
           "to": "and",
-          "probability": 1.0
+          "probability": 0.5
+        },
+        {
+          "from": "down",
+          "to": "to",
+          "probability": 0.5
         },
         {
           "from": "and",
           "to": "out",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "and",
           "to": "the",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "and",
           "to": "to",
-          "probability": 0.3333333333333333
+          "probability": 0.3333
         },
         {
           "from": "out",
@@ -816,6 +951,11 @@
           "probability": 0.2
         },
         {
+          "from": "liars",
+          "to": "and",
+          "probability": 1.0
+        },
+        {
           "from": "dirty",
           "to": "dirty",
           "probability": 0.5
@@ -833,6 +973,11 @@
         {
           "from": "of",
           "to": "the",
+          "probability": 1.0
+        },
+        {
+          "from": "world",
+          "to": "you",
           "probability": 1.0
         },
         {
@@ -871,6 +1016,11 @@
           "probability": 1.0
         },
         {
+          "from": "beat",
+          "to": "my",
+          "probability": 1.0
+        },
+        {
           "from": "my",
           "to": "ex-man",
           "probability": 0.5
@@ -898,6 +1048,11 @@
         {
           "from": "new",
           "to": "girlfriend",
+          "probability": 1.0
+        },
+        {
+          "from": "girlfriend",
+          "to": "she's",
           "probability": 1.0
         },
         {
@@ -936,6 +1091,21 @@
           "probability": 1.0
         },
         {
+          "from": "shake",
+          "to": "and",
+          "probability": 0.25
+        },
+        {
+          "from": "shake",
+          "to": "shake",
+          "probability": 0.5
+        },
+        {
+          "from": "shake",
+          "to": "yeah",
+          "probability": 0.25
+        },
+        {
           "from": "fella",
           "to": "over",
           "probability": 1.0
@@ -971,6 +1141,11 @@
           "probability": 1.0
         },
         {
+          "from": "hair",
+          "to": "won't",
+          "probability": 1.0
+        },
+        {
           "from": "won't",
           "to": "you",
           "probability": 1.0
@@ -1001,11 +1176,6 @@
           "probability": 1.0
         },
         {
-          "from": "shake",
-          "to": "shake",
-          "probability": 1.0
-        },
-        {
           "from": "yeah",
           "to": "oh-oh",
           "probability": 1.0
@@ -1017,5 +1187,87 @@
         }
       ]
     }
+  },
+  "subgraphLines": {
+    "verse": [
+      "i stay out too late",
+      "got nothin' in my brain",
+      "that's what people say mm-mm",
+      "that's what people say mm-mm",
+      "i go on too many dates",
+      "but i can't make them stay",
+      "at least that's what people say mm-mm",
+      "that's what people say mm-mm",
+      "i never miss a beat",
+      "i'm lightnin' on my feet",
+      "and that's what they don't see mm-mm",
+      "that's what they don't see mm-mm",
+      "i'm dancin' on my own",
+      "i make the moves up as i go",
+      "and that's what they don't know mm-mm",
+      "that's what they don't know mm-mm"
+    ],
+    "prechorus": [
+      "but i keep cruisin'",
+      "can't stop won't stop movin'",
+      "it's like i got this music in my mind",
+      "sayin' it's gonna be alright",
+      "but i keep cruisin'",
+      "can't stop won't stop groovin'",
+      "it's like i got this music in my mind",
+      "sayin' it's gonna be alright"
+    ],
+    "chorus": [
+      "'cause the players gonna play play play play play",
+      "and the haters gonna hate hate hate hate hate",
+      "baby i'm just gonna shake shake shake shake shake",
+      "i shake it off i shake it off",
+      "heartbreakers gonna break break break break break",
+      "and the fakers gonna fake fake fake fake fake",
+      "baby i'm just gonna shake shake shake shake shake",
+      "i shake it off i shake it off",
+      "'cause the players gonna play play play play play",
+      "and the haters gonna hate hate hate hate hate",
+      "baby i'm just gonna shake shake shake shake shake",
+      "i shake it off i shake it off",
+      "heartbreakers gonna break break break break break",
+      "and the fakers gonna fake fake fake fake fake",
+      "baby i'm just gonna shake shake shake shake shake",
+      "'cause the players gonna play play play play play",
+      "and the haters gonna hate hate hate hate hate",
+      "baby i'm just gonna shake shake shake shake shake",
+      "i shake it off i shake it off",
+      "heartbreakers gonna break break break break break",
+      "and the fakers gonna fake fake fake fake fake",
+      "baby i'm just gonna shake shake shake shake shake"
+    ],
+    "outro": [
+      "i shake it off i shake it off",
+      "i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i shake it off i shake it off",
+      "i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i i i shake it off i shake it off",
+      "i i i shake it off i shake it off"
+    ],
+    "bridge": [
+      "hey hey hey",
+      "just think while you've been gettin' down and out about the liars",
+      "and the dirty dirty cheats of the world",
+      "you could've been gettin' down",
+      "to this sick beat",
+      "my ex-man brought his new girlfriend",
+      "she's like oh my god but i'm just gonna shake",
+      "and to the fella over there with the hella good hair",
+      "won't you come on over baby we can shake shake shake",
+      "yeah oh-oh oh"
+    ]
   }
 }

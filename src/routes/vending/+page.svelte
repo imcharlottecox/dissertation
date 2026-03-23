@@ -2,8 +2,8 @@
     import Accordion from "$lib/components/Accordion.svelte";
     // import FsmViewer from "$lib/components/fsmView.svelte";
     import type { fTransition} from "$lib/graph/graphTypes";
-    // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
-    import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";//TODO make button change work on editing not just benchmark
+    import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
+    // import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";//TODO make button change work on editing not just benchmark
     import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import { makeVending5pFSM } from '$lib/data/vending/vending5pFSM';
     import { makeVending40pFSM } from '$lib/data/vending/vendingFSM';
@@ -154,15 +154,9 @@
 <style>
   .page{
     height: 95dvh;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 1rem;
-    background: #fafafa;  
-    box-sizing: border-box;
     overflow: hidden;
   }
-    .graphRow{
+    /* .graphRow{
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -243,7 +237,7 @@
 	.toggle:hover {
 		background: rgb(0, 0, 0, 0.05);
 		border-color: rgba(0, 0, 0, 0.12);
-	}
+	} */
 </style>
 
 

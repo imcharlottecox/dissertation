@@ -1,0 +1,273 @@
+:root {
+    --navy:          #1b365d;
+    --navy-mid:      #2a4f87;
+    --navy-light:    #e8edf5;   /* very light navy tint — hover bg */
+    --navy-lighter:  #f0f3f8;   /* page bg */
+
+    --stone:         #d6d2c4;
+    --stone-light:   #f5f4f1;   /* body background */
+    --stone-mid:     #c4bfb0;   /* borders */
+
+    --accent:        var(--navy);
+    --accent-light:  #dde6f5;   /* active chip bg */
+    --accent-mid:    #7096c8;   /* active chip border */
+    --accent-dark:   var(--navy);
+
+    --bg-page:       var(--stone-light);
+    --bg-panel:      #ffffff;
+    --bg-header:     #f2f1ee;   /* warm stone tint for pane headers */
+    --bg-hover:      var(--navy-light);
+
+    --border:        var(--stone-mid);
+    --border-light:  #e0ddd6;
+
+    --text-primary:   #1a1d23;
+    --text-secondary: #4a5568;
+    --text-muted:     #8a8a7a;  /* stone-toned muted */
+
+    --tag-border:    var(--stone);
+
+    --gap:    8px;
+    --pad:    1rem;
+    --radius: 5px;
+    --radius-sm: 3px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--bg-page);
+    margin: 0;
+}
+
+.page {
+    min-height: calc(100dvh - 38px); /* subtract navbar height */
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+    padding: var(--pad);
+    background: var(--bg-page);
+}
+
+.graphRow {
+    flex: 1 1 0;
+    min-height: 60dvh;
+    display: flex;
+    gap: var(--gap);
+}
+
+.fsmPane,
+.markovPane,
+.pane {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-panel);
+}
+
+.fsmPane.hidden,
+.markovPane.hidden { display: none; }
+
+.paneHeader {
+    display: flex;
+    flex: 0 0 auto;
+    min-height: 32px;
+    background: var(--bg-header);
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    align-items: center;
+    padding: 0 10px;
+    flex-wrap: wrap;
+}
+
+.fsmGraph,
+.markovGraph {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+}
+
+.check {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+.check input[type="checkbox"] {
+    accent-color: var(--navy);
+    width: 13px;
+    height: 13px;
+}
+
+.toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    height: 26px;
+    cursor: pointer;
+    transition: background 100ms, border-color 100ms, color 100ms;
+}
+.toggle:hover {
+    background: var(--bg-hover);
+    border-color: var(--navy-mid);
+    color: var(--navy);
+}
+.toggle.active {
+    background: var(--accent-light);
+    border-color: var(--accent-mid);
+    color: var(--navy);
+    font-weight: 600;
+}
+
+.word {
+    display: inline-block;
+    background: var(--bg-panel);
+    border: 1px solid var(--tag-border);
+    border-radius: var(--radius-sm);
+    padding: 3px 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.stmt,
+.lyricLine,
+.sentenceBtn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 4px 8px;
+    font-size: 13px;
+    border: 1px solid transparent;
+    background: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    transition: background 80ms;
+}
+.stmt:hover,
+.lyricLine:hover,
+.sentenceBtn:hover  { background: var(--bg-hover); }
+
+.stmt.active,
+.lyricLine.active,
+.sentenceBtn.active {
+    background: var(--accent-light);
+    border-color: var(--accent-mid);
+    font-weight: 600;
+    color: var(--navy);
+}
+
+/* ── Section label ────────────────────────────────────────────── */
+.sectionBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-bottom: 10px;
+}
+.sectionLabel {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding: 4px 0 2px;
+}
+
+.selectionHint {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    max-width: 340px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    padding-right: 4px;
+}
+.clearBtn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 0 2px;
+    border-radius: 2px;
+    transition: color 80ms, background 80ms;
+}
+.clearBtn:hover {
+    color: var(--navy);
+    background: var(--bg-hover);
+}
+
+.selectorRow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    flex-wrap: wrap;
+}
+.selectorLabel {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.selectorRow select {
+    flex: 1 1 200px;
+    min-width: 0;
+    padding: 5px 8px;
+    font-size: 13px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.selectorRow select:focus {
+    outline: none;
+    border-color: var(--navy-mid);
+}
+.talkMeta {
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.topControls {
+    flex: 0 0 auto;
+    display: flex;
+    gap: var(--gap);
+    flex-wrap: wrap;
+    align-items: center;
+}

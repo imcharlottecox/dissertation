@@ -9,31 +9,43 @@
     import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
     import PageIntro from "$lib/components/pageIntro.svelte";
-    const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeShakeItOffFSM();
-    const { markovStates, markovTransitions, mStartingStates, endState, wordChains } = makeShakeItOffMarkov();
     import Accordion from "$lib/components/Accordion.svelte";
+    import rawLyrics from "$lib/data/shakeItOff/shakeItOff.txt?raw";
+    import {subgraphedBigrams} from "$lib/components/compute/markovFilterHelpers";
+    const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeShakeItOffFSM();
+    const { markovStates, markovTransitions, mStartingStates, endState, wordChains, subgraphLines } = makeShakeItOffMarkov();
+    
 
     let weighted = false;
     let showDirectionalColours = true;
     let showEdgeLabels =false;
     let weightedThickness = true;
-
+    let showDepth = false;
     let sequence: string = "";
     let fsmResult: string | null = null;
     let markovResult: string | null = null;
+    let fullScreenPane: 'fsm' | 'markov' | null = null;
+    let selectedLine = "";
+    let selectedSection = "";
+    let markovFilter: [string, string][] = [];
+    let expandSection = "";
 
+    const lyricsSgs = Object.entries(subgraphLines ?? {}).map(([id, lines]) => ({id, lines}));
 
-    function testSequence(){
-        const fsmInput = sequence?.trim().split("");
-        const markovInput = sequence?.toUpperCase().trim().split("");
+    function selectLine(line: string, subgraphId: string){
+        if (selectedLine === line && selectedSection === subgraphId){
+            selectedLine = "";
+            selectedSection = "";
+            markovFilter =[];
+            expandSection = "";
+            return;
+        }
+        selectedLine = line;
+        selectedSection = subgraphId;
+        markovFilter = subgraphedBigrams(line, subgraphId);
+        expandSection = subgraphId;
 
-        const isAccepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
-        fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
-
-        const prob = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        markovResult = `P(${markovInput}) = ${prob.toFixed(5)}`;
     }
-    let showDepth = false;
     $: fsmRenderKey = [
       fsmStates.length,
       fsmTransitions.length,
@@ -44,8 +56,8 @@
 
 <main class="page">
     <PageIntro 
-        title="Letter Scramble"
-        description="Below, we've used a dataset of the letters 'C,a,r,t,o,n,s'. The accepting states are all of the words in the Cambridge English dictionary that you can make as an anagram of these letters, starting with the letter C. The Markov chain shows us the likeliness of transitioning between letters based on these words in the dictionary."
+        title="Shake It Off"
+        description="This Taylor Swift song's lyrics have beeen parsed into a Markov chain. At the top level, we can see the probability of transitions between different song sections, like Verse to Chorus. If you zoom in, we can see the transitions between words within this section. Click on a lyric to highlight its transitions in the graph."
     />
     <!-- <div class="box">
         <h3>Accepting States</h3>
@@ -57,11 +69,24 @@
             {/each}
             </div>
     </div> -->
-      <Accordion title="Accepting States" initiallyOpen={false}>
-        {#each acceptingStates as word (word)}
-            <span class="word">{word}</span>
+
+    <Accordion title="Song Lyrics" initiallyOpen={false}>
+        {#each lyricsSgs as section}
+            <div class="sectionBlock">
+                <span class="sectionLabel">[{section.id}]</span>
+                {#each section.lines as line}
+                    <button class="lyricLine" 
+                        class:active={selectedLine===line && selectedSection===section.id}
+                        type="button" 
+                        on:click={() => selectLine(line, section.id)}>
+                        {line}
+                    </button>   
+                {/each}
+            </div>
         {/each}
+
     </Accordion>
+
     <div class="graphRow">
         <!-- <div style="width:50%;">
             <FsmHierarchicalViewer 
@@ -74,7 +99,7 @@
             renderKey = {fsmRenderKey}
             />
         </div> -->
-        <div class="fsmPane" style="width:50%;">
+        <div class="fsmPane" class:hidden={fullScreenPane === 'markov'} style="width: {fullScreenPane === 'fsm' ? '100%' : '50%'};">
           <div class="paneHeader"></div>
           <div class="fsmGraph">
             <FsmHierarchicalViewer 
@@ -85,6 +110,8 @@
                 {weighted}      
                 {showDepth}        
                 renderKey = {fsmRenderKey}
+                isFullScreen={fullScreenPane === 'fsm'}
+                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'}
               />
           </div>
         </div>
@@ -96,7 +123,7 @@
             {endState}
             />
         </div> -->
-        <div class="markovPane"style="width:50%;">
+        <div class="markovPane" class:hidden={fullScreenPane === 'fsm'} style="width: {fullScreenPane === 'markov' ? '100%' : '50%'};">
           <div class="paneHeader">
             <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
               <input
@@ -123,19 +150,23 @@
           </div>
           <div class="markovGraph">
             <MarkovView 
-              {markovStates}
-              {markovTransitions}
-              {mStartingStates}
-              {endState}
-              {wordChains}
-              {showDirectionalColours}
-              {showEdgeLabels}
-              {weightedThickness}
+                {markovStates}
+                {markovTransitions}
+                {mStartingStates}
+                {endState}
+                {wordChains}
+                {showDirectionalColours}
+                {showEdgeLabels}
+                {weightedThickness}
+                filterPairs={markovFilter}
+                expandSectionId={expandSection}
+                isFullScreen={fullScreenPane === 'markov'}
+                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'}
             />
           </div>
         </div>
     </div>  
-    <div>
+    <!-- <div>
         <p>Can you find a word rejected by the FSM that the Markov Chain still assigns a probability to? </p>
         <label for="sequenceInput">Input Sequence:</label>
         <input
@@ -150,21 +181,13 @@
         </div>            
             {markovResult}
 
-    </div>
+    </div> -->
 </main>
 
 
 <style>
     .page{
         min-height: 95dvh;
-        height: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        padding: 1rem;
-        background: #fafafa;  
-        box-sizing: border-box;
-        /* overflow: hidden; */
         overflow-y:auto;
     }
     .graphRow{
@@ -173,46 +196,31 @@
         display: flex;
         gap: 8px;
     }
-    .fsmPane, .markovPane{
-        display: flex;
-        flex: 1 1 auto;
-        min-width: 0;
-        min-height: 0;
-        flex-direction: column;
+    .sectionLabel {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #999;
+        font-family: 'Courier New', monospace;
+        padding: 2px 0;
     }
-    .paneHeader{
-        display: flex;
-
-        flex: 0 0 20px;
-        background: whitesmoke;
-        border-bottom: 1px solid #ddd;
-        gap: 12px;
-        align-items: center;
+    .lyricLine {
+        text-align: left;
+        padding: 3px 6px;
+        font-size: 13px;
+        font-family: 'Courier New', monospace;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-radius: 3px;
+        color: #333;
+        transition: background 0.1s;
     }
-    .fsmGraph, .markovGraph{
-        flex: 1 1 auto;
-        min-height: 0;
-        display: flex;
-    }
-    h3{
-        margin: 0 0 4px 0; 
-        font-size: 16px; 
-    }
-    .box {
-        border: 1.5px solid lightgrey;
-        border-radius: 4px;
-        padding: 8px;
-        margin: 8px;
-        background-color: snow;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-    .word {
-        background-color: white;
-        border: 1px solid #f3d421;
-        border-radius: 1px;
-        padding: 4px 4px;
-        font-size: 14px;
+    .lyricLine:hover { background: #eef; }
+    .lyricLine.active {
+        background: #cde1ff;
+        font-weight: 600;
+        color: #1a4fa0;
     }
 </style>
