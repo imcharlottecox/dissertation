@@ -15,8 +15,8 @@ const config = {
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 		// adapter: adapter(),
 		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
+			pages: 'docs',
+			assets: 'docs',
 			fallback: '404.html'
 		}),
 		paths: {
