@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
 	import { onMount } from 'svelte';
     import * as d3 from 'd3';
     import { makeCaMarkov } from '$lib/data/ca_letters/caMarkov';
@@ -265,4 +265,4 @@ function calculatePositionLayout() {
         height: 600px;
         border: 1px solid #ccc;
     }
-</style>
+</style> -->
