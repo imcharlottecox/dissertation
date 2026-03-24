@@ -163,7 +163,7 @@
 <style>
     .page{
         height: auto;
-        min-height: 95dvh;
+        min-height: 1100px;
         overflow-y:auto;
     }
     .graphRow{

@@ -34,8 +34,8 @@
     const { nodeRadius, padding } = getGraphDefaultsFSM();
     const ZOOM_LEVEL_THRESHOLDS = new Map<number, number>([
         [1, 1.1],
-        [2, 1.6],
-        [3, 3.0],
+        [2, 1.3],
+        [3, 1.5],
     ]);
     let graphWidth = 720;
     let graphHeight = 200;
@@ -901,6 +901,7 @@
         if (!g) return;
         const { steps, litNodes } = computeWalkedPath(inputSequence ?? "");
         const layer = g.select<SVGGElement>("g.path-highlight");
+        layer.selectAll("path.hl-edge, circle.hl-node").interrupt();
 
         // Edges
         type HStep = { id: string; pathD: string; opacity: number; delay: number };

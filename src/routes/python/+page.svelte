@@ -130,7 +130,8 @@
     <Accordion title="Python Assignments Dataset" initiallyOpen={false}>
         {#each assignmentDataset as stmt}
             <button
-                class="stmt {selectedStatement === stmt ? 'active' : ''}"
+                class="lyricLine"
+                class:active={selectedStatement === stmt ? 'active' : ''}
                 on:click={() => selectStatement(stmt)}
                 type="button">
                 {stmt}
@@ -217,6 +218,24 @@
     }
     .graphRow{
         min-height: 60dvh;
+    }
+    .lyricLine {
+        text-align: left;
+        padding: 3px 6px;
+        font-size: 13px;
+        font-family: 'Courier New', monospace;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-radius: 3px;
+        color: #333;
+        transition: background 0.1s;
+    }
+    .lyricLine:hover { background: #eef; }
+    .lyricLine.active {
+        background: #cde1ff;
+        font-weight: 600;
+        color: #1a4fa0;
     }
 </style>
 

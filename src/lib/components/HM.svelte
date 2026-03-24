@@ -1157,7 +1157,7 @@
         const stepData: HStep[] = steps.map((s, i) => ({
             id: `hl:${s.from}>${s.to}:${i}`,
             pathD: s.pathD,
-            opacity: steps.length === 1 ? 1.0 : 0.45 + 0.55 * ((i + 1) / steps.length),
+            opacity: steps.length === 1 ? 0.8 : 0.4 + 0.4 * ((i + 1) / steps.length),
             delay: i * STAGGER_MS,
         }));
 
