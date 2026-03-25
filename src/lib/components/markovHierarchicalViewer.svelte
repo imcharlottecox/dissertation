@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, createEventDispatcher } from "svelte";
+    const dispatch = createEventDispatcher();
     import * as d3 from "d3";
     import type { StateNode, mTransition } from '$lib/graph/graphTypes';
     import { getGraphDefaultsMarkov } from '$lib/graph/graphDefaults';
@@ -15,6 +16,9 @@
     export let showEdgeLabels: boolean = true;
     export let weightedThickness: boolean = true;
     export let renderKey: string = "";
+    export let isFullScreen: boolean = false;
+
+    let zoomBehaviour: d3.ZoomBehavior<SVGSVGElement, unknown> | null = null;
 
     let focusClckdNodeId: string | null = null;
     let focusClckNodeIds = new Set<string>();
@@ -497,8 +501,8 @@
                 g.attr("transform", currentTransform);
                 drawEdges();
             });
+        zoomBehaviour = zoom;
         svg.call(zoom);
-        // svg.call(zoom); //TODO DELETE!
 
 
         // arrowhead
@@ -565,6 +569,31 @@ $: if (ready){
     drawEdges();    
 }
 
+$: if (ready && isFullScreen !== undefined) {
+    // Reset SVG to 1px so it stops inflating its own container before we remeasure.
+    // Without this, on collapse getBoundingClientRect reads the old wide size back.
+    d3.select(svgElement).attr("width", 1).attr("height", 1);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        measureHeight();
+        calculatePositionLayout();
+        drawNodes();
+        drawEdges();
+    }));
+}
+
+function zoomIn() {
+    if (!zoomBehaviour) return;
+    d3.select(svgElement).transition().duration(150).call(zoomBehaviour.scaleBy as any, 1.2);
+}
+function zoomOut() {
+    if (!zoomBehaviour) return;
+    d3.select(svgElement).transition().duration(150).call(zoomBehaviour.scaleBy as any, 1 / 1.2);
+}
+function zoomReset() {
+    if (!zoomBehaviour) return;
+    d3.select(svgElement).transition().duration(150).call(zoomBehaviour.transform as any, d3.zoomIdentity);
+}
+
 </script>
 
 <!-- <svg bind:this={svgElement} width="100%" height="600"></svg> -->
@@ -583,6 +612,12 @@ $: if (ready){
 </div>
 <div class="graphWrapper" bind:this={wrapperElement}>
     <svg bind:this={svgElement}></svg>
+    <div class="zoomControls">
+        <button type="button" class="zoomButton" title="{isFullScreen ? 'Exit fullscreen' : 'Expand'}" on:click={() => dispatch('toggleFullscreen')}>{isFullScreen ? '✕' : '⤢'}</button>
+        <button type="button" class="zoomButton" on:click={zoomIn}>+</button>
+        <button type="button" class="zoomButton" on:click={zoomOut}>−</button>
+        <button type="button" class="zoomButton" on:click={zoomReset}>⟳</button>
+    </div>
 </div>
 </div>
 
@@ -598,5 +633,23 @@ $: if (ready){
         height: 100%;
         min-height: 0;
     }
+    .zoomControls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .zoomControls button {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #ccc;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    .zoomControls button:hover { background: #f0f0f0; }
 
 </style>

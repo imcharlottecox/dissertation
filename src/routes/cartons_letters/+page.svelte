@@ -9,13 +9,15 @@
     // import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
     import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
     import {ComputeFlatValidityFSM} from "$lib/components/compute/computeValidityFSM";
-    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
+    import { ComputeProbabilityMarkov, ComputeProbabilityMarkovDetailed } from '$lib/components/compute/computeProbabilityMarkov';
     import PageIntro from "$lib/components/pageIntro.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
     import Accordion from "$lib/components/Accordion.svelte";
     import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte"
-    import { ChartNoAxesColumnDecreasing } from "lucide-react";
+    import { onMount } from "svelte";
+    import { logEvent, seqLogger } from "$lib/supabase/logging";
+
     let weighted = false;
     let showDirectionalColours = false;
     let showEdgeLabels =true;
@@ -25,6 +27,14 @@
     let fsmResult: string | null = null;
     let markovResult: string | null = null;
     let fullScreenPane: 'fsm' | 'markov' | null = null;
+    const PAGE = "Cartons";
+
+    const sequenceLogger = seqLogger(PAGE);
+
+    onMount(() => {
+        logEvent('page_load', { page: PAGE });
+    });
+
 
 
     function testinputSequence(){
@@ -43,14 +53,21 @@
 
     const questions: TaskQuestion[] = [
         {
-            id: "Q1",
-            prompt: "Can you find a word rejected by the Finite State Machine that the Markov Chain still assigns a probability to? What is the lowest probability you can find for such a word?",
-            check: ({accepted, probability}) => !accepted && probability>0
+            id: 'Q0',
+            prompt: "Try typing 'Cat'. What happens?",
+            check: ({input}) => input === "Cat",
+            hint: "Notice how the FSM moves through the states Start-> C -> Ca -> Cat on each letter input, whereas the Markov chain just goes to the next letter input with a certain probability. HINT: pay attention at to which letters in the dataset need to be capital letters. This is important as the systems are based COMPLETELY on the dataset, which uses a capital C at the start of every word! ",
+        },
+        {
+            id: 'Q00',
+            prompt: "Try typing 'Cas'. It's rejected by the Finite State Machine and assigned a 0 probability! Why? Can you figure out where it breaks?",
+            check: ({input}) => input === "Cas",
+            hint: "Cas is not in our dataset - there are no transitions either model can take from 'a' to 's', so it rejected and the probability is assigned a 0!",
         },
         {
             id: "Q2",
-            prompt: "Can you find a four-letter word accepted by the FSM with probability of exactly 0.1253?",
-            check: ({accepted, probability, input}) => accepted && probability == 0.1253 && input.length === 4
+            prompt: "Can you find a four-letter word accepted by the FSM with probability of exactly 0.12525?",
+            check: ({accepted, probability, input}) => accepted && probability == 0.12525 && input.length === 4
         },
         {
             id: "Q3",
@@ -71,6 +88,12 @@
             
         },
         {
+            id: "Q1",
+            prompt: "Can you find a word rejected by the Finite State Machine that the Markov Chain still assigns a probability to? What is the lowest probability you can find for such a word?",
+            check: ({accepted, probability}) => !accepted && probability>0,
+            hint: "The lowest probability I've found is 0.04163"
+        },
+        {
         id: "Q5",
             prompt: "How do you calculate the probability of a sequence in the Markov chain?",
             check: ()=> false,
@@ -79,6 +102,17 @@
                 {id: "MarkovLink", label: "You add each transition's probability in the sequence together"},
                 {id: "length", label: "It is just what the final transition edge's probability is"},
                 {id: "multiply", label: "You multiply the probabilities of each transition in the sequence"},
+            ]
+        },
+        {
+            id: "Q-concept1",
+            prompt: "Which statement best describes the difference between the two models?",
+            check: ()=> false,
+            correctChoice: "difference",
+            choices: [
+                {id: "same", label: "Both models decide whether a word is correct or not"},
+                {id: "difference", label: "The FSM checks if a word follows rules, while the Markov chain measures how likely it is"},
+                {id: "markovOnly", label: "The Markov chain decides if a word is valid, the FSM gives probabilities"},
             ]
         },
         {
@@ -95,14 +129,19 @@
 
         const accepted = ComputeFlatValidityFSM(fsmTransitions, fsmInput, acceptingStates, startingStates);
         const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        const rounded_p = probability.toFixed(4);
-        console.log(parseFloat(rounded_p));
+        const breakdown = ComputeProbabilityMarkovDetailed(markovTransitions, markovInput);
+
+        const rounded_p = probability.toFixed(5);
+        sequenceLogger(sequence, { accepted, probability: parseFloat(rounded_p), questionId: questions[0]?.id ?? "Q0" });
+
         return{
             accepted,
             probability: parseFloat(rounded_p),
             sequence,
             fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
-            markovText: `P(${markovInput}) = ${rounded_p}`
+            markovText: `P(${markovInput}) = ${rounded_p}`,
+            typedTokens: markovInput,
+            probabilityBreakdown: breakdown.steps,
         };
     }
     $: fsmRenderKey = [
@@ -147,7 +186,7 @@
             />
         </div> -->
         <div class="fsmPane" class:hidden={fullScreenPane === 'markov'} style="width: {fullScreenPane === 'fsm' ? '100%' : '50%'};">
-          <div class="paneHeader"></div>
+          <div class="paneHeader"><span class="paneTitle">Finite State Machine</span></div>
           <div class="fsmGraph">
             <FsmHierarchicalViewer 
                 {fsmStates}
@@ -159,7 +198,7 @@
                 renderKey = {fsmRenderKey}
                 {inputSequence}
                 isFullScreen={fullScreenPane === 'fsm'}
-                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'}
+                on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'fsm', open: fullScreenPane === 'fsm' }); }}
               />
           </div>
         </div>
@@ -173,24 +212,28 @@
         </div> -->
         <div class="markovPane" class:hidden={fullScreenPane === 'fsm'} style="width: {fullScreenPane === 'markov' ? '100%' : '50%'};">
           <div class="paneHeader">
+          <span class="paneTitle">Markov Chain</span>
             <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
-              <input
+            <input
                 type="checkbox"
                 bind:checked={showDirectionalColours}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showDirectionalColours', value: e.currentTarget.checked })}
               />
-              Show Directional Colours
+            Directional Colours
             </label>
             <label class="check" title="Displays edge probabilities">
               <input
                 type="checkbox"
                 bind:checked={showEdgeLabels}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showEdgeLabels', value: e.currentTarget.checked })}
               />
-              Show Edge Labels
+            Edge Labels
             </label>
             <label class="check" title="Edge thickness corresponds to the probability of the edge">
               <input
                 type="checkbox"
                 bind:checked={weightedThickness}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'weightedThickness', value: e.currentTarget.checked })}
               />
               Weighted Thickness
             </label>
@@ -207,7 +250,7 @@
                 {weightedThickness}
                 {inputSequence}
                 isFullScreen={fullScreenPane === 'markov'}
-                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'}
+                on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'markov', open: fullScreenPane === 'markov' }); }}
             
             />
           </div>
@@ -227,7 +270,7 @@
             {fsmResult}
         </div>            
             {markovResult} -->
-        <ChallengePanel {questions} {evaluate} showPrediction={false} on:sequenceChange={(e) => { inputSequence = e.detail; }}/>
+        <ChallengePanel {questions} {evaluate} page={PAGE} showPrediction={false} on:sequenceChange={(e) => { inputSequence = e.detail; }}/>
     </div>
 </main>
 
@@ -238,7 +281,7 @@
         overflow: hidden;
     }
     .graphRow{
-        min-height: 60dvh;
+        min-height: 80dvh;
     }
 
     .paneHeader{

@@ -5,7 +5,7 @@
     import type { HGraph, HStateNode, HEdge } from "$lib/graph/graphTypes";
     import { NODE_COLOURS, NODE_STROKES, sectionColour } from "$lib/graph/nodeColours";
     import { createDragNoSim, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from "$lib/graph/graphBehaviours";
-
+	import { logEvent } from '$lib/supabase/logging';
    
     export let markovStates: string[] = [];
     export let markovTransitions: { from: string; to: string; probability: number }[] = [];
@@ -21,10 +21,12 @@
     export let isFullScreen: boolean = false;
 
     export let filterPairs: [string, string][] = [];
-    
-    export let expandSectionId: string = "";
+    export let showDirectionalColours: boolean = false;
+    export let showEdgeLabels: boolean = true;
+    export let weightedThickness: boolean = true;
 
-   
+    export let expandSectionId: string = "";
+    export let page: string = "unknown";
    
     const ZOOM_EXPAND_THRESHOLD = 1.2;
     const BASE_NODE_RADIUS = 15;
@@ -55,6 +57,11 @@
     $: filterActiveEdges = filterPairs.length > 0
         ? new Set<string>(filterPairs.map(([a, b]) => `${a}|${b}`))
         : null;
+
+    // Click-focus state
+    let focusClickedNodeId: string | null = null;
+    let focusClickNodeIds  = new Set<string>();
+    let focusClickEdgeIds  = new Set<string>();
 
    
    
@@ -763,6 +770,33 @@
             });
     }
 
+    function computeFocusClickSets(id: string | null) {
+        focusClickedNodeId = id;
+        focusClickNodeIds  = new Set<string>();
+        focusClickEdgeIds  = new Set<string>();
+        if (!id) return;
+        focusClickNodeIds.add(id);
+        for (const e of hg.edges.values()) {
+            if (!e.visible) continue;
+            if (e.from === id || e.to === id) {
+                focusClickEdgeIds.add(e.id);
+                focusClickNodeIds.add(e.from);
+                focusClickNodeIds.add(e.to);
+            }
+        }
+    }
+
+    function handleNodeClick(id: string) {
+        if (focusClickedNodeId === id) {
+            computeFocusClickSets(null);
+        } else {
+            computeFocusClickSets(id);
+            logEvent('node_click', { page, nodeId: id, toggled_off: focusClickedNodeId === id });
+        }
+        drawNodes();
+        drawEdges();
+    }
+
     function drawNodes() {
         const nodeData = Array.from(hg.nodes.values()).filter(n => n.visible);
 
@@ -774,7 +808,8 @@
                     const n = enter.append("g")
                         .attr("class", "node")
                         .attr("transform", d => `translate(${d.x},${d.y})`)
-                        .call(dragBehaviour as any);
+                        .call(dragBehaviour as any)
+                        .on("click", (event, d) => { event.stopPropagation(); handleNodeClick(d.id); });
                     n.append("circle")
                         .attr("r", d => nodeRadius(d))
                         .attr("fill", d => {
@@ -813,9 +848,13 @@
                 update => update.attr("transform", d => `translate(${d.x},${d.y})`),
                 exit => exit.remove(),
             )
-            .attr("opacity", d => filterActiveNodes
-                ? (filterActiveNodes.has(d.id) ? 1 : 0.15)
-                : 1);
+            .attr("opacity", d => {
+                if (focusClickedNodeId)
+                    return focusClickNodeIds.has(d.id) ? 1 : 0.15;
+                if (filterActiveNodes)
+                    return filterActiveNodes.has(d.id) ? 1 : 0.15;
+                return 1;
+            });
     }
 
     function drawEdges() {
@@ -827,6 +866,9 @@
             from: string; to: string;
             path: string; labelX: number; labelY: number;
             angle: number; strokeWidth: number;
+            isUpward: boolean; probability: number;
+            isBidirectional: boolean;
+            sourceNode: HStateNode; targetNode: HStateNode;
         };
 
         const renderData: EdgeRender[] = edgeData.flatMap(e => {
@@ -849,8 +891,14 @@
                 labelY = src.y - r * 2;
             } else if (isBidirectional) {
                 path   = computeCurvedPath(src, tgt, r, 1);
-                labelX = (src.x + tgt.x) / 2 + 12;
-                labelY = (src.y + tgt.y) / 2 - LABEL_OFFSET;
+                const CURVE = 14;
+                const mx = (src.x + tgt.x) / 2;
+                const my = (src.y + tgt.y) / 2;
+                const dx = tgt.x - src.x;
+                const dy = tgt.y - src.y;
+                const len = Math.hypot(dx, dy) || 1;
+                labelX = mx + (-dy / len) * CURVE;
+                labelY = my + ( dx / len) * CURVE;
             } else {
                 const { x1, y1, x2, y2 } = computeEdgePoints(src, tgt, r);
                 path   = `M ${x1},${y1} L ${x2},${y2}`;
@@ -862,16 +910,25 @@
             let angleDeg   = angleRad * (180 / Math.PI);
             if (angleDeg > 90 || angleDeg < -90) angleDeg += 180;
 
+            const isUpward = tgt.y < src.y;
+
             return [{
                 id: e.id, label: e.label,
                 from: e.from, to: e.to,
                 path, labelX, labelY,
                 angle: isSelfLoop ? 0 : angleDeg,
-                strokeWidth: Math.max(0.5, p * 2),
+                strokeWidth: weightedThickness
+                    ? (p < 0.036 ? 0.01 : Math.max(0.5, p * 2))
+                    : 1,
+                isUpward,
+                probability: p,
+                isBidirectional,
+                sourceNode: src,
+                targetNode: tgt,
             }];
         });
 
-        g.select<SVGGElement>("g.edges")
+        const edgeLayer = g.select<SVGGElement>("g.edges")
             .selectAll<SVGPathElement, EdgeRender>("path.edge")
             .data(renderData, d => d.id)
             .join(
@@ -880,31 +937,49 @@
                 exit => exit.remove(),
             )
             .attr("fill", "none")
-            .attr("stroke", "black")
+            .attr("stroke", d => showDirectionalColours
+                ? (d.isUpward ? "lightpink" : "black")
+                : "black")
             .attr("stroke-width", d => d.strokeWidth)
-            .attr("opacity", d => filterActiveEdges
-                ? (filterActiveEdges.has(`${d.from}|${d.to}`) ? 1 : 0.06)
-                : 1)
-            .attr("marker-end", "url(#arrow-black)")
+            .attr("opacity", d => {
+                if (focusClickedNodeId)
+                    return focusClickEdgeIds.has(d.id) ? 1 : 0.06;
+                if (filterActiveEdges)
+                    return filterActiveEdges.has(`${d.from}|${d.to}`) ? 1 : 0.06;
+                return 1;
+            })
+            .attr("marker-end", d => showDirectionalColours && d.isUpward
+                ? "url(#arrow-pink)"
+                : "url(#arrow-black)")
             .attr("d", d => d.path);
+
+        // Hover tooltip
+        edgeLayer.selectAll("title").remove();
+        edgeLayer.append("title").text(d => `${d.from} → ${d.to}\nP = ${d.probability}`);
 
         g.select<SVGGElement>("g.labels")
             .selectAll<SVGTextElement, EdgeRender>("text.edge-label")
-            .data(renderData, d => d.id)
+            .data(showEdgeLabels ? renderData : [], d => d.id)
             .join(
                 enter => enter.append("text").attr("class", "edge-label"),
                 update => update,
                 exit => exit.remove(),
             )
-            .attr("opacity", d => filterActiveEdges
-                ? (filterActiveEdges.has(`${d.from}|${d.to}`) ? 1 : 0.06)
-                : 1)
+            .attr("opacity", d => {
+                if (focusClickedNodeId)
+                    return focusClickEdgeIds.has(d.id) ? 1 : 0.06;
+                if (filterActiveEdges)
+                    return filterActiveEdges.has(`${d.from}|${d.to}`) ? 1 : 0.06;
+                return 1;
+            })
             .attr("font-size", 7)
             .attr("text-anchor", "middle")
             .attr("dominant-baseline", "middle")
             .attr("fill", "#555")
             .attr("pointer-events", "none")
-            .attr("transform", d => `translate(${d.labelX},${d.labelY}) rotate(${d.angle})`)
+            .attr("transform", d => (d.isBidirectional || d.from === d.to)
+                ? `translate(${d.labelX},${d.labelY})`
+                : `translate(${d.labelX},${d.labelY}) rotate(${d.angle})`)
             .text(d => d.label ?? "");
     }
 
@@ -923,6 +998,7 @@
     function init() {
         measureHeight();
         buildBaseHGraph();
+        computeFocusClickSets(null);
         lastZoomK = 1;
         lastSemanticK = 1;
         rerenderGraph();
@@ -965,6 +1041,15 @@
             .attr("orient", "auto")
             .append("path").attr("d", "M 0 0 L 10 5 L 0 10 z").attr("fill", "#888");
 
+        defs.append("marker")
+            .attr("id", "arrow-pink")
+            .attr("viewBox", [0, 0, 10, 10])
+            .attr("refX", 7).attr("refY", 5)
+            .attr("markerUnits", "strokeWidth")
+            .attr("markerWidth", 6).attr("markerHeight", 6)
+            .attr("orient", "auto")
+            .append("path").attr("d", "M 0 0 L 10 5 L 0 10 z").attr("fill", "lightpink");
+
         dragBehaviour = createDragNoSim(() => {
             drawEdges();
             drawHalos();
@@ -973,6 +1058,7 @@
         });
 
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
+            .filter(event => !event.type.startsWith("dblclick") && (event instanceof WheelEvent || event.button === 0))
             .on("zoom", event => {
                 currentZoomTransform = event.transform;
                 g.attr("transform", event.transform.toString());
@@ -985,7 +1071,8 @@
                 }
             });
 
-        svg.call(zoomBehaviour);
+        svg.call(zoomBehaviour).on("dblclick.zoom", null);
+        svg.on("dblclick", event => event.preventDefault());
         mounted = true;
         init();
 
@@ -1004,6 +1091,11 @@
 
     $: if (mounted && filterPairs !== undefined) {
         rerenderGraph();
+    }
+
+    $: if (mounted) {
+        showDirectionalColours; showEdgeLabels; weightedThickness;
+        drawEdges();
     }
 
     $: if (mounted && expandSectionId) {

@@ -1,13 +1,15 @@
 <script lang="ts">
-  export let title: string;
-  export let initiallyOpen: boolean = false;
+	import { logEvent } from '$lib/supabase/logging';
+    export let title: string;
+    export let initiallyOpen: boolean = false;
+    export let page: string = "unknown";
 
   let showPanel = initiallyOpen;
 </script>
 
 <main>
     <div class="box">
-    <button class="accordion" on:click={() => showPanel = !showPanel} class:active={showPanel}>
+    <button class="accordion" on:click={() => {showPanel = !showPanel; if (showPanel) logEvent('accordion_open', {page});}} class:active={showPanel}>
         <h3>{title}</h3>
     </button>
     <div class="panel" class:open={showPanel}>

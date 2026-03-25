@@ -89,7 +89,17 @@ body {
     padding: 0 10px;
     flex-wrap: wrap;
 }
-
+.paneTitle {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    padding-right: 8px;
+    border-right: 1px solid var(--border);
+    margin-right: 2px;
+}
 .fsmGraph,
 .markovGraph {
     flex: 1 1 auto;

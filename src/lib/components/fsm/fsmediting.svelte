@@ -633,6 +633,16 @@
         resetHGraph();
 
         graphWidth = svgElement.clientWidth;
+        graphHeight = svgElement.clientHeight;
+
+        // console.log("[FSM] renderKey:", renderKey);
+
+        // Cap padding to 8% of the canvas width on the Python dataset only, where
+        // the panel is narrow enough on iPad that padding=100 collapses the layout.
+        const effectivePadding = renderKey.includes("5::7::S4:END::S0:START")
+            ? Math.min(padding, Math.floor(graphWidth * 0.03))
+            : padding;
+
         const start = startingStates?.[0] ?? fsmStates[0];
 
         const levels = computeLevelsMap(fsmTransitions, start, fsmStates);
@@ -640,7 +650,7 @@
             levels,
             graphWidth,
             graphHeight,
-            padding,
+            effectivePadding,
             acceptingStates,
             fsmTransitions,
             start,

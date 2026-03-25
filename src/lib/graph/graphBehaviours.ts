@@ -6,6 +6,29 @@ export function createZoom(g: d3.Selection<SVGGElement, unknown, null, undefined
     .on('zoom', (event) => g.attr('transform', event.transform));
 }
 
+const recentDrags = new Map<string, number>(); //node id timestamp
+const DRAG_COOLDOWN = 60_000;
+export function createDragNoSim(updateEdges: () => void) {
+  return d3.drag<SVGGElement, any>()
+    .on("start", function () {
+      d3.select(this).raise();
+    })
+    .on("drag", function (event, d) {
+      d.x = event.x;
+      d.y = event.y;
+      d3.select(this).attr("transform", `translate(${event.x},${event.y})`);
+      updateEdges();
+    })
+    .on("end", function (event, d){
+        const now = Date.now();
+        const last = recentDrags.get(d.id) ?? 0;
+        if (now-last > DRAG_COOLDOWN){
+            recentDrags.set(d.id, now);
+            logEvent('drag_node', { nodeId: d.id, x: Math.round(d.x), y: Math.round(d.y) });
+        }
+    })
+}
+
 // drag handler: remembers and saves positions of node drags, to persist state across window resizes
 export function createDrag(simulation: d3.Simulation<any, any>, tick: () => void, graphNodes: any[]): d3.DragBehavior<SVGGElement, any, any>  {
   return d3.drag<SVGGElement, StateNode>()
@@ -26,20 +49,6 @@ export function createDrag(simulation: d3.Simulation<any, any>, tick: () => void
             graphNodes[index].fx = d.x;
             graphNodes[index].fy = d.y;
         }
-    });
-}
-
-export function createDragNoSim(updateEdges: () => void) {
-  return d3.drag<SVGGElement, any>()
-    .on("start", function () {
-      d3.select(this).raise();
-    })
-    .on("drag", function (event, d) {
-      d.x = event.x;
-      d.y = event.y;
-      d3.select(this).attr("transform", `translate(${event.x},${event.y})`);
-      logEvent('drag_node', { nodeId: d.id, x: d.x, y: d.y });
-      updateEdges();
     });
 }
 

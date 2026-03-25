@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logEvent } from '$lib/supabase/logging';
     import MarkovView from "$lib/components/HM.svelte";
     import PageIntro from "$lib/components/pageIntro.svelte";
     import Accordion from "$lib/components/Accordion.svelte";
@@ -6,7 +7,7 @@
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
     import {getTedTalkList, getDefaultTedTalk, getTedTalkByTitle} from "$lib/data/interactive/makeTedMarkov";
 	import { wordBigrams } from '$lib/components/compute/markovFilterHelpers';
-
+    import { onMount } from 'svelte';
 
     const talkList = getTedTalkList();
     let selectedTitle = talkList[0]?.talk__name ?? "";
@@ -17,6 +18,11 @@
     let weightedThickness = true;
     let fullscreenPane: "markov"|null = null;
     let inputSequence = "";
+    const PAGE = "TED";
+
+    onMount(() => {
+        logEvent('page_load', { page: PAGE });
+    });
 
     $: selectedTalk = getTedTalkByTitle(selectedTitle)?? getDefaultTedTalk();
     $: markovStates = selectedTalk.markovStates;
@@ -50,6 +56,7 @@
         }
         selectedSentence = sentence;
         markovFilter = wordBigrams(sentence);
+        logEvent('dataset_statement_select', { page: PAGE, statement: sentence });
     }
 
     function formatTime(seconds: number){
@@ -109,10 +116,12 @@
     <div class="graphRow">
         <div class="markovPane" class:hidden={fullscreenPane !== null && fullscreenPane!== "markov"}>
           <div class="paneHeader">
+          <span class="paneTitle">Markov Chain</span>
             <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
               <input
                 type="checkbox"
                 bind:checked={showDirectionalColours}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showDirectionalColours', value: e.currentTarget.checked })}
               />
               Show Directional Colours
             </label>
@@ -120,6 +129,7 @@
               <input
                 type="checkbox"
                 bind:checked={showEdgeLabels}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showEdgeLabels', value: e.currentTarget.checked })}
               />
               Show Edge Labels
             </label>
@@ -127,6 +137,7 @@
               <input
                 type="checkbox"
                 bind:checked={weightedThickness}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'weightedThickness', value: e.currentTarget.checked })}
               />
               Weighted Thickness
             </label>
@@ -152,7 +163,7 @@
                 filterPairs={markovFilter}
 
                 isFullScreen={fullscreenPane === 'markov'}
-                on:toggleFullscreen={() => fullscreenPane = fullscreenPane === 'markov' ? null : 'markov'}
+                on:toggleFullscreen={() => { fullscreenPane = fullscreenPane === 'markov' ? null : 'markov'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'markov', open: fullscreenPane === 'markov' }); }}
             />
           </div>
         </div>

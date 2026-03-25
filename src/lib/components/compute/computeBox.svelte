@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { logEvent } from "$lib/supabase/logging";
     import { createEventDispatcher } from "svelte";
 
     export type MCQChoice = {
@@ -11,6 +12,7 @@
         check: (context: { accepted: boolean; probability: number; input: string }) => boolean;
         choices?: MCQChoice[];
         correctChoice?: string;
+        hint?: string;  // optional explanation shown after a correct answer
     };
     export type Evaluation = {
         accepted: boolean;
@@ -22,11 +24,14 @@
         typedTokens: string[];
         predictedTokens: string[];
         allBeams: Array<{ predictedTokens: string[]; totalProbability: number; terminatedNaturally: boolean }>;
+        probabilityBreakdown?: Array<{ from: string; to: string; probability: number }>;
     };
 
     export let questions: TaskQuestion[] = [];
     export let evaluate: (sequenceInput: string) => Evaluation;
     export let showPrediction: boolean = true;
+    export let page: string = "unknown";
+
 
     const dispatch = createEventDispatcher<{ sequenceChange: string }>();
 
@@ -44,6 +49,8 @@
     let prefixProbability = 0;
     let confidenceLabel: Evaluation["confidenceLabel"] = "unknown";
     let showAllBeams = false;
+    let probabilityBreakdown: Evaluation["probabilityBreakdown"] = [];
+    let evaluatedProbability = 0;
 
     $: isMCQ = !!(currentQuestion?.choices?.length);
     $: currentQuestion = questions[currentQIndex];
@@ -53,6 +60,16 @@
     $: typedDisplay = typedTokens.map(renderToken).join("");
     $: predictedDisplay = predictedTokens.map(renderToken).join("");
 
+    function formatProb(n: number): string {
+        if (n === 0) return "0";
+        if (n >= 0.0001) {
+            // Strip trailing zeros without going scientific
+            return n.toFixed(10).replace(/\.?0+$/, "");
+        }
+        const places = Math.min(Math.ceil(-Math.log10(n)) + 3, 20);
+        return n.toFixed(places).replace(/\.?0+$/, "");
+    }
+    
     function renderToken(t: string): string {
         if (t === "\n") return "↵";
         if (t === " ")  return "\u00A0"; 
@@ -71,17 +88,21 @@
         prefixProbability = 0;
         confidenceLabel = "unknown";
         showAllBeams = false;
+        probabilityBreakdown = [];
+        evaluatedProbability = 0;
         dispatch("sequenceChange", "");
     }
 
     function prevQ() {
         if (!canGoBack) return;
+        logEvent('back_question', { page, from: currentQIndex });
         currentQIndex -= 1;
         resetInput();
     }
 
     function nextQ() {
         if (!canGoNext) return;
+        logEvent('next_question', { page, from: currentQIndex });
         currentQIndex += 1;
         resetInput();
     }
@@ -99,6 +120,8 @@
         allBeams         = output.allBeams        ?? [];
         prefixProbability = output.prefixProbability ?? 0;
         confidenceLabel  = output.confidenceLabel ?? "unknown";
+        probabilityBreakdown = output.probabilityBreakdown ?? [];
+        evaluatedProbability = output.probability ?? 0;
 
         const accepted = currentQuestion?.check({
             accepted: output.accepted,
@@ -109,6 +132,7 @@
         isCorrect = accepted ?? null;
         if (accepted) {
             maxUnlockedQ = Math.max(maxUnlockedQ, currentQIndex + 1);
+            logEvent('question_correct', { page, question_id: currentQuestion.id, sequence: sequenceInput});
         }
     }
 
@@ -203,7 +227,10 @@
                     {#if allBeams.length > 1}
                         <button
                             class="beamToggle"
-                            on:click={() => showAllBeams = !showAllBeams}
+                            on:click={() => {
+                                showAllBeams = !showAllBeams;
+                                if (showAllBeams) logEvent('beam_predictions_expanded', {page, sequence: sequenceInput});
+                            }}
                         >
                             {showAllBeams ? "▲ hide" : `▼ ${allBeams.length - 1} other prediction${allBeams.length > 2 ? "s" : ""}`}
                         </button>
@@ -245,14 +272,32 @@
                     </div>
                 {/if}
             </div>
+
+            {#if probabilityBreakdown && probabilityBreakdown.length > 0}
+                <div class="probBreakdown">
+                    <span class="probLabel">P({typedTokens.map(renderToken).join("")})</span>
+                    <span class="probEquals">=</span>
+                    {#each probabilityBreakdown as step, i}
+                        <span class="probStep" title="{step.from} → {step.to}">{parseFloat(step.probability.toFixed(10))}</span>
+                        {#if i < probabilityBreakdown.length - 1}
+                            <span class="probMul">×</span>
+                        {/if}
+                    {/each}
+                    <span class="probEquals">=</span>
+                    <span class="probTotal">{formatProb(evaluatedProbability)}</span>
+                </div>
+            {/if}
         {/if}
 
         <div class="progressRow">
             {#if isCorrect}
                 <span class="status correct">Correct!</span>
-            {:else if sequenceInput.trim().length === 0}
+                {#if currentQuestion?.hint}
+                    <p class="hint">{currentQuestion.hint}</p>
+                {/if}
+            {:else if sequenceInput.trim().length === 0 && !selectedChoice}
                 <div></div>
-            {:else}
+            {:else if !isCorrect && isCorrect !== null}
                 <span class="status trying">Keep trying…</span>
             {/if}
         </div>
@@ -332,7 +377,7 @@
 
     .inputRow{
         display: flex;
-        align-items: flex-end;
+        align-items: flex-start;
         gap: 10px;
         margin: 6px 0 8px 0;
         flex-wrap: wrap;
@@ -406,7 +451,7 @@
     .arrow{
         font-size: 16px;
         color: var(--text-muted);
-        padding-bottom: 8px;
+        padding-top: 22px;
         flex: 0 0 auto;
         user-select: none;
     }
@@ -539,6 +584,45 @@
         font-size: 12px;
     }
 
+    .probBreakdown {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 6px;
+        padding: 6px 10px;
+        background: var(--bg-header);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 12px;
+        font-family: 'Courier New', monospace;
+        color: var(--text-primary);
+    }
+
+    .probLabel {
+        color: var(--navy);
+        font-weight: 600;
+    }
+
+    .probEquals {
+        color: var(--text-muted);
+    }
+
+    .probMul {
+        color: var(--text-muted);
+    }
+
+    .probStep {
+        color: var(--text-primary);
+        cursor: default;
+        border-bottom: 1px dotted var(--stone-mid);
+    }
+
+    .probTotal {
+        color: var(--navy);
+        font-weight: 700;
+    }
+
     .choiceList{
         display: flex;
         flex-direction: column;
@@ -575,6 +659,16 @@
     .choice.wrong{
         border-color: #e07070;
         background: #fdeaea;
+    }
+
+    .hint {
+        margin: 6px 0 0 0;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: #3a5a3a;
+        background: #edfaed;
+        border-left: 3px solid #6abf69;
+        border-radius: 0 var(--radius) var(--radius) 0;
     }
 
 </style>

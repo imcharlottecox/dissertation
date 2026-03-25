@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { logEvent } from '$lib/supabase/logging';
     // import FsmViewer from "$lib/components/fsmView.svelte";
     // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
     import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
@@ -12,14 +13,15 @@
     import Accordion from "$lib/components/Accordion.svelte";
     import rawLyrics from "$lib/data/shakeItOff/shakeItOff.txt?raw";
     import {subgraphedBigrams} from "$lib/components/compute/markovFilterHelpers";
+    import { onMount } from 'svelte';
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeShakeItOffFSM();
     const { markovStates, markovTransitions, mStartingStates, endState, wordChains, subgraphLines } = makeShakeItOffMarkov();
     
 
     let weighted = false;
     let showDirectionalColours = true;
-    let showEdgeLabels =false;
-    let weightedThickness = true;
+    let showEdgeLabels =true;
+    let weightedThickness = false;
     let showDepth = false;
     let sequence: string = "";
     let fsmResult: string | null = null;
@@ -29,8 +31,13 @@
     let selectedSection = "";
     let markovFilter: [string, string][] = [];
     let expandSection = "";
+    const PAGE = "ShakeItOff";
 
     const lyricsSgs = Object.entries(subgraphLines ?? {}).map(([id, lines]) => ({id, lines}));
+
+    onMount(() => {
+        logEvent('page_load', { page: PAGE });
+    });
 
     function selectLine(line: string, subgraphId: string){
         if (selectedLine === line && selectedSection === subgraphId){
@@ -44,6 +51,7 @@
         selectedSection = subgraphId;
         markovFilter = subgraphedBigrams(line, subgraphId);
         expandSection = subgraphId;
+        logEvent('dataset_statement_select', { page: PAGE, statement: line, section: subgraphId });
 
     }
     $: fsmRenderKey = [
@@ -55,10 +63,14 @@
 </script>
 
 <main class="page">
-    <PageIntro 
-        title="Shake It Off"
-        description="This Taylor Swift song's lyrics have beeen parsed into a Markov chain. At the top level, we can see the probability of transitions between different song sections, like Verse to Chorus. If you zoom in, we can see the transitions between words within this section. Click on a lyric to highlight its transitions in the graph."
-    />
+<PageIntro title="Shake It Off" description="Taylor Swift song's lyrics have been parsed into a Markov chain and FSM. As you can see, the FSM for a song is very complicated... Make the Markov chain full screen and investigate these questions! At the top level, we can see the probability of transitions between different song sections, like Verse to Chorus. If you zoom in, we can see the transitions between words within this section. Click on a lyric to highlight its transitions in the graph." />
+<div class="introText">
+    <ul>
+        <li>Thinking about FSMs as a validator of a sequence, why is using a FSM not appropriate for modelling a song?</li>
+        <li>What words in the song have the highest probability transitions?</li>
+        <li>What do you notice about the probability of transitions between different sections of the song - does this line up with what you know about music?</li>
+    </ul>
+</div>
     <!-- <div class="box">
         <h3>Accepting States</h3>
             <div style="display: flex; flex-wrap: wrap; gap: 4px;">
@@ -100,7 +112,7 @@
             />
         </div> -->
         <div class="fsmPane" class:hidden={fullScreenPane === 'markov'} style="width: {fullScreenPane === 'fsm' ? '100%' : '50%'};">
-          <div class="paneHeader"></div>
+          <div class="paneHeader"><span class="paneTitle">Finite State Machine</span></div>
           <div class="fsmGraph">
             <FsmHierarchicalViewer 
                 {fsmStates}
@@ -111,7 +123,7 @@
                 {showDepth}        
                 renderKey = {fsmRenderKey}
                 isFullScreen={fullScreenPane === 'fsm'}
-                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'}
+                on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'fsm', open: fullScreenPane === 'fsm' }); }}
               />
           </div>
         </div>
@@ -125,10 +137,12 @@
         </div> -->
         <div class="markovPane" class:hidden={fullScreenPane === 'fsm'} style="width: {fullScreenPane === 'markov' ? '100%' : '50%'};">
           <div class="paneHeader">
+          <span class="paneTitle">Markov Chain</span>
             <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
               <input
                 type="checkbox"
                 bind:checked={showDirectionalColours}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showDirectionalColours', value: e.currentTarget.checked })}
               />
               Show Directional Colours
             </label>
@@ -136,6 +150,7 @@
               <input
                 type="checkbox"
                 bind:checked={showEdgeLabels}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showEdgeLabels', value: e.currentTarget.checked })}
               />
               Show Edge Labels
             </label>
@@ -143,6 +158,7 @@
               <input
                 type="checkbox"
                 bind:checked={weightedThickness}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'weightedThickness', value: e.currentTarget.checked })}
               />
               Weighted Thickness
             </label>
@@ -161,7 +177,7 @@
                 filterPairs={markovFilter}
                 expandSectionId={expandSection}
                 isFullScreen={fullScreenPane === 'markov'}
-                on:toggleFullscreen={() => fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'}
+                on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'markov', open: fullScreenPane === 'markov' }); }}
             />
           </div>
         </div>
@@ -192,7 +208,7 @@
     }
     .graphRow{
         flex: 1 1 auto;
-        min-height: 0;
+        min-height: 70dvh;
         display: flex;
         gap: 8px;
     }

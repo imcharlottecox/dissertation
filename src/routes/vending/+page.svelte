@@ -10,10 +10,10 @@
     import { makeVending40pMarkov } from "$lib/data/vending/vending40pMarkov";
     // import pythonAssignments from "$lib/data/python_assignments.txt?raw"; 
     import PageIntro from "$lib/components/pageIntro.svelte";
-    import Page from "../+page.svelte";
+    import { onMount } from "svelte";
+    import { logEvent } from "$lib/supabase/logging";
     const { markovStates, markovTransitions, mStartingStates, endState } = makeVending40pMarkov();
     // const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeVending40pFSM();
-
     let weighted = false;
     let showPanel = true;
     let markovFilter: [string, string][] = [];
@@ -23,12 +23,15 @@
     let showDepth = false;
     let include5p = false;
     let showMarkov = false;
-
+    const PAGE = "Vending";
     let fsmStates: string[] = [];
     let fsmTransitions: fTransition[] = [];
     let acceptingStates: string[] = [];
     let startingStates: string[] = [];
     
+      onMount(() => {
+        logEvent('page_load', { page: PAGE });
+    });
     $: {
          const currentFSM = include5p ? makeVending5pFSM() : makeVending40pFSM();
          ({ fsmStates, fsmTransitions, acceptingStates, startingStates } = currentFSM);
@@ -47,13 +50,13 @@
 
   <PageIntro 
     title="Vending Machine"
-    description="A businessman has a vending machine that only accepts 10p and 20p coins. All of his prices are 30p. He wants to understand how the vending machine accepts coins, and whether he should introduce more allowed coins to potentially increase his prices."
+    description="Finite State Machines and Markov chains don't just have to be used for language - they can model any scenario that happens in real life. For example, a businessman has a vending machine that only accepts 10p and 20p coins. All of his prices are 30p. He wants to understand how the vending machine accepts coins, and whether he should introduce more allowed coins to potentially increase his prices. Do you notice how much more complicated the Finite State Machine gets from just one small change when you add 5p?"
   />
   <div class="topControls" style="display: flex; gap: 4px; flex-direction:row;">
       <button
         type="button"
         class="toggle"
-        on:click={() => (showMarkov = !showMarkov)}>
+        on:click={() => { showMarkov = !showMarkov; logEvent('checkbox_toggle', { page: PAGE, name: 'showMarkov', value: showMarkov }); }}>
           {showMarkov ? 'Hide the Markov Chain' : 'What would a Markov Chain look like?'}
       </button>
   </div>
@@ -62,6 +65,7 @@
     {#if !showMarkov}
           <div class="fsmPane" style="width:60%;">
             <div class="paneHeader">
+            <span class="paneTitle">Finite State Machine</span>
               <button
                 type="button"
                 class="toggle"
@@ -86,6 +90,7 @@
         <div class="graphRow">
           <div class="fsmPane" style="width:60%;">
             <div class="paneHeader">
+            <span class="paneTitle">Finite State Machine</span>
               <button
                 type="button"
                 class="toggle"
@@ -108,24 +113,28 @@
           </div>
         <div class="markovPane" style="width:40%;">
           <div class="paneHeader">
+          <span class="paneTitle">Markov Chain</span>
             <label class="check" title="Edges are coloured black if they are directed downwards to a node, or pink if directed upwards. This helps with clarity in busy graphs!">
               <input
                 type="checkbox"
                 bind:checked={showDirectionalColours}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showDirectionalColours', value: e.currentTarget.checked })}
               />
-              Show Directional Colours
+              Directional Colours
             </label>
             <label class="check" title="Displays edge probabilities">
               <input
                 type="checkbox"
                 bind:checked={showEdgeLabels}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'showEdgeLabels', value: e.currentTarget.checked })}
               />
-              Show Edge Labels
+              Edge Labels
             </label>
             <label class="check" title="Edge thickness corresponds to the probability of the edge">
               <input
                 type="checkbox"
                 bind:checked={weightedThickness}
+                on:change={(e) => logEvent('checkbox_toggle', { page: PAGE, name: 'weightedThickness', value: e.currentTarget.checked })}
               />
               Weighted Thickness
             </label>
@@ -154,8 +163,13 @@
 <style>
   .page{
     height: 95dvh;
-    overflow: hidden;
   }
+    .graphRow{
+        flex: 1 1 auto;
+        min-height: 80dvh;
+        display: flex;
+        gap: 8px;
+    }
     /* .graphRow{
     flex: 1 1 auto;
     min-height: 0;

@@ -49,30 +49,47 @@
 //   return probability;
 // }
 import type { mTransition } from '$lib/graph/graphTypes';
+
+export interface ProbabilityBreakdown {
+    steps: Array<{ from: string; to: string; probability: number }>;
+    total: number;
+}
+
 export function ComputeProbabilityMarkov(transitions: mTransition[], sequence: string[]): number {
-    if (sequence.length === 0) return 0;
-    let probability = 1;
+    return ComputeProbabilityMarkovDetailed(transitions, sequence).total;
+}
+
+export function ComputeProbabilityMarkovDetailed(
+    transitions: mTransition[],
+    sequence: string[],
+): ProbabilityBreakdown {
+    if (sequence.length === 0) return { steps: [], total: 0 };
 
     const path = ["START", ...sequence];
+    const steps: Array<{ from: string; to: string; probability: number }> = [];
+    let logTotal = 0;
 
     for (let i = 0; i < path.length - 1; i++) {
         const from = path[i];
-        const to = path[i + 1];
+        const to   = path[i + 1];
         const edge = transitions.find(t => t.from === from && t.to === to);
-
-        if (!edge || edge.probability === undefined) return 0;
-        probability *= edge.probability;
+        if (!edge || edge.probability === undefined) return { steps, total: 0 };
+        steps.push({ from, to, probability: edge.probability });
+        logTotal += Math.log(edge.probability);
     }
 
     const lastState = path[path.length - 1];
     const endToken = transitions.some(t => t.to === "END") ? "END"
-                   : transitions.some(t => t.to === "$") ? "$"
+                   : transitions.some(t => t.to === "$")   ? "$"
                    : null;
 
     if (endToken) {
         const endEdge = transitions.find(t => t.from === lastState && t.to === endToken);
-        if (endEdge) probability *= endEdge.probability;
+        if (endEdge) {
+            steps.push({ from: lastState, to: endToken, probability: endEdge.probability });
+            logTotal += Math.log(endEdge.probability);
+        }
     }
 
-    return probability;
+    return { steps, total: Math.exp(logTotal) };
 }
