@@ -54,6 +54,7 @@
         logEvent('dataset_statement_select', { page: PAGE, statement: line, section: subgraphId });
 
     }
+    
     $: fsmRenderKey = [
       fsmStates.length,
       fsmTransitions.length,
