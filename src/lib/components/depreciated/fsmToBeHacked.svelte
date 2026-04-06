@@ -4,7 +4,7 @@
     import { createDragNoSim, createDragSubgraph } from "$lib/graph/graphBehaviours";
     import type { fTransition, Subgraph, Warp, EdgeRenderDatum, StateNode, HGraph, HStateNode, HEdge } from "$lib/graph/graphTypes";
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
-    import { computeLevelsMap, computeNodePositions, splitWarp, computeNodePositionsWithBackbone } from "../fsm/fsmHierarchicalHelpers";
+    import { computeLevelsMap, computeNodePositions, splitWarp, computeNodePositionsWithBackbone } from "../fsm/fsmLayoutPositions";
     
     export let fsmStates: string[] = [];
     export let fsmTransitions: fTransition[] = [];

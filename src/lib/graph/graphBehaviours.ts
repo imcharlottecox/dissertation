@@ -130,19 +130,27 @@ export function computeCurvedPath(source: { x: number; y: number }, target: { x:
 
     return `M ${x1},${y1} Q ${cx},${cy} ${x2},${y2}`;
   }
-  
-  export function computeSelfLoopPath(node, r) {
-        const LOOP = Math.max(r + 12, 24);
-        const x = node.x;
-        const y = node.y;
 
-        return `
-            M ${x} ${y - r}
-            C ${x - LOOP}, ${y - 2*LOOP},
-            ${x + LOOP}, ${y - 2*LOOP},
-            ${x + 2}, ${y - r}
-        `;
-    }
+export function computeSelfLoopPath(node, r) { //todo remove this only in dead code
+    const LOOP = Math.max(r + 12, 24);
+    const x = node.x;
+    const y = node.y;
+
+    return `
+        M ${x} ${y - r}
+        C ${x - LOOP}, ${y - 2*LOOP},
+        ${x + LOOP}, ${y - 2*LOOP},
+        ${x + 2}, ${y - r}
+    `;
+}
+export function computeSelfLoop(x: number, y: number, loopRadius: number): string {
+    return `
+        M ${x} ${y}
+        C ${x - loopRadius}, ${y - 2*loopRadius},
+        ${x + loopRadius}, ${y - 2*loopRadius},
+        ${x + 2}, ${y}
+    `;
+}
 
 export function createDragSelective(onDragged: (nodeId: string) => void) {
     return d3.drag<SVGGElement, any>()

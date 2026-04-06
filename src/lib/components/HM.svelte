@@ -30,7 +30,7 @@
    
     const ZOOM_EXPAND_THRESHOLD = 1.2;
     const BASE_NODE_RADIUS = 15;
-    const WORD_NODE_RADIUS = 12;
+    const WORD_NODE_RADIUS = 15;
     const LABEL_OFFSET = 6;
 
 

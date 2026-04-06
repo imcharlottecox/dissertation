@@ -1,8 +1,10 @@
 import * as d3 from "d3";
-import type { HGraph, HStateNode, EdgeRenderingData, HEdge} from "$lib/graph/graphTypes"
+import type { HGraph, HStateNode, EdgeRenderingData, Subgraph} from "$lib/graph/graphTypes"
 // import { createDragNoSim } from "$lib/graph/graphBehaviours";
 import { benchRows, measure } from "$lib/benchmarking/profiler";
-import { NODE_COLOURS, NODE_STROKES } from "$lib/graph/nodeColours";
+import { NODE_COLOURS, NODE_STROKES, subgraphColour } from "$lib/graph/nodeColours";
+import type { Rect } from "./fsmRectangleUtilityHelpers";
+import { computeSelfLoop } from "$lib/graph/graphBehaviours"; 
 
 export type RenderContext = {
     g: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -161,10 +163,7 @@ export function drawEdges(context: RenderContext) {
         if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
 
         const path = isSelfLoop
-            ? `M ${sourceNode.x} ${sourceNode.y}
-            C ${sourceNode.x - loopRadius}, ${sourceNode.y - loopRadius * 2},
-                ${sourceNode.x + loopRadius}, ${sourceNode.y - loopRadius * 2},
-                ${targetNode.x +3}, ${targetNode.y}`
+            ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
             : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
         return {
             key: t.id,
@@ -212,6 +211,7 @@ export function drawEdges(context: RenderContext) {
 
 }
 
+
 export function drawEdges2(context: RenderContext) {
     const n = context.hg.nodes.size;
     const t0 = performance.now();
@@ -253,10 +253,7 @@ export function computeEdgeGeometry(hg: HGraph, loopRadius: number, labelOffset:
         if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
 
         e.cachedPath = isSelfLoop
-        ? `M ${sourceNode.x} ${sourceNode.y}
-        C ${sourceNode.x - loopRadius}, ${sourceNode.y - loopRadius * 2},
-            ${sourceNode.x + loopRadius}, ${sourceNode.y - loopRadius * 2},
-            ${targetNode.x +3}, ${targetNode.y}`
+        ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
         : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
 
         e.cachedLabelX = (sourceNode.x + targetNode.x) / 2;
@@ -282,10 +279,7 @@ export function computeEdgeGeometryForIds(hg: HGraph, edgeIds: Iterable<string>,
         if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
 
         e.cachedPath = isSelfLoop
-        ? `M ${sourceNode.x} ${sourceNode.y}
-        C ${sourceNode.x - loopRadius}, ${sourceNode.y - loopRadius * 2},
-            ${sourceNode.x + loopRadius}, ${sourceNode.y - loopRadius * 2},
-            ${targetNode.x +3}, ${targetNode.y}`
+        ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
         : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
 
         e.cachedLabelX = (sourceNode.x + targetNode.x) / 2;
@@ -327,4 +321,47 @@ export function patchEdgesPaths(hg: HGraph, edgeIds: Iterable<string>, edgeElemB
         if (!edgeElem) continue;
         edgeElem.setAttribute("d", e.cachedPath ?? "");
     }
+}
+
+export function drawHalos(g: d3.Selection<SVGGElement, unknown, null, undefined>, subgraphRects: Map<string, Rect>, subgraphs: Record<string, Subgraph>) {
+    type HaloData = { id: string; x: number; y: number; w: number; h: number; colour: string; depth: number };
+    const halos: HaloData[] = [];
+
+    for (const [id, r] of subgraphRects.entries()) {
+        const depth = subgraphs[id]?.depthLevel ?? 1;
+        const colour = subgraphColour(depth-1)
+        halos.push({ id, x: r.x, y: r.y, w: r.w, h: r.h, colour, depth });
+    }
+
+    // Draw deepest halos first so shallower ones render on top
+    halos.sort((a, b) => b.depth - a.depth);
+
+    g.select<SVGGElement>("g.debug")
+        .selectAll<SVGGElement, HaloData>("g.halo")
+        .data(halos, (d: HaloData) => d.id)
+        .join(
+            enter => {
+                const hg2 = enter.append("g").attr("class", "halo").attr("pointer-events", "none");
+                hg2.append("rect").attr("rx", 12).attr("ry", 12)
+                    .attr("fill-opacity", 0.18).attr("stroke-opacity", 0.6)
+                    .attr("stroke-width", 1.5).attr("stroke-dasharray", "6 3");
+                hg2.append("text").attr("font-size", 11).attr("font-weight", "600").attr("fill-opacity", 0.75);
+                return hg2;
+            },
+            update => update,
+            exit => exit.remove()
+        )
+        .each(function(d) {
+            const s = d3.select(this);
+            const strokeCol = d3.color(d.colour)?.darker(0.8).formatHex() ?? d.colour;
+            const labelCol  = d3.color(d.colour)?.darker(1.5).formatHex() ?? "#333";
+            s.select("rect")
+                .attr("x", d.x).attr("y", d.y)
+                .attr("width", d.w).attr("height", d.h)
+                .attr("fill", d.colour).attr("stroke", strokeCol);
+            s.select("text")
+                .attr("x", d.x + 8).attr("y", d.y + 16)
+                .attr("fill", labelCol)
+                .text(d.id);
+        });
 }

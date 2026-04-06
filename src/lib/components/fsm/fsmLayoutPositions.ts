@@ -1,14 +1,16 @@
-import type { fTransition } from "$lib/graph/graphTypes";
+import type { fTransition, HGraph } from "$lib/graph/graphTypes";
 
-export function splitWarp(target?: string) {
-    if (!target) return { warpParent: "", warpEntryExit: "" };
-    const parts = target.split(".");
-    return {
-        warpParent: parts.slice(0, -1).join("."),
-        warpEntryExit: parts[parts.length - 1]
-    };
+export function resetBaseNodesToCanon(hg: HGraph, canonicalBasePos:Map<string, {x:number, y:number}> ){
+    for (const n of hg.nodes.values()){
+        if (n.parent) continue;
+        if (!n.visible) continue;
+        const p = canonicalBasePos.get(n.id);
+        if (p){
+            n.x=p.x;
+            n.y=p.y;
+        }
+    }
 }
-
 export function computeLevelsMap(edges: fTransition[], root: string, allStates: string[], benchmarkReport?: (phase: string, ms: number)=> void): Map<string, number> {
     let t = performance.now()
     

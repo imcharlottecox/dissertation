@@ -3,7 +3,7 @@
     import * as d3 from "d3";
     import type { fTransition, Subgraph, Warp, EdgeRenderDatum, StateNode, HGraph, HStateNode, HEdge, EdgeRenderingData } from "$lib/graph/graphTypes";
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
-    import { computeLevelsMap, computeNodePositions, splitWarp, computeNodePositionsWithBackbone } from "$lib/components/fsm/fsmHierarchicalHelpers";
+    import { computeLevelsMap, computeNodePositions, splitWarp, computeNodePositionsWithBackbone } from "$lib/components/fsm/fsmLayoutPositions";
     import { addContentGroup, drawArrowheads } from "$lib/components/fsm/fsmSVGSetup";
     import { drawNodes, drawEdges, drawEdges2,patchEdgesPaths,computeEdgeGeometryForIds, computeEdgeGeometry, type RenderContext, syncEdgeToDom } from "$lib/components/fsm/fsmRendering";
     import { createDragNoSim, createDragSelective } from "$lib/graph/graphBehaviours";

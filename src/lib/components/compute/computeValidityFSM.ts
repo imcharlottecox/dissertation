@@ -1,7 +1,4 @@
-import type { builtFSM } from '$lib/data/shakeItOff/shakeitoff';
 import type { fTransition } from '$lib/graph/graphTypes';
-
-
 
 export function ComputeFlatValidityFSM(
     fsmTransitions: { from: string; to: string; label: string }[],

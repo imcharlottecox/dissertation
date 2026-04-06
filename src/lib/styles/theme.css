@@ -189,7 +189,6 @@ body {
     color: var(--navy);
 }
 
-/* ── Section label ────────────────────────────────────────────── */
 .sectionBlock {
     display: flex;
     flex-direction: column;
@@ -280,4 +279,27 @@ body {
     gap: var(--gap);
     flex-wrap: wrap;
     align-items: center;
+}
+
+.zoomControls{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.zoomControls button {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #ccc;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+
+}
+
+.zoomControls button:hover {
+    background: #f0f0f0;
 }
