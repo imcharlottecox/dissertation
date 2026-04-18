@@ -2,9 +2,9 @@
 	import { logEvent } from '$lib/supabase/logging';
     // import FsmViewer from "$lib/components/fsmView.svelte";
     // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
-    import MarkovView from "$lib/components/HM.svelte";
+    import MarkovView from "$lib/components/MC/HM.svelte";
     import { makeShakeItOffFSM } from '$lib/data/shakeItOff/shakeItOffFSM';
     import { makeShakeItOffMarkov } from "$lib/data/shakeItOff/shakeItOff_Markov";
     import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
@@ -28,9 +28,9 @@
     let markovResult: string | null = null;
     let fullScreenPane: 'fsm' | 'markov' | null = null;
     let selectedLine = "";
-    let selectedSection = "";
+    let selectedsubgraph = "";
     let markovFilter: [string, string][] = [];
-    let expandSection = "";
+    let expandsubgraph = "";
     const PAGE = "ShakeItOff";
 
     const lyricsSgs = Object.entries(subgraphLines ?? {}).map(([id, lines]) => ({id, lines}));
@@ -40,18 +40,18 @@
     });
 
     function selectLine(line: string, subgraphId: string){
-        if (selectedLine === line && selectedSection === subgraphId){
+        if (selectedLine === line && selectedsubgraph === subgraphId){
             selectedLine = "";
-            selectedSection = "";
+            selectedsubgraph = "";
             markovFilter =[];
-            expandSection = "";
+            expandsubgraph = "";
             return;
         }
         selectedLine = line;
-        selectedSection = subgraphId;
+        selectedsubgraph = subgraphId;
         markovFilter = subgraphedBigrams(line, subgraphId);
-        expandSection = subgraphId;
-        logEvent('dataset_statement_select', { page: PAGE, statement: line, section: subgraphId });
+        expandsubgraph = subgraphId;
+        logEvent('dataset_statement_select', { page: PAGE, statement: line, subgraph: subgraphId });
 
     }
     
@@ -64,12 +64,12 @@
 </script>
 
 <main class="page">
-<PageIntro title="Shake It Off" description="Taylor Swift song's lyrics have been parsed into a Markov chain and FSM. As you can see, the FSM for a song is very complicated... Make the Markov chain full screen and investigate these questions! At the top level, we can see the probability of transitions between different song sections, like Verse to Chorus. If you zoom in, we can see the transitions between words within this section. Click on a lyric to highlight its transitions in the graph." />
+<PageIntro title="Shake It Off" description="Taylor Swift song's lyrics have been parsed into a Markov chain and FSM. As you can see, the FSM for a song is very complicated... Make the Markov chain full screen and investigate these questions! At the top level, we can see the probability of transitions between different song subgraphs, like Verse to Chorus. If you zoom in, we can see the transitions between words within this subgraph. Click on a lyric to highlight its transitions in the graph." />
 <div class="introText">
     <ul>
         <li>Thinking about FSMs as a validator of a sequence, why is using a FSM not appropriate for modelling a song?</li>
         <li>What words in the song have the highest probability transitions?</li>
-        <li>What do you notice about the probability of transitions between different sections of the song - does this line up with what you know about music?</li>
+        <li>What do you notice about the probability of transitions between different subgraphs of the song - does this line up with what you know about music?</li>
     </ul>
 </div>
     <!-- <div class="box">
@@ -84,14 +84,14 @@
     </div> -->
 
     <Accordion title="Song Lyrics" initiallyOpen={false}>
-        {#each lyricsSgs as section}
-            <div class="sectionBlock">
-                <span class="sectionLabel">[{section.id}]</span>
-                {#each section.lines as line}
+        {#each lyricsSgs as subgraph}
+            <div class="subgraphBlock">
+                <span class="subgraphLabel">[{subgraph.id}]</span>
+                {#each subgraph.lines as line}
                     <button class="lyricLine" 
-                        class:active={selectedLine===line && selectedSection===section.id}
+                        class:active={selectedLine===line && selectedsubgraph===subgraph.id}
                         type="button" 
-                        on:click={() => selectLine(line, section.id)}>
+                        on:click={() => selectLine(line, subgraph.id)}>
                         {line}
                     </button>   
                 {/each}
@@ -176,7 +176,7 @@
                 {showEdgeLabels}
                 {weightedThickness}
                 filterPairs={markovFilter}
-                expandSectionId={expandSection}
+                expandsubgraphId={expandsubgraph}
                 isFullScreen={fullScreenPane === 'markov'}
                 on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'markov', open: fullScreenPane === 'markov' }); }}
             />
@@ -204,16 +204,12 @@
 
 <style>
     .page{
-        min-height: 95dvh;
-        overflow-y:auto;
+        min-height: 100dvh;
     }
     .graphRow{
-        flex: 1 1 auto;
-        min-height: 70dvh;
-        display: flex;
-        gap: 8px;
+        min-height: 80dvh;
     }
-    .sectionLabel {
+    .subgraphLabel {
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;

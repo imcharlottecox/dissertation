@@ -117,7 +117,7 @@ export function computeNodePositionsWithBackbone(levels: Map<string, number>, la
 
     benchmarkReport?.("find_straight_path", performance.now() - t);
     t = performance.now();
-    const yCenter = paddingOverride + innerHeight/2;
+    const yCentre = paddingOverride + innerHeight/2;
     const nodePositions = new Map<string, { x: number; y: number }>();
 
     for (const [lvl, nodes] of grouped.entries())  {
@@ -125,7 +125,7 @@ export function computeNodePositionsWithBackbone(levels: Map<string, number>, la
         const x = paddingOverride + lvl * levelColumnSpacing;
 
         const straightpathNode = nodes.find(state => straighPath.includes(state));
-        if (straightpathNode) nodePositions.set(straightpathNode, {x, y: yCenter});
+        if (straightpathNode) nodePositions.set(straightpathNode, {x, y: yCentre});
         const rest = nodes.filter(state => state !== straightpathNode);
         rest.sort();
 
@@ -133,7 +133,7 @@ export function computeNodePositionsWithBackbone(levels: Map<string, number>, la
         rest.forEach((state, i) => {
             const k = Math.floor(i/2)+1;
             const direction = (i%2 === 0)? -1 : 1;
-            nodePositions.set(state, {x, y: yCenter + direction*k*gap})
+            nodePositions.set(state, {x, y: yCentre + direction*k*gap})
         })
         
     };

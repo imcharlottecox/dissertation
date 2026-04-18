@@ -2,7 +2,7 @@
     import Accordion from "$lib/components/Accordion.svelte";
     // import FsmViewer from "$lib/components/fsmView.svelte";
     import type { fTransition} from "$lib/graph/graphTypes";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     // import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";//TODO make button change work on editing not just benchmark
     import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import { makeVending5pFSM } from '$lib/data/vending/vending5pFSM';

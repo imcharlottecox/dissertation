@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import type {fTransition, HGraph, HStateNode} from "$lib/graph/graphTypes";
 import { computeSelfLoop } from "$lib/graph/graphBehaviours";
-import  LOOP_RADIUS  from "./fsmediting.svelte"; 
+import  LOOP_RADIUS  from "./fsmViewer.svelte"; 
 
 export type PathWalked = {from: string, to: string, path: string};
 type HStep = {id: string; path: string; opacity: number; delay:number};
@@ -66,6 +66,7 @@ export function drawPathHighlight(layer: d3.Selection<SVGGElement, unknown, null
         );
 
 
+
 }
 
 //user completely deletes their input
@@ -77,7 +78,13 @@ export function fadeOutPathHighlight(layer:d3.Selection<SVGGElement, unknown, nu
 
 }
 
-export function computeWalkedPathFSM(sequence: string, fsmTransitions: fTransition[], startingStates: string[], fsmStates: string[], hg: HGraph): {steps: PathWalked[]; highlightedNodeIds: Set<string>} {
+export function computeWalkedPathFlat(sequence: string, fsmTransitions: fTransition[], startingStates: string[], fsmStates: string[], hg: HGraph,
+    matchFn: (t: fTransition, token: string) => boolean = (t, token) => t.label === token, 
+    tokenise: (sequence: string) => string[] = (sequence) =>{
+        const wordLevel = fsmTransitions.some(t => (t.label ?? "").includes(" "));
+        return wordLevel ? sequence.split(" ").filter(Boolean) : sequence.split("");
+    }
+): {steps: PathWalked[]; highlightedNodeIds: Set<string>} {
     const steps: PathWalked[] = [];
     const highlightedNodeIds = new Set<string>();
     if (!sequence) return {steps, highlightedNodeIds};
@@ -96,7 +103,7 @@ export function computeWalkedPathFSM(sequence: string, fsmTransitions: fTransiti
     highlightedNodeIds.add(current);
 
     for (const token of tokens){
-        const t = fsmTransitions.find(tran => tran.from === current && tran.label === token);
+        const t = fsmTransitions.find(tran => tran.from === current && matchFn(tran, token));
         if (!t) break;
 
         const edgeId = `base:${t.from}-${t.to}-${t.label ?? "undefined"}`;
@@ -108,10 +115,10 @@ export function computeWalkedPathFSM(sequence: string, fsmTransitions: fTransiti
     }
     return {steps, highlightedNodeIds};
 }
-function buildFallbackPath(hg: HGraph, fromId: string, toId: string){
+export function buildFallbackPath(hg: HGraph, fromId: string, toId: string){
     const source = hg.nodes.get(fromId);
     const target = hg.nodes.get(toId);
     if (!source||!target) return "";
-    if (fromId === toId) return computeSelfLoop(source.x, source.y, LOOP_RADIUS )
+    if (fromId === toId) return computeSelfLoop(source.x, source.y, 27 )
     return `M${source.x},${source.y} L${target.x},${target.y}`;
 }

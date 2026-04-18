@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { logEvent } from '$lib/supabase/logging';
-    import MarkovView from "$lib/components/HM.svelte";
+    import MarkovView from "$lib/components/MC/HM.svelte";
     import PageIntro from "$lib/components/pageIntro.svelte";
     import Accordion from "$lib/components/Accordion.svelte";
     import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte";

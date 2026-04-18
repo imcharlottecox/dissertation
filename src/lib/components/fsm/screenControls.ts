@@ -22,10 +22,19 @@ export function makeZoomControls(svgElement: SVGSVGElement, zoomBehaviour: d3.Zo
     return { zoomIn, zoomOut, zoomReset };
 }
 
-export function measureHeight(wrapperElement: HTMLDivElement, graphWidth: number, graphHeight: number, svgElement: SVGSVGElement) {
-    const r = wrapperElement.getBoundingClientRect();
-    graphWidth = Math.max(1, Math.floor(r.width));
-    graphHeight = Math.max(1, Math.floor(r.height));
+// export function measureHeight(wrapperElement: HTMLDivElement, graphWidth: number, graphHeight: number, svgElement: SVGSVGElement) {
+//     const r = wrapperElement.getBoundingClientRect();
+//     graphWidth = Math.max(1, Math.floor(r.width));
+//     graphHeight = Math.max(1, Math.floor(r.height));
+
+//     d3.select(svgElement).attr("width", graphWidth).attr("height", graphHeight);
+// }
+export function measureHeight(wrapperElement: HTMLDivElement, svgElement: SVGSVGElement) {
+    const container = wrapperElement.parentElement ?? wrapperElement;
+    const r = container.getBoundingClientRect();
+    const graphWidth = Math.max(1, Math.floor(r.width));
+    const graphHeight = Math.max(1, Math.floor(r.height));
 
     d3.select(svgElement).attr("width", graphWidth).attr("height", graphHeight);
+    return { graphWidth, graphHeight}
 }

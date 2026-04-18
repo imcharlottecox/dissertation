@@ -1,6 +1,6 @@
 <script lang="ts">
     // import FsmViewer from "$lib/components/fsmView.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     import MarkovView from "$lib/components/depreciated/markovView.svelte";
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";

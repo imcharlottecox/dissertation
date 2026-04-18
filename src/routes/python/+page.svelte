@@ -1,10 +1,10 @@
 <script lang="ts">
     import Accordion from "$lib/components/Accordion.svelte";
     // import FsmViewer from "$lib/components/fsmView.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     import { makeLetFSM } from '$lib/data/python_assignments/letFSM2';
-    import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
-    // import MarkovView from "$lib/components/HM.svelte";
+    // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
+    import MarkovView from "$lib/components/MC/HM.svelte";
 
     // import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/pythonMarkov";
     // import pythonAssignments from "$lib/data/python_assignments/python_assignments.txt?raw"; 
@@ -207,7 +207,7 @@
 <main class="page">
     <PageIntro 
         title="Python Variable Assignments"
-        description="Python has rules about what 'is' valid syntax. How does your computer know what these are? Below, we look at a FSM which accpets vairables assigned to Boolean, String, and Number values (including expressions). The top layer is abstracted to be easily understood but, as you zoom in, you will find more accurate letter-level string acceptance criteria. The markov chain looks at the transitions between letters over a mass of variable assignments in the dataset, so we can analyse what patterns are more likely to occur in writing assignments!"
+        description="Python has rules about what 'is' valid syntax. How does your computer know what these are? Below, we look at a FSM which accepts vairables assigned to Boolean, String, and Number values (including expressions). The top layer is abstracted to be easily understood but, as you zoom in, you will find more accurate letter-level string acceptance criteria. The markov chain looks at the transitions between letters over a mass of variable assignments in the dataset, so we can analyse what patterns are more likely to occur in writing assignments!"
      />
     <Accordion title="Python Assignments Dataset" initiallyOpen={false}>
         {#each assignmentDataset as stmt}

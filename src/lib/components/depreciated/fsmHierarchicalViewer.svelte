@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import * as d3 from "d3";
-    import { createDragNoSim, createDragSubgraph } from "$lib/graph/graphBehaviours";
+    import { createDragHandler, createDragSubgraph } from "$lib/graph/graphBehaviours";
     import type { fTransition, Subgraph, Warp, EdgeRenderDatum, StateNode, HGraph, HStateNode, HEdge } from "$lib/graph/graphTypes";
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
     import { computeLevelsMap, computeNodePositions, splitWarp } from "../fsm/fsmLayoutPositions";
@@ -227,7 +227,7 @@
     }
 
     function drawNodes() {
-        const drag = createDragNoSim(drawEdges);
+        const drag = createDragHandler(drawEdges);
         const data = Array.from(hg.nodes.values()).filter(n => n.visible);
 
         nodeRender = g

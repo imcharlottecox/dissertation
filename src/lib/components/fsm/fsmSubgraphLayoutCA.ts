@@ -4,8 +4,8 @@ import type {Rect}  from "$lib/components/fsm/fsmRectangleUtilityHelpers";
 
 type Vec = {dx: number, dy:number};
 
-export function runCollisionAvoidance( context: {graphWidth:number; graphHeight: number; hg: HGraph; nodeRadius: number; subgraphRects: Map<string, Rect>; subgraphParent: Map<string, string | null>;}){
-    const {hg, nodeRadius, subgraphRects, subgraphParent} = context;
+export function runCollisionAvoidance( context: {graphWidth:number; graphHeight: number; hg: HGraph; nodeRadius: number; subgraphRects: Map<string, Rect>; subgraphParent: Map<string, string | null>; siblingGrowthAxis?: "vertical" | "horizontal";}){
+    const {hg, nodeRadius, subgraphRects, subgraphParent, siblingGrowthAxis="vertical"} = context;
 
     const haloPadding = nodeRadius*1.5;
     const moatPadding = nodeRadius; //non sg nodes must be outside halo plus moat
@@ -143,7 +143,7 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
     }
 
     function recomputeAllRects() {
-        //do deepest children first - bottom up
+        //do deepest children first -bottom up
         for (const sgId of sgsByDepth){
             const thisSgVisibleNodes = [...hg.nodes.values()].filter((n) => n.visible && n.parent == sgId);
             const nodeBox = smallestContainerofNodes(thisSgVisibleNodes);
@@ -198,20 +198,32 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
         //vetically pack sibling sgs within the same container but split half up half down
         const siblingsByContainer = buildSiblingsByContainer();
         for (const ids of siblingsByContainer.values()){
-            for (let i=1; i<ids.length; i++){
-                const rectAId = ids[i-1];
-                const rectBId = ids[i];
-                const rectA = subgraphRects.get(rectAId);
-                const rectB = subgraphRects.get(rectBId);
-                if (!rectA || !rectB) continue;
-                if (!rectOverlapsRect(rectA, rectB, 0)) continue;
+            for (let i=0; i<ids.length; i++){
+                for (let j = i+1; j< ids.length; j++){ //compare all-pairs rather than just adjacent pair sgs
+                    const rectAId = ids[i];
+                    const rectBId = ids[j];
+                    const rectA = subgraphRects.get(rectAId);
+                    const rectB = subgraphRects.get(rectBId);
+                    if (!rectA || !rectB) continue;
+                    if (!rectOverlapsRect(rectA, rectB, 0)) continue;
+                    if (siblingGrowthAxis === "horizontal"){ //for MC where empty real estate is horizontal
+                        const overlap = (rectA.x + rectA.w + gap + moatPadding) - rectB.x;
+                        if (overlap > 0){
+                            const half = overlap / 2;
+                            shiftSubtree(rectAId, {dx:-half, dy: 0}); // push A left
+                            shiftSubtree(rectBId, {dx:half, dy: 0}); // push B riht
+                            changed = true;
+                        }
 
-                const overlap = (rectA.y + rectA.h + gap + moatPadding) - rectB.y;
-                if (overlap > 0){
-                    const half = overlap / 2;
-                    shiftSubtree(rectAId, {dx:0, dy: -half}); // push A up
-                    shiftSubtree(rectBId, {dx:0, dy:  half}); // push B down
-                    changed = true;
+                    } else{
+                        const overlap = (rectA.y + rectA.h + gap + moatPadding) - rectB.y;
+                        if (overlap > 0){
+                            const half = overlap / 2;
+                            shiftSubtree(rectAId, {dx:0, dy: -half}); // push A up
+                            shiftSubtree(rectBId, {dx:0, dy:  half}); // push B down
+                            changed = true;
+                        }
+                    }
                 }
             }
         }

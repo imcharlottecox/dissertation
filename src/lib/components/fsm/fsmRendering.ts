@@ -1,12 +1,13 @@
 import * as d3 from "d3";
 import type { HGraph, HStateNode, EdgeRenderingData, Subgraph} from "$lib/graph/graphTypes"
-// import { createDragNoSim } from "$lib/graph/graphBehaviours";
+// import { createDragHandler } from "$lib/graph/graphBehaviours";
 import { benchRows, measure } from "$lib/benchmarking/profiler";
 import { NODE_COLOURS, NODE_STROKES, subgraphColour } from "$lib/graph/nodeColours";
 import type { Rect } from "./fsmRectangleUtilityHelpers";
 import { computeSelfLoop } from "$lib/graph/graphBehaviours"; 
-
-export type RenderContext = {
+import { buildEdgeRenderData } from "../sharedGraph/graphRendering";
+import { recomputeLiveHaloSgRects } from "./fsmRectangleUtilityHelpers";
+export type FSMRenderContext = {
     g: d3.Selection<SVGGElement, unknown, null, undefined>;
     hg: HGraph;
     nodeRadius: number;
@@ -14,8 +15,7 @@ export type RenderContext = {
     labelOffset: number;
     acceptingStates: string[];
     startingStates: string[];
-    arrowheadStraight: string;
-    arrowheadLoop: string;
+    arrowheadBlack: string;
 }
 
 const benchmarkReport = (name: string, n: number, ms: number) => {
@@ -43,7 +43,7 @@ function makeNodeLines(d: HStateNode): string[] {
 }
 
 
-function setTspansCentered(
+function setTspansCentred(
   textSel: d3.Selection<SVGTextElement, HStateNode, any, any>,
   lines: string[]
 ) {
@@ -59,7 +59,7 @@ function setTspansCentered(
         .text(line);
     });
 }
-export function drawNodes(context: RenderContext, drag: d3.DragBehavior<SVGGElement, HStateNode, unknown>) {
+export function drawNodes(context: FSMRenderContext, drag: d3.DragBehavior<SVGGElement, HStateNode, unknown>) {
     const n = context.hg.nodes.size;
     const t0 = performance.now();
 
@@ -135,53 +135,22 @@ export function drawNodes(context: RenderContext, drag: d3.DragBehavior<SVGGElem
             const stroke = n.select<SVGTextElement>("text.label-stroke");
             const main = n.select<SVGTextElement>("text.label-main");
             const title = n.select("title");
-            setTspansCentered(stroke as any, lines);
-            setTspansCentered(main as any, lines);
+            setTspansCentred(stroke as any, lines);
+            setTspansCentred(main as any, lines);
             title.text(full);
         });
     nodeSel.call(drag as any);
     benchRows.push({ name: "fsm:drawNodes", n, ms: performance.now() - t0 });
 }
 
-export function drawEdges(context: RenderContext) {
-    const n = context.hg.nodes.size;
-    const t0 = performance.now();
-    const { g , hg, loopRadius, labelOffset, arrowheadStraight, arrowheadLoop} = context;
-    const visibleHgEdgesFromDataset = Array.from(hg.edges.values()).filter(e => e.visible);
 
-    //type EdgeRenderingData[]
-    const renderingEdgeData = visibleHgEdgesFromDataset.map((t) : EdgeRenderingData | null => {
-        const sourceNode = hg.nodes.get(t.from);
-        const targetNode = hg.nodes.get(t.to);
-        if (!sourceNode || !targetNode) return null;
-        const isSelfLoop = t.from === t.to;
-        const labelX = (sourceNode.x + targetNode.x) / 2;
-        const labelY = (sourceNode.y + targetNode.y) / 2 - labelOffset;
-
-        const angleRadius = Math.atan2(targetNode.y - sourceNode.y , targetNode.x - sourceNode.x);
-        let angleDegrees = angleRadius * (180/Math.PI);
-        if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
-
-        const path = isSelfLoop
-            ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
-            : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
-        return {
-            key: t.id,
-            label: t.label,
-            sourceNode,
-            targetNode,
-            path,
-            labelX,
-            labelY: isSelfLoop? labelY -40 : labelY,
-            isSelfLoop,
-            angle: isSelfLoop ? 0 : angleDegrees,
-        };
-    })
-    .filter((d): d is EdgeRenderingData => d !== null);
+export function drawEdges(context: FSMRenderContext) {
+    const { g , hg, nodeRadius, loopRadius, labelOffset, arrowheadBlack} = context;
+    const renderData = buildEdgeRenderData(hg, nodeRadius, labelOffset, loopRadius);
     
     g.select<SVGGElement>("g.edges")
         .selectAll<SVGPathElement, EdgeRenderingData>("path")
-        .data(renderingEdgeData, (d: EdgeRenderingData) => d.key)
+        .data(renderData, (d: EdgeRenderingData) => d.id)
         .join(
             enter => enter.append("path").attr("class", "edge"),
             update => update,
@@ -189,12 +158,12 @@ export function drawEdges(context: RenderContext) {
         )         
         .attr("stroke", "grey")
         .attr("fill", "none")
-        .attr("marker-end", (d: EdgeRenderingData) => d.isSelfLoop ? arrowheadLoop : arrowheadStraight)
+        .attr("marker-end", arrowheadBlack)
         .attr("d", (d: EdgeRenderingData) => d.path);
 
     g.select<SVGGElement>("g.labels")
         .selectAll<SVGTextElement, EdgeRenderingData>("text")
-        .data(renderingEdgeData, (d: EdgeRenderingData) => d.key)
+        .data(renderData, (d: EdgeRenderingData) => d.id)
         .join(
             enter => enter.append("text"),
             update => update,
@@ -204,38 +173,35 @@ export function drawEdges(context: RenderContext) {
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "middle")
         .attr("transform", d => `translate(${d.labelX},${d.labelY}) rotate(${d.angle})`)
-        // .attr("x", d => d.labelX)
-        // .attr("y", d => d.labelY)
         .text(d => d.label ?? "")
-
-
 }
 
 
-export function drawEdges2(context: RenderContext) {
-    const n = context.hg.nodes.size;
-    const t0 = performance.now();
-    const { g , hg, loopRadius, labelOffset, arrowheadStraight, arrowheadLoop} = context;
-    const edges = Array.from(hg.edges.values()).filter(e => e.visible);
+
+// export function drawEdges2(context: FSMRenderContext) {
+//     const n = context.hg.nodes.size;
+//     const t0 = performance.now();
+//     const { g , hg, loopRadius, labelOffset, arrowheadStraight, arrowheadLoop} = context;
+//     const edges = Array.from(hg.edges.values()).filter(e => e.visible);
 
     
-    const sel = g.select<SVGGElement>("g.edges")
-        .selectAll<SVGPathElement, typeof edges[number]>("path.edge")
-        .data(edges, d => d.id)
+//     const sel = g.select<SVGGElement>("g.edges")
+//         .selectAll<SVGPathElement, typeof edges[number]>("path.edge")
+//         .data(edges, d => d.id)
 
-    sel.join(
-            enter => enter.append("path")
-                .attr("class", "edge")
-                .attr("stroke", "grey")
-                .attr("fill", "none")
-                .attr("marker-end", (d) => d.cachedIsSelfLoop ? arrowheadLoop : arrowheadStraight),
-            update => update,
-            exit => exit.remove() 
-        )         
+//     sel.join(
+//             enter => enter.append("path")
+//                 .attr("class", "edge")
+//                 .attr("stroke", "grey")
+//                 .attr("fill", "none")
+//                 .attr("marker-end", (d) => d.cachedIsSelfLoop ? arrowheadLoop : arrowheadStraight),
+//             update => update,
+//             exit => exit.remove() 
+//         )         
     
-        .attr("d", (d) => d.cachedPath ?? "");
-    benchRows.push({ name: "fsm:drawEdges", n, ms: performance.now() - t0 });
-}
+//         .attr("d", (d) => d.cachedPath ?? "");
+//     benchRows.push({ name: "fsm:drawEdges", n, ms: performance.now() - t0 });
+// }
 
 export function computeEdgeGeometry(hg: HGraph, loopRadius: number, labelOffset: number) {
     for (const e of hg.edges.values()) {
@@ -323,44 +289,59 @@ export function patchEdgesPaths(hg: HGraph, edgeIds: Iterable<string>, edgeElemB
     }
 }
 
-export function drawHalos(g: d3.Selection<SVGGElement, unknown, null, undefined>, subgraphRects: Map<string, Rect>, subgraphs: Record<string, Subgraph>) {
+export function drawHalos(g: d3.Selection<SVGGElement, unknown, null, undefined>, hg: HGraph, nodeRadius: number, subgraphRects: Map<string, Rect>, subgraphs: Record<string, Subgraph>, colourFn?:(id: string, depth: number) => string) {
+    const rects = subgraphRects ?? new Map<string, Rect>();
+    recomputeLiveHaloSgRects(hg, hg.activeSubgraphs, nodeRadius, rects);
     type HaloData = { id: string; x: number; y: number; w: number; h: number; colour: string; depth: number };
     const halos: HaloData[] = [];
 
-    for (const [id, r] of subgraphRects.entries()) {
+    for (const id of hg.activeSubgraphs) {
+        const r = rects.get(id);
+        if (!r) continue;
+
         const depth = subgraphs[id]?.depthLevel ?? 1;
-        const colour = subgraphColour(depth-1)
+        const colour = colourFn ? colourFn(id, depth) : subgraphColour(depth-1);
         halos.push({ id, x: r.x, y: r.y, w: r.w, h: r.h, colour, depth });
     }
 
     // Draw deepest halos first so shallower ones render on top
     halos.sort((a, b) => b.depth - a.depth);
 
-    g.select<SVGGElement>("g.debug")
+    g.select<SVGGElement>("g.halos")
         .selectAll<SVGGElement, HaloData>("g.halo")
         .data(halos, (d: HaloData) => d.id)
-        .join(
-            enter => {
-                const hg2 = enter.append("g").attr("class", "halo").attr("pointer-events", "none");
-                hg2.append("rect").attr("rx", 12).attr("ry", 12)
-                    .attr("fill-opacity", 0.18).attr("stroke-opacity", 0.6)
-                    .attr("stroke-width", 1.5).attr("stroke-dasharray", "6 3");
-                hg2.append("text").attr("font-size", 11).attr("font-weight", "600").attr("fill-opacity", 0.75);
-                return hg2;
+       .join(enter => {
+            const haloG = enter.append("g").attr("class", "halo")
+            haloG.append("rect")
+                .attr("rx", 12)
+                .attr("ry", 12)
+                .attr("fill-opacity", 0.15)
+                .attr("stroke-opacity", 0.5)
+                .attr("stroke-width", 1.5)
+                .attr("stroke-dasharray", "6 3")
+            haloG.append("text")
+                .attr("font-size", 12)
+                .attr("font-weight", 600)
+                .attr("fill-opacity", 0.7)
+            return haloG;
             },
             update => update,
-            exit => exit.remove()
+            exit => exit.remove(),
         )
         .each(function(d) {
             const s = d3.select(this);
             const strokeCol = d3.color(d.colour)?.darker(0.8).formatHex() ?? d.colour;
             const labelCol  = d3.color(d.colour)?.darker(1.5).formatHex() ?? "#333";
             s.select("rect")
-                .attr("x", d.x).attr("y", d.y)
-                .attr("width", d.w).attr("height", d.h)
-                .attr("fill", d.colour).attr("stroke", strokeCol);
+                .attr("x", d.x)
+                .attr("y", d.y)
+                .attr("width", d.w)
+                .attr("height", d.h)
+                .attr("fill", d.colour)
+                .attr("stroke", strokeCol);
             s.select("text")
-                .attr("x", d.x + 8).attr("y", d.y + 16)
+                .attr("x", d.x + 8)
+                .attr("y", d.y + 16)
                 .attr("fill", labelCol)
                 .text(d.id);
         });

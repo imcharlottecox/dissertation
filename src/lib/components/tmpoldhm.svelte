@@ -3,7 +3,7 @@
     import * as d3 from "d3";
     import type { StateNode, mTransition, HGraph, HStateNode, HEdge } from '$lib/graph/graphTypes';
     import { getGraphDefaultsMarkov } from '$lib/graph/graphDefaults';
-    import { createDragNoSim, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from '$lib/graph/graphBehaviours';
+    import { createDragHandler, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from '$lib/graph/graphBehaviours';
 
     //export props
     export let markovStates: string[] = [];
@@ -501,7 +501,7 @@
         drawEdges();
     }
     function drawNodes() {
-        // const dragHandler = createDragNoSim(() => drawEdges());
+        // const dragHandler = createDragHandler(() => drawEdges());
         const nodeData = Array.from(hg.nodes.values()).filter(n => n.visible);
 
         g.select<SVGGElement>("g.nodes")
@@ -822,7 +822,7 @@
         //     .attr("orient", "auto")
         //     .append("path").attr("d", "M 0 0 L 10 5 L 0 10 z").attr("fill", "#888");
  
-        dragBehaviour = createDragNoSim(() => { drawEdges(); drawHalos(); drawSectionEdges(); });
+        dragBehaviour = createDragHandler(() => { drawEdges(); drawHalos(); drawSectionEdges(); });
  
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .on("zoom", event => {

@@ -1,30 +1,30 @@
+import type { builtFSM } from '$lib/data/shakeItOff/shakeitoff';
 import type { fTransition } from '$lib/graph/graphTypes';
 
-export function ComputeFlatValidityFSM(
-    fsmTransitions: { from: string; to: string; label: string }[],
-    input: string[],
-    acceptingStates: string[],
-    startingStates: string[],
-): boolean {
+export function ComputeFlatValidityFSM(fsmTransitions: fTransition[], input: string[], acceptingStates: string[], startingStates: string[]): boolean {
     if (input.length === 0) return false;
-
     let currentStates = new Set(startingStates);
 
-    for (const token of input) {
-        const next = new Set<string>();
-        for (const state of currentStates) {
-            for (const t of fsmTransitions) {
-                if (t.from === state && t.label === token) {
-                    next.add(t.to);
+    for (const token of input){
+        const nextState = new Set<string>();
+        for (const state of currentStates){
+            for (const t of fsmTransitions){
+                if (t.from === state && t.label === token){
+                    nextState.add(t.to);
                 }
             }
         }
-        if (next.size === 0) return false;
-        currentStates = next;
+        if (nextState.size == 0) return false;
+        currentStates = nextState;
     }
-
-    return [...currentStates].some(s => acceptingStates.includes(s));
+    for (const s of currentStates){
+        if (acceptingStates.includes(s)) return true;
+    }
+    return false;
 }
+
+
+
 export interface Subgraph {
     depthLevel: number;
     parentState?: string;

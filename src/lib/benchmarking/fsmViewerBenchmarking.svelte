@@ -6,7 +6,7 @@
     import { computeLevelsMap, computeNodePositions, splitWarp, computeNodePositionsWithBackbone } from "$lib/components/fsm/fsmLayoutPositions";
     import { addContentGroup, drawArrowheads } from "$lib/components/fsm/fsmSVGSetup";
     import { drawNodes, drawEdges, drawEdges2,patchEdgesPaths,computeEdgeGeometryForIds, computeEdgeGeometry, type RenderContext, syncEdgeToDom } from "$lib/components/fsm/fsmRendering";
-    import { createDragNoSim, createDragSelective } from "$lib/graph/graphBehaviours";
+    import { createDragHandler, createDragSelective } from "$lib/graph/graphBehaviours";
     import {runCollisionAvoidance} from "$lib/components/fsm/fsmSubgraphLayoutCA";
     import type {Rect}  from "$lib/components/fsm/fsmRectangleUtilityHelpers"; 
     import {rectContainsRect, rectOverlapsRect, clampRectangleInside}  from "$lib/components/fsm/fsmRectangleUtilityHelpers"; 
@@ -834,7 +834,7 @@
         edgesLayer = g.select<SVGGElement>("g.edges");
         measureHeight();
         rerunHGraph();
-        // dragBehaviour = createDragNoSim(() => {computeEdgeGeometry(hg, LOOP_RADIUS, LABEL_OFFSET); drawEdges(makeContext());});
+        // dragBehaviour = createDragHandler(() => {computeEdgeGeometry(hg, LOOP_RADIUS, LABEL_OFFSET); drawEdges(makeContext());});
 
         dragBehaviour = createDragSelective((nodeId) => patcheEdgesForNode(nodeId));
         

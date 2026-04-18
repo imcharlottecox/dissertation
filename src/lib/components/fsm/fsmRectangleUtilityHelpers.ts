@@ -1,5 +1,5 @@
 export type Rect = { x:number, y: number, w: number, h: number };
-
+import type { HGraph, HStateNode } from "$lib/graph/graphTypes";
 function right(r: Rect){
     return r.x + r.w;
 }
@@ -67,4 +67,59 @@ export function unionRect(a: Rect | null, b: Rect | null): Rect | null {
         w: maxX - minX,
         h: maxY - minY,
     };
+}
+export function recomputeLiveHaloSgRects(hg: HGraph, activeSubgraphs: Set<string>, nodeRadius: number, subgraphRects: Map<string, Rect>){
+    const haloPadding = nodeRadius* 2.5;
+    for (const sgId of activeSubgraphs){    
+        const rect = liveHaloRects(hg, sgId, haloPadding);
+        if (rect) subgraphRects.set(sgId, rect);
+        else subgraphRects.delete(sgId);
+    }
+}
+
+export function liveHaloRects(hg: HGraph, subgraphId: string, pad: number){
+    const children = Array.from(hg.nodes.values()).filter(n => n.visible && (n.parent === subgraphId || isInSubtree(n, subgraphId, hg)));
+        if (!children.length) return null;
+        const xLocs = children.map(n => n.x);
+        const yLocs = children.map(n => n.y);
+
+        return {
+            x: Math.min(...xLocs) - pad,
+            y: Math.min(...yLocs) - pad,
+            w: Math.max(...xLocs) - Math.min(...xLocs) + 2*pad,
+            h: Math.max(...yLocs) - Math.min(...yLocs) + 2*pad
+        };
+}
+function isInSubtree(n: HStateNode, sgId: string, hg: HGraph): Boolean{
+    let p = n.parent;
+    while (p){
+        if (p === sgId) return true;
+        const parentNode = hg.nodes.get(p);
+        p = parentNode?.parent ?? null;
+    }
+    return false;
+}
+// line from rect to a target point
+export function rectBorderPoint(r: Rect, targetX: number, targetY: number): {x:number, y:number}{
+    const centreX = r.x + r.w /2;
+    const centreY = r.y + r.h/2;
+    const dx = targetX - centreX;
+    const dy = targetY - centreY;
+    if (dx === 0 && dy === 0) return {x: centreX, y: centreY};
+
+    const targets= [];
+    if (dx!==0) {
+        targets.push((r.x-centreX)/dx);
+        targets.push((r.x+r.w-centreX)/dx);
+    }
+    if (dy!==0) {
+        targets.push((r.y-centreY)/dy);
+        targets.push((r.y+r.h-centreY)/dy);
+    }
+    const target = targets.filter(t => t>0.00001).reduce((a,b) => Math.min(a,b), Infinity);
+    return {
+        x: centreX + target*dx,
+        y: centreY + target*dy,
+    }
+
 }

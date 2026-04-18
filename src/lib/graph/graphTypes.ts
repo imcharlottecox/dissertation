@@ -1,5 +1,3 @@
-import type { StringToBoolean } from "class-variance-authority/types";
-
 export type StateNode = {
   id: string;
   x: number;
@@ -40,27 +38,32 @@ export type Warp = {
     backto?: string;
 };
 
-export type EdgeRenderDatum = {
-    key: string;
-    label?: string;
-    source: { x: number; y: number };
-    target: { x: number; y: number };
-    path: string;
-    labelX: number;
-    labelY: number;
-    isLoop: boolean;
-};
+// export type EdgeRenderDatum = {
+//     key: string;
+//     label?: string;
+//     source: { x: number; y: number };
+//     target: { x: number; y: number };
+//     path: string;
+//     labelX: number;
+//     labelY: number;
+//     isLoop: boolean;
+// };
 
 export type EdgeRenderingData = {
-    key: string;
+    id: string;
     label: string | undefined;
+    from: string;
+    to: string;
     sourceNode: HStateNode;
     targetNode: HStateNode;
     path: string;
     labelX: number;
     labelY: number;
+    probability: number;
     isSelfLoop: boolean;
+    isBidirectional: boolean;
     angle: number;
+    isUpward: boolean;
 };
 
 

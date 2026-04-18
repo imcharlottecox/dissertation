@@ -113,22 +113,22 @@ function collidesWithSibligns(test: Rect, subgraphRects: Map<string, Rect>, pare
 //add subnodes but skip the ports
 export function addSubNodes(hg: HGraph, parentId: string, sg: Subgraph, rect: Rect, localPos: Map<string, { x: number; y: number }>, anchorNode: HStateNode ): void {
     for (const stateId of sg.states){
-            if (stateId == sg.entry || stateId == sg.exit) continue;
-            const p = localPos.get(stateId);
-            if (!p) continue;
-            const nodeId = mkNodeId(parentId, stateId);
-            
-            hg.nodes.set(nodeId, {
-                id: nodeId,
-                displayName: stateId,
-                x: rect.x + p.x,
-                y: rect.y + p.y,
-                parent: parentId,
-                depth: anchorNode.depth + 1,
-                visible: true,
-                kind: "sub"
-            });
-        }
+        if (stateId == sg.entry || stateId == sg.exit) continue;
+        const p = localPos.get(stateId);
+        if (!p) continue;
+        const nodeId = mkNodeId(parentId, stateId);
+        
+        hg.nodes.set(nodeId, {
+            id: nodeId,
+            displayName: stateId,
+            x: rect.x + p.x,
+            y: rect.y + p.y,
+            parent: parentId,
+            depth: anchorNode.depth + 1,
+            visible: true,
+            kind: "sub"
+        });
+    }
 }
 
 //add subedges skip ports

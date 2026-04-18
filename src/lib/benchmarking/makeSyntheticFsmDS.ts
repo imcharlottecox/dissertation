@@ -1,7 +1,7 @@
 import type { fTransition } from "$lib/graph/graphTypes";
 
 //this is Mulberry32, a standard 32bit PRNG (pseudorandom number generator) for Javascript to create a seeded random function
-function createRandomSeed(seed: number) {
+export function createRandomSeed(seed: number) {
     return function() {
         let t = seed += 0x6D2B79F5;
         t = Math.imul(t ^ t >>> 15, t | 1);

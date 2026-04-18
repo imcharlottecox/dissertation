@@ -7,22 +7,20 @@
 
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
     import { computeLevelsMap, computeNodePositions, computeNodePositionsWithBackbone, resetBaseNodesToCanon } from "./fsmLayoutPositions";
-    import { addContentGroup, drawArrowheads } from "$lib/components/fsm/fsmSVGSetup";
-    import { drawNodes, drawEdges, drawHalos, type RenderContext } from "$lib/components/fsm/fsmRendering";
-    import { createDragNoSim } from "$lib/graph/graphBehaviours";
+    import { addContentGroup } from "$lib/components/fsm/fsmSVGSetup";
+    import { drawNodes, drawEdges, drawHalos, type FSMRenderContext } from "$lib/components/fsm/fsmRendering";
+    import { createDragHandler } from "$lib/graph/graphBehaviours";
     import {runCollisionAvoidance} from "$lib/components/fsm/fsmSubgraphLayoutCA";
     import { makeZoomControls, measureHeight } from "./screenControls";
-    import { drawPathHighlight, fadeOutPathHighlight, computeWalkedPathFSM, type PathWalked } from "./pathwalk";
+    import { drawPathHighlight, fadeOutPathHighlight, computeWalkedPathFlat, type PathWalked } from "./pathwalk";
     import { getSgDescendants, placeSubgraphRect, addSubEdges, addSubNodes, addWarpEdges, hideAnchorAndEdges } from "./fsmSubgraphExpansion";
+    import {drawArrowheads} from "../sharedGraph/graphRendering";
+    import { collapseSubgraph, subgraphShouldExpand } from "../sharedGraph/collapse";
+    import { resetHGraph } from "../sharedGraph/lifecycle";
     import "$lib/styles/theme.css"
 
     const dispatch = createEventDispatcher();
     const { nodeRadius, padding } = getGraphDefaultsFSM();
-    const ZOOM_LEVEL_THRESHOLDS = new Map<number, number>([
-        [1, 1.1],
-        [2, 1.3],
-        [3, 1.5],
-    ]);
     const LABEL_OFFSET = 6;
     const subgraphRects = new Map<string, Rect>(); // for each subgraph location
     const subgraphParent = new Map<string, string | null>(); //nested parent id, not parentState 
@@ -51,8 +49,7 @@
     let wrapperElement: HTMLDivElement;
     let svgElement: SVGSVGElement;
     let canonicalBasePos = new Map<string, {x:number, y:number}>();
-    let arrowheadStraight = "url(#arrowhead-straight)";
-    let arrowheadLoop = "url(#arrowhead-loop)";
+    let arrowheadBlack = "url(#arrowhead-black)";
     let mounted = false;
     let currentZoomTransform = d3.zoomIdentity;
     let evaluating = false;
@@ -61,7 +58,6 @@
     let dragBehaviour: d3.DragBehavior<SVGGElement, HStateNode, unknown>;
     let zoomBehaviour: d3.ZoomBehavior<SVGSVGElement, unknown>;
     let hiddenEdgesBySubgraph = new Map<string, string[]>(); //subgraphId -> edgeIds
-    let hiddenNodesBySubgraph = new Map<string, string[]>(); //subgraphId -> nodeIds
     let hg: HGraph = {
         nodes: new Map<string, HStateNode>(),
         edges: new Map<string, HEdge>(),
@@ -70,29 +66,8 @@
 
     function drawPathHighlightLocal(){
         if (!g) return;
-        const {steps, highlightedNodeIds } = computeWalkedPathFSM(inputSequence, fsmTransitions, startingStates, fsmStates, hg);
+        const {steps, highlightedNodeIds } = computeWalkedPathFlat(inputSequence, fsmTransitions, startingStates, fsmStates, hg);
         drawPathHighlight(g.select("g.path-highlight"), steps, highlightedNodeIds, hg);
-    }
-    function snapshotBasePos(){
-        canonicalBasePos.clear();
-        for (const n of hg.nodes.values()){
-            if (!n.parent){
-                canonicalBasePos.set(n.id, {x:n.x, y:n.y});
-            }
-        }
-    }
-    function makeContext(): RenderContext {
-        return {
-            g,
-            hg,
-            nodeRadius,
-            loopRadius: LOOP_RADIUS,
-            labelOffset: LABEL_OFFSET,
-            acceptingStates,
-            startingStates,
-            arrowheadStraight,
-            arrowheadLoop,
-        };
     }
     function expandSubgraph(parentId: string){
         const sg = subgraphs[parentId];
@@ -124,55 +99,10 @@
 
         const hiddenEdges = hideAnchorAndEdges(hg, parentId, containerId, sg);
         hiddenEdgesBySubgraph.set(parentId, hiddenEdges);
-        hiddenNodesBySubgraph.set(parentId, [parentId]);
-
         hg.activeSubgraphs.add(parentId);
 
     }
-    function collapseSubgraph(parentId: string){
-        const sg = subgraphs[parentId];
-        if (!sg) return;
 
-        if (!hg.activeSubgraphs.has(parentId)) return;
-
-        const childrenDescendants = getSgDescendants(parentId, hg, subgraphParent);
-
-        for (const childId of childrenDescendants){
-            collapseSubgraph(childId);
-        }
-
-        for (const [id, node] of hg.nodes){
-            if (node.parent === parentId){
-                hg.nodes.delete(id);
-            }
-        }
-
-        for (const [id, edge] of hg.edges){
-            if (edge.parent === parentId){
-                hg.edges.delete(id);
-            }   
-        }
-        
-        const anchorNode = hg.nodes.get(parentId);
-        if (anchorNode) anchorNode.visible = true;
-
-        const hiddenEdges = hiddenEdgesBySubgraph.get(parentId) ?? [];
-        for (const edgeId of hiddenEdges){
-            const edge = hg.edges.get(edgeId);
-            if (edge) edge.visible = true;
-        }
-
-        hiddenEdgesBySubgraph.delete(parentId);
-        hiddenNodesBySubgraph.delete(parentId);
-        subgraphRects.delete(parentId);
-        subgraphParent.delete(parentId);
-        hg.activeSubgraphs.delete(parentId);
-    }
-    function subgraphShouldExpand(sg: Subgraph, k: number): boolean {
-        const lvl = sg.depthLevel ?? 1;
-        const threshold = ZOOM_LEVEL_THRESHOLDS.get(lvl) ?? 3.0
-        return k >= threshold;
-    }
     function updateExpansionsForZoom(k: number): boolean {
         const entries = Object.entries(subgraphs).sort((a, b) => (a[1]?.depthLevel ?? 1) - (b[1]?.depthLevel ?? 1));
         let changed = false;
@@ -182,7 +112,7 @@
             const active = hg.activeSubgraphs.has(id);
             const want = subgraphShouldExpand(sg, k);
             if (active && !want){
-                collapseSubgraph(id);
+                collapseSubgraph(id, hg, subgraphs, subgraphParent, hiddenEdgesBySubgraph, subgraphRects);
                 changed = true;
             }
         }
@@ -204,16 +134,17 @@
         if (evaluating) return;
         evaluating = true;
         const changed = updateExpansionsForZoom(lastZoomK);
-        if (changed) resetBaseNodesToCanon(hg, canonicalBasePos);
+        if (changed) {
+            resetBaseNodesToCanon(hg, canonicalBasePos);
             // runRectPipeline({graphWidth, graphHeight, hg, nodeRadius, subgraphRects, subgraphParent});        
-        runCollisionAvoidance({graphWidth: svgElement.clientWidth, graphHeight: 0.9*svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent});
-
-        rerunDepthBox();
-        rerenderGraph();
+            runCollisionAvoidance({graphWidth: svgElement.clientWidth, graphHeight: 0.9*svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent});
+            rerunDepthBox();
+            rerenderGraph();
+        }
         evaluating = false;
     }
     function buildBaseHGraph() {
-        resetHGraph();
+        resetHGraph(hg);
 
         graphWidth = svgElement.clientWidth;
         graphHeight = svgElement.clientHeight;
@@ -266,7 +197,7 @@
         snapshotBasePos();
         rerunDepthBox();
     }
-    function rerunHGraph(){
+    function runHGraph(){
         buildBaseHGraph();
         runCollisionAvoidance({graphWidth: svgElement.clientWidth, graphHeight: svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent});
         rerunDepthBox();
@@ -276,17 +207,33 @@
         g.attr("transform", currentZoomTransform.toString());
         const context = makeContext();
         
-        drawHalos(g, subgraphRects, subgraphs);
+        drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs);
         drawEdges(context);
         drawNodes(context, dragBehaviour);
         if(inputSequence&& inputSequence.trim()) drawPathHighlightLocal();
 
     }
-    function resetHGraph() {
-        hg.nodes.clear();
-        hg.edges.clear();
-        hg.activeSubgraphs.clear();
+    function snapshotBasePos(){
+        canonicalBasePos.clear();
+        for (const n of hg.nodes.values()){
+            if (!n.parent){
+                canonicalBasePos.set(n.id, {x:n.x, y:n.y});
+            }
+        }
     }
+    function makeContext(): FSMRenderContext {
+        return {
+            g,
+            hg,
+            nodeRadius,
+            loopRadius: LOOP_RADIUS,
+            labelOffset: LABEL_OFFSET,
+            acceptingStates,
+            startingStates,
+            arrowheadBlack,
+        };
+    }
+
     function rerunDepthBox(){
         if (!showDepthBox) return;
         let maxDepthExpanded = 0;
@@ -306,8 +253,8 @@
         const svg = d3.select(svgElement);
         drawArrowheads(svg);
         g = addContentGroup(svg);       
-        measureHeight(wrapperElement, graphWidth, graphHeight, svgElement);
-        dragBehaviour = createDragNoSim(() => { drawEdges(makeContext()); drawHalos(g, subgraphRects, subgraphs); });
+        measureHeight(wrapperElement, svgElement);
+        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs); });
         
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .on('zoom', (event) => {
@@ -315,7 +262,6 @@
                 g.attr('transform', event.transform.toString());
                 lastZoomK = event.transform.k;
                 if (event.sourceEvent instanceof WheelEvent ){ //TODO: MORE SOPHISTICATED DIFFERENTIATION BETWEEN WHEEL AND BUTTON EVENT FOR MOBILE PINCH AND ZOOM
-                    lastZoomK = event.transform.k;
                     if (Math.abs(lastZoomK - lastSemanticZoomK) > 0.05){
                         lastSemanticZoomK = lastZoomK;
                         requestAnimationFrame(semanticTickGuard); //for throttling
@@ -330,10 +276,10 @@
 
     $: if (mounted && (renderKey !== lastRenderKey)) {
         lastRenderKey = renderKey;
-        rerunHGraph();
+        runHGraph();
     }
     $: if(mounted && isFullScreen !== undefined){
-        requestAnimationFrame(() => {measureHeight(wrapperElement, graphWidth, graphHeight, svgElement); rerenderGraph();});
+        requestAnimationFrame(() => {measureHeight(wrapperElement, svgElement); buildBaseHGraph(); rerenderGraph(); });
     } 
     $: showDepthBox = Object.keys(subgraphs ?? {}).length > 0;
     $: if (!showDepthBox) depthText = "";

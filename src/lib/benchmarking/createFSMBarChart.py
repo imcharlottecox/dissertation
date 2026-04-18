@@ -64,9 +64,7 @@ interesting_stages = [
 total_render = [
     "fsm:totalRender",
 ]
-# index = stages
-# columns = n
-# values = ms
+
 n_order = [10, 100, 500, 1000]
 pivot = df[df["name"].isin(selected_stages)].pivot_table(index="name", columns="n", values="ms").reindex(selected_stages, columns=n_order)
 pivot = pivot.reindex(columns=n_order)

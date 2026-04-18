@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import type { StateNode } from './graphTypes';
 import {logEvent} from '../supabase/logging';
+
 export function createZoom(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
   return d3.zoom<SVGSVGElement, unknown>()
     .on('zoom', (event) => g.attr('transform', event.transform));
@@ -8,7 +9,8 @@ export function createZoom(g: d3.Selection<SVGGElement, unknown, null, undefined
 
 const recentDrags = new Map<string, number>(); //node id timestamp
 const DRAG_COOLDOWN = 60_000;
-export function createDragNoSim(updateEdges: () => void) {
+
+export function createDragHandler(updateEdges: () => void) {
   return d3.drag<SVGGElement, any>()
     .on("start", function () {
       d3.select(this).raise();
@@ -29,56 +31,56 @@ export function createDragNoSim(updateEdges: () => void) {
     })
 }
 
-// drag handler: remembers and saves positions of node drags, to persist state across window resizes
-export function createDrag(simulation: d3.Simulation<any, any>, tick: () => void, graphNodes: any[]): d3.DragBehavior<SVGGElement, any, any>  {
-  return d3.drag<SVGGElement, StateNode>()
-    .on('start', (event, d: any) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        d.fx = d.x;
-        d.fy = d.y;
-    })
-    .on('drag', (event, d: any) => {
-        d.fx = d.x = event.x;
-        d.fy = d.y = event.y;
-        tick();
-    })
-    .on('end', (event, d: any) => {
-        const index = graphNodes.findIndex(n => n.id === d.id);
-        if (!event.active) simulation.alphaTarget(0);
-        if (index !== -1) {
-            graphNodes[index].fx = d.x;
-            graphNodes[index].fy = d.y;
-        }
-    });
-}
+// // drag handler: remembers and saves positions of node drags, to persist state across window resizes
+// export function createDrag(simulation: d3.Simulation<any, any>, tick: () => void, graphNodes: any[]): d3.DragBehavior<SVGGElement, any, any>  {
+//   return d3.drag<SVGGElement, StateNode>()
+//     .on('start', (event, d: any) => {
+//         if (!event.active) simulation.alphaTarget(0.3).restart();
+//         d.fx = d.x;
+//         d.fy = d.y;
+//     })
+//     .on('drag', (event, d: any) => {
+//         d.fx = d.x = event.x;
+//         d.fy = d.y = event.y;
+//         tick();
+//     })
+//     .on('end', (event, d: any) => {
+//         const index = graphNodes.findIndex(n => n.id === d.id);
+//         if (!event.active) simulation.alphaTarget(0);
+//         if (index !== -1) {
+//             graphNodes[index].fx = d.x;
+//             graphNodes[index].fy = d.y;
+//         }
+//     });
+// }
 
-export function createDragSubgraph(updateEdges, subNodePositions) {
-    return d3.drag<SVGGElement, any>()
-    .on("start", function () {
-        d3.select(this).raise();
-    })
-    .on("drag", function (event, d: any) {
-        // parent <g> is the subgraph container group
-        const parentG = this.parentNode as SVGGElement;
-        const parentCTM = parentG.getScreenCTM().inverse();
+// export function createDragSubgraph(updateEdges, subNodePositions) {
+//     return d3.drag<SVGGElement, any>()
+//     .on("start", function () {
+//         d3.select(this).raise();
+//     })
+//     .on("drag", function (event, d: any) {
+//         // parent <g> is the subgraph container group
+//         const parentG = this.parentNode as SVGGElement;
+//         const parentCTM = parentG.getScreenCTM().inverse();
 
-        // convert screen coordinates to LOCAL subgraph coordinates
-        const pt = parentG.ownerSVGElement!.createSVGPoint();
-        pt.x = event.sourceEvent.clientX;
-        pt.y = event.sourceEvent.clientY;
-        const local = pt.matrixTransform(parentCTM);
+//         // convert screen coordinates to LOCAL subgraph coordinates
+//         const pt = parentG.ownerSVGElement!.createSVGPoint();
+//         pt.x = event.sourceEvent.clientX;
+//         pt.y = event.sourceEvent.clientY;
+//         const local = pt.matrixTransform(parentCTM);
 
-        d.x = local.x;
-        d.y = local.y;
+//         d.x = local.x;
+//         d.y = local.y;
 
-        if (subNodePositions[d.id]) {
-            subNodePositions[d.id].x = local.x;
-            subNodePositions[d.id].y = local.y;
-        }
-        d3.select(this).attr("transform", `translate(${local.x},${local.y})`);
-        updateEdges();
-        });
-}
+//         if (subNodePositions[d.id]) {
+//             subNodePositions[d.id].x = local.x;
+//             subNodePositions[d.id].y = local.y;
+//         }
+//         d3.select(this).attr("transform", `translate(${local.x},${local.y})`);
+//         updateEdges();
+//         });
+// }
 
 export function computeEdgePoints(source: { x: number; y: number }, target: { x: number; y: number },nodeRadius: number) {
     const dx = target.x - source.x;

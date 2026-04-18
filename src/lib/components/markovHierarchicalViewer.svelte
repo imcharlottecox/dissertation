@@ -4,7 +4,7 @@
     import * as d3 from "d3";
     import type { StateNode, mTransition } from '$lib/graph/graphTypes';
     import { getGraphDefaultsMarkov } from '$lib/graph/graphDefaults';
-    import { createDragNoSim, createZoom, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from '$lib/graph/graphBehaviours';
+    import { createDragHandler, createZoom, computeEdgePoints, computeCurvedPath, computeSelfLoopPath } from '$lib/graph/graphBehaviours';
     import {NODE_COLOURS, NODE_STROKES} from '$lib/graph/nodeColours';
 
     export let markovStates: string[] = [];
@@ -93,8 +93,8 @@
     function calculatePositionLayout() {
         const innerW = graphWidth - 2*padding;
         const innerH = graphHeight - 2*padding;
-        const centerx = padding + innerW / 2;
-        const centery = padding + innerH / 2;
+        const centrex = padding + innerW / 2;
+        const centrey = padding + innerH / 2;
 
         const adjacency = new Map<string, string[]>();
     
@@ -199,8 +199,8 @@
             const angleStep = (2 * Math.PI) / markovStates.length;
             graphNodes = markovStates.map((s, i) => {
                 const angle = i * angleStep;
-                const x = centerx + (innerW / 2 - nodeRadius - 10) * Math.cos(angle);
-                const y = centery + (innerH / 2 - nodeRadius - 10) * Math.sin(angle);
+                const x = centrex + (innerW / 2 - nodeRadius - 10) * Math.cos(angle);
+                const y = centrey + (innerH / 2 - nodeRadius - 10) * Math.sin(angle);
                 return { id: s, x, y };
             });
             maxLevel = 0;
@@ -264,7 +264,7 @@
     }
 
     function drawNodes() {
-        const dragHandler = createDragNoSim(() => drawEdges());
+        const dragHandler = createDragHandler(() => drawEdges());
 
         nodeLayer = g.select(".nodes")
             .selectAll<SVGGElement, StateNode>("g.node")

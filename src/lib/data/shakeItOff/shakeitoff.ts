@@ -185,11 +185,6 @@ export function buildKgramFSMfromLyrics(lyrics: string, k: number, acceptMode?: 
     const prefixTree = buildPrefixTreefromKgrams(kgrams);
     const dfa = buildTotalDFAfromPrefixTree(prefixTree, "S_Dead");
     const minDfa = hopcroftMinimiseDFA(dfa);
-    console.log("[kgramFSM] k =", k);
-    console.log("[kgramFSM] num states =", minDfa.states.length);
-
-    console.log("[kgramFSM] lines =", lines.length, "first line tokens =", lines[0]);
-    console.log("[kgramFSM] kgrams =", kgrams.length, "first kgram =", kgrams[0]);
     const viewer = buildFsmForViewer(minDfa, acceptMode, hideDeadState);
     return {dfa: minDfa, viewer};
 }

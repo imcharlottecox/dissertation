@@ -88,7 +88,7 @@
     import Accordion from "$lib/components/Accordion.svelte";
     // import FsmViewer from "$lib/components/depreciated/fsmView.svelte";
     // import MarkovView from "$lib/components/depreciated/markovView.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
 
     import { makeChurchillFSM } from '$lib/data/churchill/churchillFSM';
