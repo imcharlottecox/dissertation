@@ -1,6 +1,6 @@
-import { getSgDescendants } from "../fsm/fsmSubgraphExpansion";
+import { getSgDescendants } from "./subgraphExpansion";
 import type { Subgraph, HGraph } from "$lib/graph/graphTypes";
-import type { Rect } from "../fsm/fsmRectangleUtilityHelpers";
+import type { Rect } from "./rectangleUtilityHelpers";
 const ZOOM_LEVEL_THRESHOLDS = new Map<number, number>([
     [1, 1.1],
     [2, 1.3],

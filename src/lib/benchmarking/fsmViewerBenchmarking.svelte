@@ -7,9 +7,9 @@
     import { addContentGroup, drawArrowheads } from "$lib/components/fsm/fsmSVGSetup";
     import { drawNodes, drawEdges, drawEdges2,patchEdgesPaths,computeEdgeGeometryForIds, computeEdgeGeometry, type RenderContext, syncEdgeToDom } from "$lib/components/fsm/fsmRendering";
     import { createDragHandler, createDragSelective } from "$lib/graph/graphBehaviours";
-    import {runCollisionAvoidance} from "$lib/components/fsm/fsmSubgraphLayoutCA";
-    import type {Rect}  from "$lib/components/fsm/fsmRectangleUtilityHelpers"; 
-    import {rectContainsRect, rectOverlapsRect, clampRectangleInside}  from "$lib/components/fsm/fsmRectangleUtilityHelpers"; 
+    import {runCollisionAvoidance} from "$lib/components/sharedGraph/subgraphLayoutCA";
+    import type {Rect}  from "$lib/components/sharedGraph/rectangleUtilityHelpers"; 
+    import {rectContainsRect, rectOverlapsRect, clampRectangleInside}  from "$lib/components/sharedGraph/rectangleUtilityHelpers"; 
     import { benchRows, downloadBenchRowsAsCsv, measure, clearBenchRows } from "$lib/benchmarking/profiler";
     import { tick } from "svelte";
     import { makeSyntheticFsmDS } from "$lib/benchmarking/makeSyntheticFsmDS";

@@ -3,7 +3,7 @@
     import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";
     import MarkovView from "$lib/benchmarking/markovViewerBenchmarking.svelte";
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
-    import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
+    import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
     import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
     import PageIntro from "$lib/components/pageIntro.svelte";
@@ -11,7 +11,6 @@
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
     import Accordion from "$lib/components/Accordion.svelte";
 
-    let weighted = false;
     let showDirectionalColours = true;
     let showEdgeLabels =true;
     let weightedThickness = true;
@@ -29,9 +28,8 @@
         fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
 
         const prob = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        markovResult = `P(${markovInput}) = ${prob.toFixed(5)}`;
+        markovResult = `P(${markovInput}) = ${prob.probability.toFixed(5)}`;
     }
-    let showDepth = false;
     $: fsmRenderKey = [
       fsmStates.length,
       fsmTransitions.length,
@@ -59,8 +57,6 @@
                 {fsmTransitions}
                 {acceptingStates}
                 {startingStates}
-                {weighted}      
-                {showDepth}        
                 renderKey = {fsmRenderKey}
               />
           </div>
@@ -161,20 +157,6 @@
         flex: 1 1 auto;
         min-height: 0;
         display: flex;
-    }
-    h3{
-        margin: 0 0 4px 0; 
-        font-size: 16px; 
-    }
-    .box {
-        border: 1.5px solid lightgrey;
-        border-radius: 4px;
-        padding: 8px;
-        margin: 8px;
-        background-color: snow;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
     }
     .word {
         background-color: white;

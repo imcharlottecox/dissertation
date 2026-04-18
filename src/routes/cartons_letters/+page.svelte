@@ -3,13 +3,13 @@
     // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
     import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
-    import MarkovView from "$lib/components/MC/HM.svelte";
+    import MarkovView from "$lib/components/MC/markovViewer.svelte";
 
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     // import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
     import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
     import {ComputeFlatValidityFSM} from "$lib/components/compute/computeValidityFSM";
-    import { ComputeProbabilityMarkov, ComputeProbabilityMarkovDetailed } from '$lib/components/compute/computeProbabilityMarkov';
+    import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbabilityMarkov';
     import PageIntro from "$lib/components/pageIntro.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
@@ -36,18 +36,7 @@
     });
 
 
-
-    function testinputSequence(){
-        const fsmInput = inputSequence?.trim().split("");
-        const markovInput = inputSequence?.trim().split("");
-
-        const isAccepted = ComputeFlatValidityFSM(fsmTransitions, fsmInput, acceptingStates, startingStates);
-        fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
-
-        const prob = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        markovResult = `P(${markovInput}) = ${prob.toFixed(3)}`;
-    }
-    let showDepth = false;
+    let showDepthBox = false;
 
 
 
@@ -129,9 +118,8 @@
 
         const accepted = ComputeFlatValidityFSM(fsmTransitions, fsmInput, acceptingStates, startingStates);
         const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        const breakdown = ComputeProbabilityMarkovDetailed(markovTransitions, markovInput);
 
-        const rounded_p = probability.toFixed(5);
+        const rounded_p = probability.probability.toFixed(5);
         sequenceLogger(sequence, { accepted, probability: parseFloat(rounded_p), questionId: questions[0]?.id ?? "Q0" });
 
         return{
@@ -141,7 +129,7 @@
             fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
             markovText: `P(${markovInput}) = ${rounded_p}`,
             typedTokens: markovInput,
-            probabilityBreakdown: breakdown.steps,
+            probabilityBreakdown: probability.steps,
         };
     }
     $: fsmRenderKey = [
@@ -181,7 +169,7 @@
             {acceptingStates}
             {startingStates}
             {weighted}
-            {showDepth}
+            {showDepthBox}
             renderKey = {fsmRenderKey}
             />
         </div> -->
@@ -193,8 +181,7 @@
                 {fsmTransitions}
                 {acceptingStates}
                 {startingStates}
-                {weighted}      
-                {showDepth}        
+                {showDepthBox}        
                 renderKey = {fsmRenderKey}
                 {inputSequence}
                 isFullScreen={fullScreenPane === 'fsm'}
@@ -283,14 +270,4 @@
     .graphRow{
         min-height: 80dvh;
     }
-
-    .paneHeader{
-        /* display: flex;
-        flex: 0 0 20px;
-        background: whitesmoke;
-        border-bottom: 1px solid #ddd;
-        gap: 12px;
-        align-items: center; */
-    }
-   
 </style>

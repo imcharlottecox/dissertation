@@ -1,5 +1,5 @@
 import type { fTransition, Subgraph } from "$lib/graph/graphTypes";
-import { buildKgramFSMfromLyrics, buildSubstringFSMfromLyrics } from "./shakeitoff";
+import { buildKgramFSMfromLyrics, buildSubstringFSMfromLyrics } from "./buildShakeItOffFSM";
 import lyrics from "$lib/data/shakeItOff/shakeItOff.txt?raw";
 
 export function makeShakeItOffFSM(k=4){

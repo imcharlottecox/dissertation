@@ -20,7 +20,7 @@
     let showDirectionalColours = false;
     let showEdgeLabels = true;
     let weightedThickness = false;
-    let showDepth = false;
+    let showDepthBox = false;
     let include5p = false;
     let showMarkov = false;
     const PAGE = "Vending";
@@ -79,8 +79,7 @@
                   {fsmTransitions}
                   {acceptingStates}
                   {startingStates}
-                  {weighted}      
-                  {showDepth}        
+                  {showDepthBox}        
                   renderKey = {fsmRenderKey}
 
                 />
@@ -104,8 +103,7 @@
                   {fsmTransitions}
                   {acceptingStates}
                   {startingStates}
-                  {weighted}      
-                  {showDepth}        
+                  {showDepthBox}        
                   renderKey = {fsmRenderKey}
 
                 />

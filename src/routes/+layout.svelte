@@ -14,30 +14,11 @@
 	<!-- <h1 style="font-size: 1.4rem; margin: 0; font-weight: 650;">Node To Joy</h1> -->
 	<a class="logo" href={`${base}/`}>Node To Joy</a>
 	<div class="links">
-		<!-- <a href="/">Home</a>
-    <a href="/svelteImperativeFSM">FSM</a>
-	<a href="/resizes">Resizes</a>
-	<a href="/myFSM">My FSM</a>
-	<a href="/holdsShape">Holds Shape</a>
-	<a href="/churchillFSM">My Churchill FSM</a>
-	<a href="/cambridgeFsm">My Cam FSM</a> -->
-	<!-- <a href="{base}/algebraPage0">Algebra: Example 0</a> -->
-	<!-- <a href={`${base}/algebraPage0`}>Algebra: Example 0</a>
-	<a href="{base}/camPage2">Cam: Example 2</a>
-	<a href="{base}/churPage3">Churchill: Example 3</a> -->
 	<a href="{base}/cartons_letters">1: Letters!</a>
 	<a href="{base}/python">2: Python Assignments</a>
 	<a href="{base}/vending">3: Vending Machine</a>
 	<a href="{base}/shakeItOff">4: Shake It Off</a>
 	<a href="{base}/TED">5: TED</a>
-	<!-- <a href="{base}/benchmark">5: Benchmark</a>
-	<a href="{base}/not_using/camPage2">Cam: Example 2</a>
-	<a href="{base}/not_using/churPage3">Churchill: Example 3</a> -->
-
-
-
-
-	<!-- <a href="/markov1">Markov</a> -->
 	</div>
 </div>
 

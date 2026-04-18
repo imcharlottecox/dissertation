@@ -54,7 +54,4 @@
 </div>
 
 <style>
-    svg {
-        background-color: whitesmoke;
-    }
 </style>

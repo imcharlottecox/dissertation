@@ -1,4 +1,4 @@
-import { liveHaloRects, rectBorderPoint} from "../fsm/fsmRectangleUtilityHelpers";
+import { liveHaloRects, rectBorderPoint} from "../sharedGraph/rectangleUtilityHelpers";
 import type { mTransition, HGraph } from "$lib/graph/graphTypes";
 import "$lib/styles/theme.css"
 

@@ -2,9 +2,9 @@
     import Accordion from "$lib/components/Accordion.svelte";
     // import FsmViewer from "$lib/components/fsmView.svelte";
     import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
-    import { makeLetFSM } from '$lib/data/python_assignments/letFSM2';
+    import { makeLetFSM } from '$lib/data/python_assignments/letFSM';
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
-    import MarkovView from "$lib/components/MC/HM.svelte";
+    import MarkovView from "$lib/components/MC/markovViewer.svelte";
 
     // import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/pythonMarkov";
     // import pythonAssignments from "$lib/data/python_assignments/python_assignments.txt?raw"; 
@@ -13,7 +13,7 @@
     import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/real_dataset/real_pythonMarkov";
     import { computeMarkovCompletion } from "$lib/components/compute/computeCompletePredictedMarkov";
     import { ComputeValidityFSM } from '$lib/components/compute/computeValidityFSM';
-    import { ComputeProbabilityMarkov, ComputeProbabilityMarkovDetailed } from '$lib/components/compute/computeProbabilityMarkov';
+    import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbabilityMarkov';
     import ChallengePanel from "$lib/components/compute/computeBox.svelte"
     import type { TaskQuestion, Evaluation } from "$lib/components/compute/computeBox.svelte";
     import { onMount } from "svelte";
@@ -99,8 +99,7 @@
         const fsmText = accepted ? "FSM: Accepted" : "FSM: Rejected";
 
         const typeProbability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
-        const breakdown = ComputeProbabilityMarkovDetailed(markovTransitions, typedTokens);
-        sequenceLogger(sequenceInput, { accepted, probability: typeProbability, questionId: "q1" });
+        sequenceLogger(sequenceInput, { accepted, probability: typeProbability.probability, questionId: "q1" });
 
         return {
             accepted,
@@ -116,7 +115,7 @@
                 totalProbability:   b.totalProbability,
                 terminatedNaturally: b.terminatedNaturally,
             })),
-            probabilityBreakdown: breakdown.steps,
+            probabilityBreakdown: typeProbability.steps,
         };
     }
     // const questions: TaskQuestion[] = [
@@ -236,7 +235,6 @@
                     {startingStates}
                     {subgraphs}
                     {warps}
-                    {weighted}       
                     {inputSequence}       
                     renderKey = {fsmRenderKey}
                     isFullScreen={fullScreenPane === 'fsm'}

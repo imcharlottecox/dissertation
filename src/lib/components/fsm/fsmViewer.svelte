@@ -3,17 +3,18 @@
     import * as d3 from "d3";
     
     import type { fTransition, Subgraph, Warp, HGraph, HStateNode, HEdge } from "$lib/graph/graphTypes";
-    import type {Rect}  from "$lib/components/fsm/fsmRectangleUtilityHelpers"; 
+    import type {Rect}  from "$lib/components/sharedGraph/rectangleUtilityHelpers"; 
 
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
     import { computeLevelsMap, computeNodePositions, computeNodePositionsWithBackbone, resetBaseNodesToCanon } from "./fsmLayoutPositions";
     import { addContentGroup } from "$lib/components/fsm/fsmSVGSetup";
-    import { drawNodes, drawEdges, drawHalos, type FSMRenderContext } from "$lib/components/fsm/fsmRendering";
+    import { drawNodes, drawEdges, type FSMRenderContext } from "$lib/components/fsm/fsmRendering";
+    import { drawHalos } from "$lib/components/sharedGraph/drawHalos";
     import { createDragHandler } from "$lib/graph/graphBehaviours";
-    import {runCollisionAvoidance} from "$lib/components/fsm/fsmSubgraphLayoutCA";
-    import { makeZoomControls, measureHeight } from "./screenControls";
-    import { drawPathHighlight, fadeOutPathHighlight, computeWalkedPathFlat, type PathWalked } from "./pathwalk";
-    import { getSgDescendants, placeSubgraphRect, addSubEdges, addSubNodes, addWarpEdges, hideAnchorAndEdges } from "./fsmSubgraphExpansion";
+    import {runCollisionAvoidance} from "$lib/components/sharedGraph/subgraphLayoutCA";
+    import { makeZoomControls, measureHeight } from "../sharedGraph/screenControls";
+    import { drawPathHighlight, fadeOutPathHighlight, computeWalkedPathFlat, type PathWalked } from "../sharedGraph/pathwalk";
+    import { getSgDescendants, placeSubgraphRect, addSubEdges, addSubNodes, addWarpEdges, hideAnchorAndEdges } from "../sharedGraph/subgraphExpansion";
     import {drawArrowheads} from "../sharedGraph/graphRendering";
     import { collapseSubgraph, subgraphShouldExpand } from "../sharedGraph/collapse";
     import { resetHGraph } from "../sharedGraph/lifecycle";

@@ -4,7 +4,7 @@
     // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
     import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
-    import MarkovView from "$lib/components/MC/HM.svelte";
+    import MarkovView from "$lib/components/MC/markovViewer.svelte";
     import { makeShakeItOffFSM } from '$lib/data/shakeItOff/shakeItOffFSM';
     import { makeShakeItOffMarkov } from "$lib/data/shakeItOff/shakeItOff_Markov";
     import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
@@ -22,7 +22,7 @@
     let showDirectionalColours = true;
     let showEdgeLabels =true;
     let weightedThickness = false;
-    let showDepth = false;
+    let showDepthBox = false;
     let sequence: string = "";
     let fsmResult: string | null = null;
     let markovResult: string | null = null;
@@ -108,7 +108,7 @@
             {acceptingStates}
             {startingStates}
             {weighted}
-            {showDepth}
+            {showDepthBox}
             renderKey = {fsmRenderKey}
             />
         </div> -->
@@ -120,8 +120,7 @@
                 {fsmTransitions}
                 {acceptingStates}
                 {startingStates}
-                {weighted}      
-                {showDepth}        
+                {showDepthBox}        
                 renderKey = {fsmRenderKey}
                 isFullScreen={fullScreenPane === 'fsm'}
                 on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'fsm', open: fullScreenPane === 'fsm' }); }}
@@ -176,7 +175,6 @@
                 {showEdgeLabels}
                 {weightedThickness}
                 filterPairs={markovFilter}
-                expandsubgraphId={expandsubgraph}
                 isFullScreen={fullScreenPane === 'markov'}
                 on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'markov' ? null : 'markov'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'markov', open: fullScreenPane === 'markov' }); }}
             />

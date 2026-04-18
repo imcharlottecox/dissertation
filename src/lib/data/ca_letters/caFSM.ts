@@ -1,4 +1,4 @@
-export type Transition = { from: string; to: string; label: string };
+import type { fTransition } from "$lib/graph/graphTypes";
 
 export function makeCaFSM() {
 
@@ -28,7 +28,7 @@ export function makeCaFSM() {
 
     ];
 
-    const fsmTransitions: Transition[] = [
+    const fsmTransitions: fTransition[] = [
         { from: 'START', to: 'C', label: 'C' },
         { from: 'C', to: 'Ca', label: 'a' },
         { from: 'Ca', to: 'Cat', label: 't' },
