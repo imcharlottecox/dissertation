@@ -1,7 +1,7 @@
 <script lang="ts">
     import Accordion from "$lib/components/Accordion.svelte";
-    // import FsmViewer from "$lib/components/fsmView.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
+    // import FsmViewer from "$lib/components/FSMView.svelte";
+    import FsmHierarchicalViewer from "$lib/components/FSM/fsmViewer.svelte";
     import { makeLetFSM } from '$lib/data/python_assignments/letFSM';
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
@@ -11,11 +11,11 @@
     import PageIntro from "$lib/components/pageIntro.svelte";
     import pythonAssignments from "$lib/data/python_assignments/real_dataset/real_python_assignments.txt?raw"; 
     import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/real_dataset/real_pythonMarkov";
-    import { computeMarkovCompletion } from "$lib/components/compute/computeCompletePredictedMarkov";
-    import { ComputeValidityFSM } from '$lib/components/compute/computeValidityFSM';
-    import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbabilityMarkov';
+    import { computeMarkovPredicted } from "$lib/components/compute/computeCompletePredictedMarkov";
+    import { ComputeValidityFSM } from '$lib/components/compute/computeAcceptance';
+    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
     import ChallengePanel from "$lib/components/compute/computeBox.svelte"
-    import type { TaskQuestion, Evaluation } from "$lib/components/compute/computeBox.svelte";
+    import type { Question, Evaluation } from "$lib/components/compute/computeBox.svelte";
     import { onMount } from "svelte";
     import { logEvent, seqLogger } from "$lib/supabase/logging";
 
@@ -70,114 +70,92 @@
     }
 
    
-    function evaluate(sequenceInput: string): Evaluation {
+    function evaluate(sequenceInput: string):Evaluation{
         const typedTokens = sequenceInput.split("");
-
-        const completion = computeMarkovCompletion(
-            typedTokens,
-            markovStates,
-            markovTransitions,
-            endState,
-        );
-
-        const best = completion.best;
-
+        const predicted = computeMarkovPredicted(typedTokens, markovStates, markovTransitions, endState);
+        const best = predicted.best;
         const fsmInput = [...typedTokens, "\n"];
-        const accepted = ComputeValidityFSM(
-            fsmTransitions,
-            fsmInput,
-            acceptingStates,
-            subgraphs,
-            warps,
-        );
-
-        const predictedStr = best.predictedTokens.join("");
-        const markovText = best.terminatedNaturally
-            ? `Predicts: ${sequenceInput}[${predictedStr}]`
-            : `Predicts: ${sequenceInput}[${predictedStr}] (no clean end)`;
+        const accepted = ComputeValidityFSM( fsmTransitions, fsmInput, acceptingStates, subgraphs, warps);
+        const predictedSeq = best.predictedTokens.join("");
+        const markovText = best.terminatedNaturally ? `Predicts: ${sequenceInput}[${predictedSeq}]` : `Predicts: ${sequenceInput}[${predictedSeq}] (no clean end)`;
 
         const fsmText = accepted ? "FSM: Accepted" : "FSM: Rejected";
 
-        const typeProbability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
-        sequenceLogger(sequenceInput, { accepted, probability: typeProbability.probability, questionId: "q1" });
+        const typedProbability = ComputeProbabilityMarkov(markovTransitions, typedTokens);
 
-        return {
-            accepted,
-            probability:       typeProbability,
-            prefixProbability: completion.prefixProbability,
-            confidenceLabel:   completion.confidenceLabel,
-            fsmText,
+        sequenceLogger(sequenceInput, {accepted, probability: typedProbability.probability, questionId: "q1"});
+
+        return { accepted, 
+            probability: typedProbability.probability,
+            typedProbability: predicted.typedProbability,
+            confidenceLabel: predicted.confidenceLabel,
+            fsmText, 
             markovText,
             typedTokens,
-            predictedTokens:   best.predictedTokens,
-            allBeams:          completion.beams.map(b => ({
-                predictedTokens:    b.predictedTokens,
-                totalProbability:   b.totalProbability,
+            predictedTokens: best.predictedTokens,
+            allBeams: predicted.beams.map(b => ({
+                predictedTokens: b.predictedTokens,
+                predictedSeqProbability: b.predictedSeqProbability,
                 terminatedNaturally: b.terminatedNaturally,
             })),
-            probabilityBreakdown: typeProbability.steps,
+            probabilityBreakdown: typedProbability.steps,
+
         };
+
     }
-    // const questions: TaskQuestion[] = [
-    //     {
-    //         id: "q1",
-    //         prompt: "Type any Python variable assignment you want. Is the sequence that the Markov chain predicted what you wanted to type?",
-    //         check: ({accepted}) => accepted,
-    //     }
-    // ];
-    const questions: TaskQuestion[] = [
+    const questions: Question[] = [
         {
             id: "q0",
-            prompt: "Type a simple variable assignment, like x = 1 or name='hi'. Is it accepted by the FSM? What does the Markov chain predict will come next?",
+            question: 'Type a simple variable assignment, like x = 1 or name="hi". Is it accepted by the FSM? What does the Markov chain predict will come next?',
             check: ({ accepted }) => accepted,
         },
         {
             id: "q1",
-            prompt: "Try typing only the start of an assignment, like x = or total=. What kind of ending does the predictor suggest? Is it accepted by the FSM?",
+            question: "Try typing only the start of an assignment, like x = or total=. What kind of ending does the predictor suggest? Is it accepted by the FSM?",
             check: ({ input }) => input.includes("="),
             hint: "The FSM should reject your statement because we made the rules to accept only valid Python syntax."
         },
         {
             id: "q11",
-            prompt: "Open the Python Assignments Dataset and copy an assignment exactly. Do you notice whether this has a higher or lower probability than some other sequences you've tried out?",
+            question: "Open the Python Assignments Dataset and copy an assignment exactly. Do you notice whether this has a higher or lower probability than some other sequences you've tried out?",
             check: ({ input }) => input.includes("="),
             hint: "It should be higher! This is because our Markov chain was trained on this data and learned that this is a pattern it should recognsise! Does this remind you of how ChatGPT might work?"
         },
         {
             id: "q2",
-            prompt: "Can you find an input that the predictor completes in a sensible way, even before you've finished typing it?",
+            question: "Can you find an input that the predictor completes in a sensible way, even before you've finished typing it?",
             check: ()=> true,
             hint: "Often, the Markov chain might produce something silly. The dataset is trained on 1000 real Python statements, which is not very many in reality. This means that even if a statement seems common to you, if it's not in the dataset then the Markov chain won't recognise the pattern and will assign it a low probability."
         },
         {
             id: "q3",
-            prompt: "Can you type something that is rejected by the FSM, but still gets a non-zero probability from the Markov chain?",
+            question: "Can you type something that is rejected by the FSM, but still gets a non-zero probability from the Markov chain?",
             check: ({ accepted, probability }) => !accepted && probability > 0,
         },
         {
             id: "q5",
-            prompt: "Try two different variable names at the start of an assignment. Does the predictor seem to prefer some names or patterns over others?",
+            question: "Try two different variable names at the start of an assignment. Does the predictor seem to prefer some names or patterns over others?",
             check: () => true,
             hint: "Try x = 0 versus c = 0. 'c = 0' is in the training dataset 'Python Assignments Dataset', so the Markov chain has seen it before and assigns it a higher probability!"
         },
         {
             id: "q6",
-            prompt: "What happens if you type a capital letter, a space, or unusual punctuation? How do the FSM and Markov chain respond differently?",
+            question: "What happens if you type a capital letter, a space, or unusual punctuation? How do the FSM and Markov chain respond differently?",
             check: () => true,
         },
         {
             id: "q7",
-            prompt: "Can you make the predictor suggest something you did NOT intend to type? Why do you think it made that guess?",
+            question: "Can you make the predictor suggest something you did NOT intend to type? Why do you think it made that guess?",
             check: () => true,
         },
         {
             id: "q8",
-            prompt: "Find a case where the FSM says your input is invalid, but the predictor still seems confident about what should come next.",
+            question: "Find a case where the FSM says your input is invalid, but the predictor still seems confident about what should come next.",
             check: () => true,
         },
         {
             id: "q9",
-            prompt: "Which model seems more like an autocomplete tool: the FSM or the Markov chain? Why?",
+            question: "Which model seems more like an autocomplete tool: the FSM or the Markov chain? Why?",
             check: ()=> false,
             correctChoice: "MC",
             choices: [
@@ -188,7 +166,7 @@
         },
         {
             id: "q10",
-            prompt: "Can you find an assignment statement rejected by the FSM that you think should be accepted?",
+            question: "Can you find an assignment statement rejected by the FSM that you think should be accepted?",
             check: ()=>true
         }
     ];
@@ -235,7 +213,7 @@
                     {startingStates}
                     {subgraphs}
                     {warps}
-                    {inputSequence}       
+                    {inputSequence}
                     renderKey = {fsmRenderKey}
                     isFullScreen={fullScreenPane === 'fsm'}
                     on:toggleFullscreen={() => { fullScreenPane = fullScreenPane === 'fsm' ? null : 'fsm'; logEvent('fullscreen_toggle', { page: PAGE, pane: 'fsm', open: fullScreenPane === 'fsm' }); }}

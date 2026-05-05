@@ -37,10 +37,10 @@
 "/Users/charlottecox/Development/dissertation/draft2/src/lib/components/compute/computeProbabilityMarkov.ts", "TypeScript", 0, 0, 0, 28, 0, 0, 0, 0, 0, 1, 8, 37
 "/Users/charlottecox/Development/dissertation/draft2/src/lib/components/compute/computeValidityFSM.ts", "TypeScript", 0, 0, 0, 366, 0, 0, 0, 0, 0, 17, 37, 420
 "/Users/charlottecox/Development/dissertation/draft2/src/lib/components/compute/markovFilterHelpers.ts", "TypeScript", 0, 0, 0, 32, 0, 0, 0, 0, 0, 3, 8, 43
-"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmLayoutPositions.ts", "TypeScript", 0, 0, 0, 169, 0, 0, 0, 0, 0, 7, 41, 217
-"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmRendering.ts", "TypeScript", 0, 0, 0, 206, 0, 0, 0, 0, 0, 40, 46, 292
-"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmSVGSetup.ts", "TypeScript", 0, 0, 0, 13, 0, 0, 0, 0, 0, 1, 6, 20
-"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmViewer.svelte", "Svelte", 302, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 340
+"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmLayoutPositions.ts", "TypeScript", 0, 0, 0, 169, 0, 0, 0, 0, 0, 7, 41, 217
+"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmRendering.ts", "TypeScript", 0, 0, 0, 206, 0, 0, 0, 0, 0, 40, 46, 292
+"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmSVGSetup.ts", "TypeScript", 0, 0, 0, 13, 0, 0, 0, 0, 0, 1, 6, 20
+"/Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmViewer.svelte", "Svelte", 302, 0, 0, 0, 0, 0, 0, 0, 0, 0, 38, 340
 "/Users/charlottecox/Development/dissertation/draft2/src/lib/components/markovHierarchicalViewer.svelte", "Svelte", 575, 0, 0, 0, 0, 0, 0, 0, 0, 11, 69, 655
 "/Users/charlottecox/Development/dissertation/draft2/src/lib/components/pageIntro.svelte", "Svelte", 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 29
 "/Users/charlottecox/Development/dissertation/draft2/src/lib/components/sharedGraph/collapse.ts", "TypeScript", 0, 0, 0, 43, 0, 0, 0, 0, 0, 1, 10, 54

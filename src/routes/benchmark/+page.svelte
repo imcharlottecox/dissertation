@@ -1,12 +1,13 @@
 <script lang="ts">
-    // import FsmViewer from "$lib/components/fsmView.svelte";
-    import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";
-    import MarkovView from "$lib/benchmarking/markovViewerBenchmarking.svelte";
+	import BenchmarkFSMViewer from '$lib/components/benchmarking/benchmarkFSMViewer.svelte';
+    // import FsmViewer from "$lib/components/FSMView.svelte";
+    // import FsmHierarchicalViewer from "$lib/benchmarking/BenchmarkFSMViewer.svelte";
+    import MarkovView from "$lib/components/benchmarking/benchmarkMarkovViewer.svelte";
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
-    import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
-    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
-    import PageIntro from "$lib/components/pageIntro.svelte";
+    // import {ComputeValidityFSM} from "$lib/components/compute/computeAcceptance";
+    // import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
+    // import PageIntro from "$lib/components/pageIntro.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
     import Accordion from "$lib/components/Accordion.svelte";
@@ -20,16 +21,16 @@
     let markovResult: string | null = null;
 
 
-    function testSequence(){
-        const fsmInput = sequence?.trim().split("");
-        const markovInput = sequence?.toUpperCase().trim().split("");
+    // function testSequence(){
+    //     const fsmInput = sequence?.trim().split("");
+    //     const markovInput = sequence?.toUpperCase().trim().split("");
 
-        const isAccepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
-        fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
+    //     const isAccepted = ComputeValidityFSM(fsmTransitions, fsmInput, acceptingStates);
+    //     fsmResult = isAccepted ? "FSM: Accepted" : "FSM: Rejected";
 
-        const prob = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        markovResult = `P(${markovInput}) = ${prob.probability.toFixed(5)}`;
-    }
+    //     const prob = ComputeProbability(markovTransitions, markovInput);
+    //     markovResult = `P(${markovInput}) = ${prob.probability.toFixed(5)}`;
+    // }
     $: fsmRenderKey = [
       fsmStates.length,
       fsmTransitions.length,
@@ -39,7 +40,7 @@
 </script>
 
 <main class="page">
-    <PageIntro 
+    <!-- <PageIntro 
         title="Letter Scramble"
         description="Below, we've used a dataset of the letters 'C,a,r,t,o,n,s'. The accepting states are all of the words in the Cambridge English dictionary that you can make as an anagram of these letters, starting with the letter C. The Markov chain shows us the likeliness of transitioning between letters based on these words in the dictionary."
     />
@@ -47,19 +48,19 @@
         {#each acceptingStates as word (word)}
             <span class="word">{word}</span>
         {/each}
-    </Accordion>
+    </Accordion> -->
     <div class="graphRow">
         <div class="fsmPane" style="width:50%;">
           <div class="paneHeader"></div>
-          <div class="fsmGraph">
-            <FsmHierarchicalViewer 
+          <!-- <div class="fsmGraph">
+            <BenchmarkFSMViewer 
                 {fsmStates}
                 {fsmTransitions}
                 {acceptingStates}
                 {startingStates}
                 renderKey = {fsmRenderKey}
               />
-          </div>
+          </div> -->
         </div>
         <div class="markovPane"style="width:50%;">
           <div class="paneHeader">
@@ -99,7 +100,7 @@
           </div>
         </div>
     </div>  
-    <div>
+    <!-- <div>
         <p>Can you find a word rejected by the FSM that the Markov Chain still assigns a probability to? </p>
         <label for="sequenceInput">Input Sequence:</label>
         <input
@@ -114,7 +115,7 @@
         </div>            
             {markovResult}
 
-    </div>
+    </div> -->
 </main>
 
 

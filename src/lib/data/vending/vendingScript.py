@@ -8,7 +8,7 @@ WRONG_COINS = [5,50]
 # START_STATE = "START"
 END_STATE = "PRESSED_PAY"
 
-def generate_data(p_10 = 0.6, p_20 = 0.35, p_noise = 0.05, max_steps=8):
+def generate_data(p_10 = 0.6, p_20 = 0.35, max_steps=8):
     total = 0
     inputted_coins = []
 

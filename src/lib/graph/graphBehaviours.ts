@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { StateNode } from './graphTypes';
+import type { HStateNode } from './graphTypes';
 import {logEvent} from '../supabase/logging';
 
 export function createZoom(g: d3.Selection<SVGGElement, unknown, null, undefined>) {
@@ -155,14 +155,14 @@ export function computeSelfLoop(x: number, y: number, loopRadius: number): strin
 }
 
 export function createDragSelective(onDragged: (nodeId: string) => void) {
-    return d3.drag<SVGGElement, any>()
-        .on("start", function () {
-        d3.select(this).raise();
-        })
+    return d3.drag<SVGGElement, HStateNode>()
+        // .on("start", function () {
+        // d3.select(this).raise();
+        // })
         .on("drag", function (event, d) {
-        d.x = event.x;
-        d.y = event.y;
-        d3.select(this).attr("transform", `translate(${event.x},${event.y})`);
-        onDragged(d.id);
+            d.x = event.x;
+            d.y = event.y;
+            d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+            onDragged(d.id);
         });
 }

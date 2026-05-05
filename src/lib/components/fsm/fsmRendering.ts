@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import type { HGraph, HStateNode, EdgeRenderingData, Subgraph} from "$lib/graph/graphTypes"
 // import { createDragHandler } from "$lib/graph/graphBehaviours";
-import { benchRows, measure } from "$lib/benchmarking/profiler";
+import { benchRows, measure } from "$lib/components/benchmarking/profiler";
 import { NODE_COLOURS, NODE_STROKES, subgraphColour } from "$lib/graph/nodeColours";
 import type { Rect } from "../sharedGraph/rectangleUtilityHelpers";
 import { computeSelfLoop } from "$lib/graph/graphBehaviours"; 
@@ -203,89 +203,89 @@ export function drawEdges(context: FSMRenderContext) {
 //     benchRows.push({ name: "fsm:drawEdges", n, ms: performance.now() - t0 });
 // }
 
-export function computeEdgeGeometry(hg: HGraph, loopRadius: number, labelOffset: number) {
-    for (const e of hg.edges.values()) {
-        if (!e.visible) continue;
+// export function computeEdgeGeometry(hg: HGraph, loopRadius: number, labelOffset: number) {
+//     for (const e of hg.edges.values()) {
+//         if (!e.visible) continue;
 
-        const sourceNode = hg.nodes.get(e.from);
-        const targetNode = hg.nodes.get(e.to);
-        if (!sourceNode || !targetNode) continue;
+//         const sourceNode = hg.nodes.get(e.from);
+//         const targetNode = hg.nodes.get(e.to);
+//         if (!sourceNode || !targetNode) continue;
 
-        const isSelfLoop = e.from === e.to;
-        e.cachedIsSelfLoop = isSelfLoop;
+//         const isSelfLoop = e.from === e.to;
+//         e.cachedIsSelfLoop = isSelfLoop;
 
-        const angleRadius = Math.atan2(targetNode.y - sourceNode.y , targetNode.x - sourceNode.x);
-        let angleDegrees = angleRadius * (180/Math.PI);
-        if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
+//         const angleRadius = Math.atan2(targetNode.y - sourceNode.y , targetNode.x - sourceNode.x);
+//         let angleDegrees = angleRadius * (180/Math.PI);
+//         if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
 
-        e.cachedPath = isSelfLoop
-        ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
-        : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
+//         e.cachedPath = isSelfLoop
+//         ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
+//         : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
 
-        e.cachedLabelX = (sourceNode.x + targetNode.x) / 2;
-        e.cachedLabelY = (sourceNode.y + targetNode.y) / 2 - labelOffset - (isSelfLoop ? 40 : 0);
-        e.cachedAngle = isSelfLoop ? 0 : angleDegrees;
-    }
-}
+//         e.cachedLabelX = (sourceNode.x + targetNode.x) / 2;
+//         e.cachedLabelY = (sourceNode.y + targetNode.y) / 2 - labelOffset - (isSelfLoop ? 40 : 0);
+//         e.cachedAngle = isSelfLoop ? 0 : angleDegrees;
+//     }
+// }
 
-export function computeEdgeGeometryForIds(hg: HGraph, edgeIds: Iterable<string>, loopRadius: number, labelOffset: number) {
-    for (const id of edgeIds) {
-        const e = hg.edges.get(id);
-        if (!e || !e.visible) continue;
+// export function computeEdgeGeometryForIds(hg: HGraph, edgeIds: Iterable<string>, loopRadius: number, labelOffset: number) {
+//     for (const id of edgeIds) {
+//         const e = hg.edges.get(id);
+//         if (!e || !e.visible) continue;
 
-        const sourceNode = hg.nodes.get(e.from);
-        const targetNode = hg.nodes.get(e.to);
-        if (!sourceNode || !targetNode) continue;
+//         const sourceNode = hg.nodes.get(e.from);
+//         const targetNode = hg.nodes.get(e.to);
+//         if (!sourceNode || !targetNode) continue;
 
-        const isSelfLoop = e.from === e.to;
-        e.cachedIsSelfLoop = isSelfLoop;
+//         const isSelfLoop = e.from === e.to;
+//         e.cachedIsSelfLoop = isSelfLoop;
 
-        const angleRadius = Math.atan2(targetNode.y - sourceNode.y , targetNode.x - sourceNode.x);
-        let angleDegrees = angleRadius * (180/Math.PI);
-        if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
+//         const angleRadius = Math.atan2(targetNode.y - sourceNode.y , targetNode.x - sourceNode.x);
+//         let angleDegrees = angleRadius * (180/Math.PI);
+//         if (angleDegrees > 90 || angleDegrees < -90 ) angleDegrees +=180; //to avoid upside down labels
 
-        e.cachedPath = isSelfLoop
-        ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
-        : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
+//         e.cachedPath = isSelfLoop
+//         ? computeSelfLoop(sourceNode.x, sourceNode.y, loopRadius)
+//         : `M ${sourceNode.x} ${sourceNode.y} L ${targetNode.x} ${targetNode.y}`;
 
-        e.cachedLabelX = (sourceNode.x + targetNode.x) / 2;
-        e.cachedLabelY = (sourceNode.y + targetNode.y) / 2 - labelOffset - (isSelfLoop ? 40 : 0);
-        e.cachedAngle = isSelfLoop ? 0 : angleDegrees;
-    }
-}
+//         e.cachedLabelX = (sourceNode.x + targetNode.x) / 2;
+//         e.cachedLabelY = (sourceNode.y + targetNode.y) / 2 - labelOffset - (isSelfLoop ? 40 : 0);
+//         e.cachedAngle = isSelfLoop ? 0 : angleDegrees;
+//     }
+// }
 
 //for selective patching of dragged edges
-export function syncEdgeToDom(edgesLayer: d3.Selection<SVGGElement, unknown, null, undefined>, hg: HGraph, arrowheadStraight: string, arrowheadLoop: string, edgeElemById: Map<string, SVGPathElement>) {
-    const edges = Array.from(hg.edges.values()).filter(e => e.visible);
-    edgesLayer .selectAll<SVGPathElement, typeof edges[number]>("path.edge")
-        .data(edges, d => d.id)
-        .join(
-            enter => enter.append("path")
-                .attr("class", "edge")
-                .attr("stroke", "grey")
-                .attr("fill", "none")
-                .each(function (d) {
-                    edgeElemById.set(d.id, this as SVGPathElement);
-                }),
-            update => update.each(function (d){
-                edgeElemById.set(d.id, this as SVGPathElement);
-            }),
-            exit => exit.each(function (d){
-                edgeElemById.delete(d.id);
-            }).remove() 
-        )         
+// export function syncEdgeToDom(edgesLayer: d3.Selection<SVGGElement, unknown, null, undefined>, hg: HGraph, arrowheadStraight: string, arrowheadLoop: string, edgeElemById: Map<string, SVGPathElement>) {
+//     const edges = Array.from(hg.edges.values()).filter(e => e.visible);
+//     edgesLayer .selectAll<SVGPathElement, typeof edges[number]>("path.edge")
+//         .data(edges, d => d.id)
+//         .join(
+//             enter => enter.append("path")
+//                 .attr("class", "edge")
+//                 .attr("stroke", "grey")
+//                 .attr("fill", "none")
+//                 .each(function (d) {
+//                     edgeElemById.set(d.id, this as SVGPathElement);
+//                 }),
+//             update => update.each(function (d){
+//                 edgeElemById.set(d.id, this as SVGPathElement);
+//             }),
+//             exit => exit.each(function (d){
+//                 edgeElemById.delete(d.id);
+//             }).remove() 
+//         )         
     
-        .attr("marker-end", (d) => d.cachedIsSelfLoop ? arrowheadLoop : arrowheadStraight);
-        // .attr("d", (d) => d.cachedPath ?? "");
-}
+//         .attr("marker-end", (d) => d.cachedIsSelfLoop ? arrowheadLoop : arrowheadStraight);
+//         // .attr("d", (d) => d.cachedPath ?? "");
+// }
 
-export function patchEdgesPaths(hg: HGraph, edgeIds: Iterable<string>, edgeElemById: Map<string, SVGPathElement>) {
-    for (const id of edgeIds) {
-        const e = hg.edges.get(id);
-        if (!e || !e.visible) continue;
-        const edgeElem = edgeElemById.get(id);
-        if (!edgeElem) continue;
-        edgeElem.setAttribute("d", e.cachedPath ?? "");
-    }
-}
+// export function patchEdgesPaths(hg: HGraph, edgeIds: Iterable<string>, edgeElemById: Map<string, SVGPathElement>) {
+//     for (const id of edgeIds) {
+//         const e = hg.edges.get(id);
+//         if (!e || !e.visible) continue;
+//         const edgeElem = edgeElemById.get(id);
+//         if (!edgeElem) continue;
+//         edgeElem.setAttribute("d", e.cachedPath ?? "");
+//     }
+// }
 

@@ -33,7 +33,7 @@ Directories
 | lib/components (Files)                                                                                                        |          3 |        676 |         11 |         75 |        762 |
 | lib/components/MC                                                                                                             |          5 |        790 |         24 |         91 |        905 |
 | lib/components/compute                                                                                                        |          5 |      1,183 |         23 |        172 |      1,378 |
-| lib/components/fsm                                                                                                            |          4 |        690 |         48 |        131 |        869 |
+| lib/components/FSM                                                                                                            |          4 |        690 |         48 |        131 |        869 |
 | lib/components/sharedGraph                                                                                                    |          9 |        853 |         28 |        108 |        989 |
 | lib/data                                                                                                                      |         28 |    267,328 |         38 |        319 |    267,685 |
 | lib/data/ca_letters                                                                                                           |          3 |        140 |          0 |         11 |        151 |
@@ -100,10 +100,10 @@ Files
 | /Users/charlottecox/Development/dissertation/draft2/src/lib/components/compute/computeProbabilityMarkov.ts                    | TypeScript |         28 |          1 |          8 |         37 |
 | /Users/charlottecox/Development/dissertation/draft2/src/lib/components/compute/computeValidityFSM.ts                          | TypeScript |        366 |         17 |         37 |        420 |
 | /Users/charlottecox/Development/dissertation/draft2/src/lib/components/compute/markovFilterHelpers.ts                         | TypeScript |         32 |          3 |          8 |         43 |
-| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmLayoutPositions.ts                              | TypeScript |        169 |          7 |         41 |        217 |
-| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmRendering.ts                                    | TypeScript |        206 |         40 |         46 |        292 |
-| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmSVGSetup.ts                                     | TypeScript |         13 |          1 |          6 |         20 |
-| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/fsm/fsmViewer.svelte                                   | Svelte     |        302 |          0 |         38 |        340 |
+| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmLayoutPositions.ts                              | TypeScript |        169 |          7 |         41 |        217 |
+| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmRendering.ts                                    | TypeScript |        206 |         40 |         46 |        292 |
+| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmSVGSetup.ts                                     | TypeScript |         13 |          1 |          6 |         20 |
+| /Users/charlottecox/Development/dissertation/draft2/src/lib/components/FSM/fsmViewer.svelte                                   | Svelte     |        302 |          0 |         38 |        340 |
 | /Users/charlottecox/Development/dissertation/draft2/src/lib/components/markovHierarchicalViewer.svelte                        | Svelte     |        575 |         11 |         69 |        655 |
 | /Users/charlottecox/Development/dissertation/draft2/src/lib/components/pageIntro.svelte                                       | Svelte     |         27 |          0 |          2 |         29 |
 | /Users/charlottecox/Development/dissertation/draft2/src/lib/components/sharedGraph/collapse.ts                                | TypeScript |         43 |          1 |         10 |         54 |

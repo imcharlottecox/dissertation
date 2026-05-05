@@ -1,15 +1,15 @@
 <script lang="ts">
-    // import FsmViewer from "$lib/components/fsmView.svelte";
-    // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
+    // import FsmViewer from "$lib/components/FSMView.svelte";
+    // import FsmHierarchicalViewer from "$lib/components/FSM/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/FSM/fsmViewer.svelte";
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
 
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     // import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
     import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
-    import {ComputeFlatValidityFSM} from "$lib/components/compute/computeValidityFSM";
-    import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbabilityMarkov';
+    import {ComputeFlatValidityFSM} from "$lib/components/compute/computeAcceptance";
+    import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbability';
     import PageIntro from "$lib/components/pageIntro.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
@@ -43,24 +43,24 @@
     const questions: TaskQuestion[] = [
         {
             id: 'Q0',
-            prompt: "Try typing 'Cat'. What happens?",
+            question: "Try typing 'Cat'. What happens?",
             check: ({input}) => input === "Cat",
             hint: "Notice how the FSM moves through the states Start-> C -> Ca -> Cat on each letter input, whereas the Markov chain just goes to the next letter input with a certain probability. HINT: pay attention at to which letters in the dataset need to be capital letters. This is important as the systems are based COMPLETELY on the dataset, which uses a capital C at the start of every word! ",
         },
         {
             id: 'Q00',
-            prompt: "Try typing 'Cas'. It's rejected by the Finite State Machine and assigned a 0 probability! Why? Can you figure out where it breaks?",
+            question: "Try typing 'Cas'. It's rejected by the Finite State Machine and assigned a 0 probability! Why? Can you figure out where it breaks?",
             check: ({input}) => input === "Cas",
             hint: "Cas is not in our dataset - there are no transitions either model can take from 'a' to 's', so it rejected and the probability is assigned a 0!",
         },
         {
             id: "Q2",
-            prompt: "Can you find a four-letter word accepted by the FSM with probability of exactly 0.12525?",
+            question: "Can you find a four-letter word accepted by the FSM with probability of exactly 0.12525?",
             check: ({accepted, probability, input}) => accepted && probability == 0.12525 && input.length === 4
         },
         {
             id: "Q3",
-            prompt: "'Cacao' is a valid anagram of the letters starting with Ca, but it isn't accepted by the FSM. Can you explain why this is the case?",
+            question: "'Cacao' is a valid anagram of the letters starting with Ca, but it isn't accepted by the FSM. Can you explain why this is the case?",
             check: ()=> false,
             correctChoice: "dataset",
             choices: [
@@ -72,19 +72,19 @@
         },
         {
             id: "Q4",
-            prompt: "What is the longest word assigned a probability by the Markov chain?",
+            question: "What is the longest word assigned a probability by the Markov chain?",
             check: ({input}) => input === "Cartons"
             
         },
         {
             id: "Q1",
-            prompt: "Can you find a word rejected by the Finite State Machine that the Markov Chain still assigns a probability to? What is the lowest probability you can find for such a word?",
+            question: "Can you find a word rejected by the Finite State Machine that the Markov Chain still assigns a probability to? What is the lowest probability you can find for such a word?",
             check: ({accepted, probability}) => !accepted && probability>0,
             hint: "The lowest probability I've found is 0.04163"
         },
         {
         id: "Q5",
-            prompt: "How do you calculate the probability of a sequence in the Markov chain?",
+            question: "How do you calculate the probability of a sequence in the Markov chain?",
             check: ()=> false,
             correctChoice: "multiply",
             choices: [
@@ -95,7 +95,7 @@
         },
         {
             id: "Q-concept1",
-            prompt: "Which statement best describes the difference between the two models?",
+            question: "Which statement best describes the difference between the two models?",
             check: ()=> false,
             correctChoice: "difference",
             choices: [
@@ -106,7 +106,7 @@
         },
         {
             id: "Q6",
-            prompt: "Compare with your friends - what is the highest and lowest probability sequences you can find?",
+            question: "Compare with your friends - what is the highest and lowest probability sequences you can find?",
             check: ()=> true,
         },
     ];

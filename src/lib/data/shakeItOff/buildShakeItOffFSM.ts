@@ -1,21 +1,7 @@
-import type { fTransition } from "$lib/graph/graphTypes";
-import { hopcroftMinimiseDFA } from "./EDIT_hopcrofts";
-import { buildSuffixAutomatonFSM } from "./EDIT_shakeitoffSAM";
-export type builtFSM = { 
-    fsmStates: string[];
-    fsmTransitions: fTransition[];
-    startingStates: string[];
-    acceptingStates: string[];
-}
+import type { fTransition, FSM, DFA } from "$lib/graph/graphTypes";
+import { minimiseDFA } from "./hopcrofts";
+import { buildSuffixAutomatonFSM } from "./SAM";
 
-export type DFA = {
-    start: string;
-    states: string[];
-    alphabet: string[];
-    accepting: Set<string>;
-    transitions: Map<string, Map<string, string>>;
-    dead: string;
-}
 
 export function parseLines(lyrics: string): string[][] {
     return lyrics
@@ -37,12 +23,13 @@ export function getKgrams(lines: string[][], k: number): string[][]{
     for (const line of lines) {
         const tokens: string[] = [];
         tokens.push(...line);
-        if (tokens.length < k) continue;
+        if (tokens.length < k ) continue;
         for (let i = 0; i + k <= tokens.length; i++) {
             const kgram = tokens.slice(i, i + k);
             kgrams.push(kgram);
         }
     }
+
     return kgrams;
 }
 
@@ -61,7 +48,7 @@ export function getKgrams(lines: string[][], k: number): string[][]{
 //     return kgrams;
 // }
 
-export function buildSubstringFSMfromLyrics(lyrics: string, k: number):  builtFSM{
+export function buildSubstringFSMfromLyrics(lyrics: string, k: number):  FSM{
     const lines = parseLines(lyrics);
     const tokens: string[] = [];
     for (const line of lines) tokens.push(...line);
@@ -78,6 +65,7 @@ function checkMap<K,V>(map: Map<K,V>, key: K, make: () => V): V {
         val = make();
         map.set(key, val);
     }
+    
     return val;
 }
 
@@ -156,7 +144,7 @@ export function buildTotalDFAfromPrefixTree(prefixTree: {start: string; states: 
 
 }
 
-export function buildFsmForViewer (dfa: DFA, acceptMode: "k_only"|"valid_so_far" = "k_only", hideDeadState?: boolean): builtFSM {
+export function buildFsmForViewer (dfa: DFA, acceptMode: "k_only"|"valid_so_far" = "k_only", hideDeadState?: boolean): FSM {
     const acceptingStates = acceptMode == "valid_so_far" ? dfa.states.filter(s => s !== dfa.dead) : Array.from(dfa.accepting);
     const fsmTransitions: fTransition[] = [];
     for (const from of dfa.states){
@@ -179,12 +167,12 @@ export function buildFsmForViewer (dfa: DFA, acceptMode: "k_only"|"valid_so_far"
     };
 
 }
-export function buildKgramFSMfromLyrics(lyrics: string, k: number, acceptMode?: "k_only"|"valid_so_far", hideDeadState?: boolean): {dfa: DFA; viewer: builtFSM}{
+export function buildKgramFSMfromLyrics(lyrics: string, k: number, acceptMode?: "k_only"|"valid_so_far", hideDeadState?: boolean): {dfa: DFA; viewer: FSM}{
     const lines = parseLines(lyrics);
     const kgrams = getKgrams(lines, k);
     const prefixTree = buildPrefixTreefromKgrams(kgrams);
     const dfa = buildTotalDFAfromPrefixTree(prefixTree, "S_Dead");
-    const minDfa = hopcroftMinimiseDFA(dfa);
+    const minDfa = minimiseDFA(dfa);
     const viewer = buildFsmForViewer(minDfa, acceptMode, hideDeadState);
     return {dfa: minDfa, viewer};
 }

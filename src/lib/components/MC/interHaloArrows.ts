@@ -46,10 +46,7 @@ function computeInterSgArrows(hg: HGraph, markovTransitions: mTransition[]){
 export function drawInterSgArrows(g: d3.Selection<SVGGElement, unknown, null, undefined>, hg: HGraph, markovTransitions: mTransition[], arrowheadSg:string){
     const arrowData = computeInterSgArrows(hg, markovTransitions);
     const layer = g.select<SVGGElement>("g.subgraph-arrows");
- console.log("arrowData", computeInterSgArrows(hg, markovTransitions));
-    console.log("layer empty?", g.select<SVGGElement>("g.subgraph-arrows").empty());
-    console.log("layer node", g.select<SVGGElement>("g.subgraph-arrows").node());
-
+ 
     layer.selectAll<SVGPathElement, SgArrow>("path.subgraph-arrow")
         .data(arrowData, (d:SgArrow) => d.id)
         .join(

@@ -2,7 +2,7 @@
     import { onMount, createEventDispatcher } from "svelte";
     const dispatch = createEventDispatcher();
     import * as d3 from "d3";
-    import type { HGraph, HStateNode, HEdge, Subgraph } from "$lib/graph/graphTypes";
+    import type { HGraph, HStateNode, HEdge, Subgraph, mTransition } from "$lib/graph/graphTypes";
     import type { Rect } from "../sharedGraph/rectangleUtilityHelpers";
 
     import { sectionColour } from "$lib/graph/nodeColours";
@@ -10,26 +10,24 @@
 	import { logEvent } from "$lib/supabase/logging";
     import { computePositionLayout } from "./mcLayoutPositions";
     import { makeZoomControls, measureHeight } from "$lib/components/sharedGraph/screenControls";
-    import {drawArrowheads} from "../sharedGraph/graphRendering";
+    import {drawArrowheads, drawHalos} from "../sharedGraph/graphRendering";
     import { drawEdges, drawNodes, type MCRenderContext } from "./mcRendering"
     import { addMCContentGroup} from "./mcSVGSetup";
-    import { addSubEdges, addSubNodes, hideAnchorAndEdges } from "../sharedGraph/subgraphExpansion";
-    import { collapseSubgraph, subgraphShouldExpand} from "../sharedGraph/collapse";
+    import { collapseSubgraph, subgraphShouldExpand, addSubEdges, addSubNodes, hideAnchorAndEdges } from "../sharedGraph/subgraphExpansion";
     import { runCollisionAvoidance } from "$lib/components/sharedGraph/subgraphLayoutCA";
     import { recomputeLiveHaloSgRects } from "$lib/components/sharedGraph/rectangleUtilityHelpers";
-    import { drawHalos } from "$lib/components/sharedGraph/drawHalos";
     import { drawInterSgArrows } from "./interHaloArrows";
     import { fadeOutPathHighlight, drawPathHighlight, type PathWalked , buildFallbackPath, computeWalkedPathFlat} from "$lib/components/sharedGraph/pathwalk"
     import { resetHGraph } from "../sharedGraph/lifecycle";
 
     export let markovStates: string[] = [];
-    export let markovTransitions: { from: string; to: string; probability: number }[] = [];
+    export let markovTransitions: mTransition[] = [];
     export let mStartingStates: string[] = [];
     export let endState: string[] = [];
-    export let wordChains: Record<string, {
+    export let fineChains: Record<string, {
         markovStates: string[];
         mStartingStates: string[];
-        markovTransitions: { from: string; to: string; probability: number }[];
+        markovTransitions: mTransition[];
     }> = {};
     export let renderKey: string = "";
     export let inputSequence: string = "";
@@ -65,10 +63,12 @@
     let zoomOut: () => void;
     let zoomReset: () => void;
     let nodeRadius = 15;
+    // let arrowheadBlack =`url(${base}#arrowhead-black)`;
+    // let arrowheadPink = `url(${base}(#arrowhead-pink)`;
 
     $: filterActiveNodes = filterPairs.length > 0 ? new Set<string>(filterPairs.flatMap(([a, b]) => [a, b])) : null; 
     $: filterActiveEdges = filterPairs.length > 0 ? new Set<string>(filterPairs.map(([a, b]) => `${a}->${b}`)) : null;
-    $: subgraphs = wordChainsToSubgraph(wordChains);
+    $: subgraphs = fineChainsToSubgraph(fineChains);
     const subgraphRects = new Map<string, Rect>();
     const subgraphParent = new Map<string, string | null>();
     let focusClickedNodeId: string | null = null;
@@ -82,7 +82,7 @@
     let canonicalBasePos = new Map<string, { x: number; y: number }>();
     let hiddenEdgesBySubgraph = new Map<string, string[]>();
 
-    function wordChainsToSubgraph(wc: typeof wordChains): Record<string, Subgraph>{
+    function fineChainsToSubgraph(wc: typeof fineChains): Record<string, Subgraph>{
             return Object.fromEntries(
                 Object.entries(wc).map(([id, chain]) => [id, {
                     depthLevel: 1,
@@ -215,6 +215,7 @@
         }
     }
     function makeContext(): MCRenderContext {
+        const base = window.location.href.split('#')[0];
         return {
             g,
             hg,
@@ -223,8 +224,8 @@
             labelOffset: LABEL_OFFSET,
             acceptingStates: endState,
             startingStates: mStartingStates,
-            arrowheadBlack: "url(#arrowhead-black)",
-            arrowheadPink: "url(#arrowhead-pink)",
+            arrowheadBlack: `url(${base}#arrowhead-black)`,
+            arrowheadPink: `url(${base}#arrowhead-pink)`,
             showDirectionalColours,
             weightedThickness,
             showEdgeLabels,
@@ -269,6 +270,8 @@
         const dimensions = measureHeight(wrapperElement,  svgElement);
         graphWidth = dimensions.graphWidth;
         graphHeight = dimensions.graphHeight;
+        // const svg = d3.select(svgElement);
+        // drawArrowheads(svg);
         buildBaseHGraph();
         computeFocusClickSets(null);
         lastZoomK = 1;
@@ -279,7 +282,8 @@
     onMount(() => {
         const svg = d3.select(svgElement);
         drawArrowheads(svg);
-        g = addMCContentGroup(svg);       
+        g = addMCContentGroup(svg);
+        measureHeight(wrapperElement, svgElement);       
         dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions,"url(#arrowhead-sg)");  });
         
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
@@ -314,11 +318,9 @@
         runHGraph();
     }
     $: if(mounted && isFullScreen !== undefined){
-        requestAnimationFrame(() => {const dimensions = measureHeight(wrapperElement, svgElement); 
-            graphHeight = dimensions.graphHeight;
-            graphWidth = dimensions.graphWidth;
-            buildBaseHGraph(); 
-            rerenderGraph(); });
+        requestAnimationFrame(() => {
+            runHGraph();
+        });
     } 
 
     $: if (mounted && filterPairs !== undefined){

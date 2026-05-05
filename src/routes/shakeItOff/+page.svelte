@@ -1,21 +1,21 @@
 <script lang="ts">
 	import { logEvent } from '$lib/supabase/logging';
-    // import FsmViewer from "$lib/components/fsmView.svelte";
-    // import FsmHierarchicalViewer from "$lib/components/fsm/fsmediting.svelte";
-    import FsmHierarchicalViewer from "$lib/components/fsm/fsmViewer.svelte";
+    // import FsmViewer from "$lib/components/FSMView.svelte";
+    // import FsmHierarchicalViewer from "$lib/components/FSM/fsmediting.svelte";
+    import FsmHierarchicalViewer from "$lib/components/FSM/fsmViewer.svelte";
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
     import { makeShakeItOffFSM } from '$lib/data/shakeItOff/shakeItOffFSM';
     import { makeShakeItOffMarkov } from "$lib/data/shakeItOff/shakeItOff_Markov";
-    import {ComputeValidityFSM} from "$lib/components/compute/computeValidityFSM";
-    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
+    import {ComputeValidityFSM} from "$lib/components/compute/computeAcceptance";
+    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
     import PageIntro from "$lib/components/pageIntro.svelte";
     import Accordion from "$lib/components/Accordion.svelte";
     import rawLyrics from "$lib/data/shakeItOff/shakeItOff.txt?raw";
     import {subgraphedBigrams} from "$lib/components/compute/markovFilterHelpers";
     import { onMount } from 'svelte';
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeShakeItOffFSM();
-    const { markovStates, markovTransitions, mStartingStates, endState, wordChains, subgraphLines } = makeShakeItOffMarkov();
+    const { markovStates, markovTransitions, mStartingStates, endState, fineChains, subgraphLines } = makeShakeItOffMarkov();
     
 
     let weighted = false;
@@ -170,7 +170,7 @@
                 {markovTransitions}
                 {mStartingStates}
                 {endState}
-                {wordChains}
+                {fineChains}
                 {showDirectionalColours}
                 {showEdgeLabels}
                 {weightedThickness}

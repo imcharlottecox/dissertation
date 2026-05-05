@@ -163,6 +163,7 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
             
     for (let iter=0; iter< MAX_ITERATIONS; iter++){
         let changed = false;
+        console.log("iteration: ", iter);
         recomputeAllRects();
 
         for (const subId of sgsByDepth){
@@ -176,19 +177,20 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
                 if (!isPointInRect(n.x, n.y, keepOutRect, 0)) continue;
 
                 const owner = obstacleOwnerId(n);
-                console.log("owner", owner, "subId", subId);
+                // console.log("owner", owner, "subId", subId);
                 if (owner && owner !== subId) continue;
-                const preferRightforEnd = /:END$/.test(n.id) || /:START$/.test(n.id);
+                // const preferRightforEnd = /:END$/.test(n.id) || /:START$/.test(n.id);
+                const preferRightforEnd = /:END$/.test(n.id);
                 const move = minimalMoveOutsideRect(n.x, n.y, keepOutRect, preferRightforEnd);
                 if (move.dx === 0 && move.dy === 0) continue;
-                if (owner){
-                    //move whole ovner subtree
-                    shiftSubtree(owner, move);
-                } else{
+                // if (owner){
+                //     //move whole ovner subtree
+                //     shiftSubtree(owner, move);
+                // } else{
                     //base node, just move the node alone
                     n.x += move.dx;
                     n.y += move.dy;
-                }
+                // }
                 changed = true;
             }
         }

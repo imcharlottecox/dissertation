@@ -3,9 +3,9 @@
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
     import PageIntro from "$lib/components/pageIntro.svelte";
     import Accordion from "$lib/components/Accordion.svelte";
-    import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte";
-    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbabilityMarkov";
-    import {getTedTalkList, getDefaultTedTalk, getTedTalkByTitle} from "$lib/data/interactive/makeTedMarkov";
+    // import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte";
+    import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
+    import {getTedTalkList, getDefaultTedTalk, getTedTalkByTitle} from "$lib/data/TED/makeTedMarkov";
 	import { wordBigrams } from '$lib/components/compute/markovFilterHelpers';
     import { onMount } from 'svelte';
 
@@ -66,16 +66,16 @@
     }
 
 
-    function evaluate(sequence: string): Evaluation{
-        const markovInput = sequence?.trim().split(/\s+/).filter(Boolean);
-        const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
-        const rounded_p = probability.toFixed(4);
-        return{
-            probability: parseFloat(rounded_p),
-            sequence,
-            markovText: `P(${markovInput}) = ${rounded_p}`
-        };
-    }
+    // function evaluate(sequence: string): Evaluation{
+    //     const markovInput = sequence?.trim().split(/\s+/).filter(Boolean);
+    //     const probability = ComputeProbabilityMarkov(markovTransitions, markovInput);
+    //     const rounded_p = probability.toFixed(4);
+    //     return{
+    //         probability: parseFloat(rounded_p),
+    //         sequence,
+    //         markovText: `P(${markovInput}) = ${rounded_p}`
+    //     };
+    // }
    </script>
 
 

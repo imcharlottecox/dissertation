@@ -59,7 +59,7 @@ def main():
         "mStartingStates": [subgraph_seq[0]] if subgraph_seq else [],
         "endState": [],
         "markovTransitions": top_transitions,
-        "wordChains": word_chains,
+        "fineChains": word_chains,
         "subgraphLines":{
             subgraph: [" ".join(line) for line in lines]
             for subgraph, lines in subgraph_lines.items()

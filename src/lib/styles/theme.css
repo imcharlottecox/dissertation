@@ -1,7 +1,7 @@
 :root {
-    --navy:          #1b365d;
-    --navy-mid:      #2a4f87;
-    --navy-light:    #e8edf5;   /* very light navy tint — hover bg */
+    --navy:          #1b365e;
+    --navy-mid:      #2a4f86;
+    --navy-light:    #e7edf5;   /* very light navy tint — hover bg */
     --navy-lighter:  #f0f3f8;   /* page bg */
 
     --stone:         #d6d2c4;
@@ -35,6 +35,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+.toggle:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 body {
     font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-size: 14px;

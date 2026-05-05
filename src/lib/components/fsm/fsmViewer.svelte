@@ -7,25 +7,23 @@
 
     import { getGraphDefaultsFSM } from "$lib/graph/graphDefaults";
     import { computeLevelsMap, computeNodePositions, computeNodePositionsWithBackbone, resetBaseNodesToCanon } from "./fsmLayoutPositions";
-    import { addContentGroup } from "$lib/components/fsm/fsmSVGSetup";
-    import { drawNodes, drawEdges, type FSMRenderContext } from "$lib/components/fsm/fsmRendering";
-    import { drawHalos } from "$lib/components/sharedGraph/drawHalos";
-    import { createDragHandler } from "$lib/graph/graphBehaviours";
+    import { addContentGroup } from "$lib/components/FSM/fsmSVGSetup";
+    import { drawNodes, drawEdges, type FSMRenderContext } from "$lib/components/FSM/fsmRendering";
+    import { createDragHandler, createDragSelective } from "$lib/graph/graphBehaviours";
     import {runCollisionAvoidance} from "$lib/components/sharedGraph/subgraphLayoutCA";
     import { makeZoomControls, measureHeight } from "../sharedGraph/screenControls";
     import { drawPathHighlight, fadeOutPathHighlight, computeWalkedPathFlat, type PathWalked } from "../sharedGraph/pathwalk";
-    import { getSgDescendants, placeSubgraphRect, addSubEdges, addSubNodes, addWarpEdges, hideAnchorAndEdges } from "../sharedGraph/subgraphExpansion";
-    import {drawArrowheads} from "../sharedGraph/graphRendering";
-    import { collapseSubgraph, subgraphShouldExpand } from "../sharedGraph/collapse";
+    import { collapseSubgraph, subgraphShouldExpand, getSgDescendants, placeSubgraphRect, addSubEdges, addSubNodes, addWarpEdges, hideAnchorAndEdges } from "../sharedGraph/subgraphExpansion";
+    import {drawArrowheads, drawHalos} from "../sharedGraph/graphRendering";
     import { resetHGraph } from "../sharedGraph/lifecycle";
-    import "$lib/styles/theme.css"
+    import "$lib/styles/theme.css";
 
     const dispatch = createEventDispatcher();
     const { nodeRadius, padding } = getGraphDefaultsFSM();
     const LABEL_OFFSET = 6;
     const subgraphRects = new Map<string, Rect>(); // for each subgraph location
     const subgraphParent = new Map<string, string | null>(); //nested parent id, not parentState 
-    
+
     export let fsmStates: string[] = [];
     export let fsmTransitions: fTransition[] = [];
     export let acceptingStates: string[] = [];

@@ -1,14 +1,4 @@
 export function makeLetFSM() {
-    //hypothetical dataset
-    // name = "Anna"
-    // age = 17
-    // snowing = true
-    // VARIABLE = [name, age, snowing]
-    // VALUE = ["Anna", 17, true]
-
-    //TODO: ALLOW FOR NEGATIVE NUMBERS
-    //ALLOW FOR ARRAY ACCESS
-
     const acceptingStates = ['S4:END'];
     const startingStates = ['S0:START'];
 
@@ -72,12 +62,12 @@ export function makeLetFSM() {
             acceptingStates: ['end'],
             startingStates: ['space'],
             transitions: [
-                { from: 'space', to: 't', label: 't' },
+                { from: 'space', to: 't', label: 'T' },
                 { from: 't', to: 'r', label: 'r' },
                 { from: 'r', to: 'u', label: 'u' },
                 { from: 'u', to: 'e', label: 'e' },
                 { from: 'e', to: 'end', label: 'newline' },
-                { from: 'space', to: 'f', label: 'f' },
+                { from: 'space', to: 'f', label: 'F' },
                 { from: 'f', to: 'a', label: 'a' },
                 { from: 'a', to: 'l', label: 'l' },
                 { from: 'l', to: 's', label: 's' },
@@ -95,9 +85,9 @@ export function makeLetFSM() {
             startingStates: ['space'],
             transitions: [
                 { from: 'space', to: 'opening_"', label: '"' },
-                { from: 'opening_"', to: 'character', label: '_ | [A-Za-z0-9] | operator | space' },
+                { from: 'opening_"', to: 'character', label: '_ | [A-Za-z0-9] | operator | space | .' },
                 { from: 'opening_"', to: 'closing_"', label: '"' },
-                { from: 'character', to: 'character', label: '_ | [A-Za-z0-9] | operator | space' },
+                { from: 'character', to: 'character', label: '_ | [A-Za-z0-9] | operator | space | .' },
                 { from: 'character', to: 'closing_"', label: '"' },
                 { from: 'closing_"', to: 'end', label: 'newline' }
             ]

@@ -36,7 +36,7 @@ Summary / [Details](details.md) / [Diff Summary](diff.md) / [Diff Details](diff-
 | lib/components (Files) | 3 | 676 | 11 | 75 | 762 |
 | lib/components/MC | 5 | 790 | 24 | 91 | 905 |
 | lib/components/compute | 5 | 1,183 | 23 | 172 | 1,378 |
-| lib/components/fsm | 4 | 690 | 48 | 131 | 869 |
+| lib/components/FSM | 4 | 690 | 48 | 131 | 869 |
 | lib/components/sharedGraph | 9 | 853 | 28 | 108 | 989 |
 | lib/data | 28 | 267,328 | 38 | 319 | 267,685 |
 | lib/data/ca_letters | 3 | 140 | 0 | 11 | 151 |

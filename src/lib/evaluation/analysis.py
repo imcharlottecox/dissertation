@@ -98,7 +98,7 @@ for (before, after, title, filename) in LESSONS_DATA:
     for i, (concept, label) in enumerate(zip(CONCEPTS, LABELS)):
         ax = axes[i]
         g = gains[concept].dropna()
-        ax.hist(g, bins=range(-3, 8), color='#A3C1AD', edgecolor='white', alpha=0.8, linewidth=0.5)
+        ax.hist(g, bins=[x-0.5 for x in range(-3, 8)], color='#A3C1AD', edgecolor='white', alpha=0.8, linewidth=0.5)
         ax.axvline(g.mean(), color='red', linestyle='--', linewidth=0.8, label=f'Mean gain: {g.mean():.1f}')
         ax.set_title(label)
         ax.set_xlabel("Score gain", fontsize=9)
@@ -109,7 +109,7 @@ for (before, after, title, filename) in LESSONS_DATA:
     
     fig.suptitle("Distribution of score gains (after - before) for each concept\n" + title)
     plt.tight_layout()
-    fig.savefig(os.path.join(FIG_DIR, filename.replace(".png", "_score_gains.png")), dpi=180, bbox_inches='tight')
+    fig.savefig(os.path.join(FIG_DIR, filename.replace(".png", "_score_gains_mid.png")), dpi=180, bbox_inches='tight')
 
 def summary_table(before, after, label):
     print(label)

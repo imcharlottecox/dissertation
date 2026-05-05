@@ -42,7 +42,7 @@
       "probability": 1.0
     }
   ],
-  "wordChains": {
+  "fineChains": {
     "verse": {
       "markovStates": [
         "a",

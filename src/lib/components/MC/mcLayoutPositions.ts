@@ -31,11 +31,12 @@ export function computePositionLayout(markovTransitions: {from: string; to: stri
     //step 1: identify BFS levels for each node from start, if there is a starting state.
     const levels = computeBFSLevels(markovStates, markovTransitions, mStartingStates);
     if (renderKey === "5::7::S4:END::S0:START") applyDatasetSpecificOverride(levels, renderKey);
-const distinctLevels = Array.from(new Set(levels.values())).sort((a, b) => a - b);
-const levelRemap = new Map(distinctLevels.map((l, i) => [l, i]));
-for (const [s, l] of levels) levels.set(s, levelRemap.get(l)!);
 
-const maxLevel = distinctLevels.length - 1;
+   const distinctLevels = Array.from(new Set(levels.values())).sort((a, b) => a - b);
+    const levelRemap = new Map(distinctLevels.map((l, i) => [l, i]));
+    for (const [s, l] of levels) levels.set(s, levelRemap.get(l)!);
+
+    const maxLevel = distinctLevels.length - 1;
     //
     // Step 2: spread out nodes horizonatally within their vertical spacing BFS levels
     //
@@ -45,6 +46,51 @@ const maxLevel = distinctLevels.length - 1;
         groupedByLevel.get(lvl)?.push(s);
     }
 
+        if (renderKey === "5::7::S4:END::S0:START"){
+        const positions = new Map<string, {x: number, y:number}>();
+        const innerW = graphWidth -2 *pad;
+        const innerH = graphHeight-2*pad;
+        const sortedLevelsSp = Array.from(groupedByLevel.keys()).sort((a,b) => a - b);
+        const levelSpacing = innerH/Math.max(maxLevel, 1);
+        for (const lvl of sortedLevelsSp){
+            const siblings = (groupedByLevel.get(lvl)?? []).slice().sort((a,b) => {
+                const rank = (c: string) => {
+                    if (/[a-z]/.test(c)) return 0;
+                    if (/[A-Z]/.test(c)) return 1;
+                    if (/[0-9]/.test(c)) return 2;
+                    return 3;
+                };
+                const dr = rank(a) - rank(b);
+                return dr !== 0 ? dr: a.localeCompare(b);
+            });
+
+            const maxPerRow = Math.max(2, Math.floor(graphWidth - 2*pad/28));
+            const rows: {siblings: string[]}[] = [];
+            for (const lvl of sortedLevelsSp){
+                const sorted = (groupedByLevel.get(lvl) ?? []).slice().sort((a,b) => a-b);
+                for (let i=0; i<sorted.length; i+=maxPerRow){
+                    rows.push({ siblings: sorted.slice(i, i+maxPerRow)});
+                }
+            }
+            
+            const rowSpacing = innerH/ Math.max(rows.length - 1, 1);
+            rows.forEach((row, ri)=>{
+                const y = pad + ri * rowSpacing;
+                const xSpacing = innerW / (row.siblings.length +1);
+
+                row.siblings.forEach((id, i) => {
+                    positions.set(id, {x: pad +xSpacing *(1+i), y});
+
+                });
+            });
+            // const y = pad + lvl * levelSpacing;
+            // const xSpacing = innerW / (rows.siblings.length +1);
+            // siblings.forEach((id, i) => {
+            //     positions.set(id, {x: pad +xSpacing *(1+i), y});
+            // });
+        }
+        return positions;
+    } 
     const COLUMN_WIDTH = 56;
     const ROW_HEIGHT = 46;
     const LEVEL_GAP = 60;
@@ -56,11 +102,13 @@ const maxLevel = distinctLevels.length - 1;
     const evenLevelSpacing = (graphHeight - 2*pad) / maxLevel;
     const rowsPerLevel = Array.from(groupedByLevel.values()).map(nodes => Math.ceil(nodes.length / maxNodesPerRow));
     const largestNumRowsPerLevel = Math.max(...rowsPerLevel);
-    const fits = evenLevelSpacing >= (largestNumRowsPerLevel * ROW_HEIGHT *1.15); //for margin
+    const MARGIN = 1.15;
+    const fits = evenLevelSpacing >= (largestNumRowsPerLevel * ROW_HEIGHT * MARGIN); //for margin
+    const sortedLevels = Array.from(groupedByLevel.keys()).sort((a,b) => a-b);
 
-
-    for (const lvl of Array.from(groupedByLevel.keys()).sort((a,b) => a-b)){
+    for (const lvl of sortedLevels){
         const nodes: string[] = groupedByLevel.get(lvl) ?? [];
+        console.log(`level ${lvl}: ${nodes.length} nodes:`, nodes);
         if(allSingletons){
             viewerRows.push({nodes, level:lvl, xOffset: lvl % 2 === 1 ?  ZIG : -ZIG * 0.55});
         }else if (nodes.length <= maxNodesPerRow){
@@ -229,6 +277,15 @@ function applyDatasetSpecificOverride(levels: Map<string, number>, renderKey: st
         else if (row2.has(base)) levels.set(id, 1.1);
         }
         if (levels.get("_") === 1) levels.set("_", 1.1);
+
+        // const positions = new Map<string, {x: number, y:number}>();
+        // const innerW = graphWidth -2 *pad;
+        // const innerH = graphWidth-2*pad;
+        // const sortedLevelsSp = Array.from(groupedByLevel.keys()).sort((a,b) => a - b);
+    //     const levelSpacing = innerH/Math.max(maxLevel, 1);
+    //     for (const lvl of sortedLevels){
+    //         const siblings = (groupedByLevel)
+    //     }
     }
 
 }

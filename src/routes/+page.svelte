@@ -1,5 +1,4 @@
 <script>
-    import * as d3 from 'd3';
     import { onMount } from 'svelte';
     import { thisStudent, studentLogin, restoreSession } from '../lib/supabase/auth';
 

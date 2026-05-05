@@ -49,10 +49,10 @@ Total : 105 files,  289238 codes, 353 comments, 1468 blanks, all 291059 lines
 | [src/lib/components/compute/computeProbabilityMarkov.ts](/src/lib/components/compute/computeProbabilityMarkov.ts) | TypeScript | 28 | 1 | 8 | 37 |
 | [src/lib/components/compute/computeValidityFSM.ts](/src/lib/components/compute/computeValidityFSM.ts) | TypeScript | 366 | 17 | 37 | 420 |
 | [src/lib/components/compute/markovFilterHelpers.ts](/src/lib/components/compute/markovFilterHelpers.ts) | TypeScript | 32 | 3 | 8 | 43 |
-| [src/lib/components/fsm/fsmLayoutPositions.ts](/src/lib/components/fsm/fsmLayoutPositions.ts) | TypeScript | 169 | 7 | 41 | 217 |
-| [src/lib/components/fsm/fsmRendering.ts](/src/lib/components/fsm/fsmRendering.ts) | TypeScript | 206 | 40 | 46 | 292 |
-| [src/lib/components/fsm/fsmSVGSetup.ts](/src/lib/components/fsm/fsmSVGSetup.ts) | TypeScript | 13 | 1 | 6 | 20 |
-| [src/lib/components/fsm/fsmViewer.svelte](/src/lib/components/fsm/fsmViewer.svelte) | Svelte | 302 | 0 | 38 | 340 |
+| [src/lib/components/FSM/fsmLayoutPositions.ts](/src/lib/components/FSM/fsmLayoutPositions.ts) | TypeScript | 169 | 7 | 41 | 217 |
+| [src/lib/components/FSM/fsmRendering.ts](/src/lib/components/FSM/fsmRendering.ts) | TypeScript | 206 | 40 | 46 | 292 |
+| [src/lib/components/FSM/fsmSVGSetup.ts](/src/lib/components/FSM/fsmSVGSetup.ts) | TypeScript | 13 | 1 | 6 | 20 |
+| [src/lib/components/FSM/fsmViewer.svelte](/src/lib/components/FSM/fsmViewer.svelte) | Svelte | 302 | 0 | 38 | 340 |
 | [src/lib/components/markovHierarchicalViewer.svelte](/src/lib/components/markovHierarchicalViewer.svelte) | Svelte | 575 | 11 | 69 | 655 |
 | [src/lib/components/pageIntro.svelte](/src/lib/components/pageIntro.svelte) | Svelte | 27 | 0 | 2 | 29 |
 | [src/lib/components/sharedGraph/collapse.ts](/src/lib/components/sharedGraph/collapse.ts) | TypeScript | 43 | 1 | 10 | 54 |

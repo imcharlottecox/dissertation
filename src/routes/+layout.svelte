@@ -11,7 +11,6 @@
 </svelte:head>
 
 <div class="taskbar">
-	<!-- <h1 style="font-size: 1.4rem; margin: 0; font-weight: 650;">Node To Joy</h1> -->
 	<a class="logo" href={`${base}/`}>Node To Joy</a>
 	<div class="links">
 	<a href="{base}/cartons_letters">1: Letters!</a>
