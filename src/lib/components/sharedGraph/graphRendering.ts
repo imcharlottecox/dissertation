@@ -65,12 +65,12 @@ export function buildEdgeRenderData(hg: HGraph, nodeRadius: number, labelOffset:
     });
 }
 
-export function drawArrowheads(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>) {
+export function drawArrowheads(svg: d3.Selection<SVGSVGElement, unknown, null, undefined>, prefix = "") {
     const defs = svg.select("defs").empty() ? svg.append("defs") : svg.select("defs");
 
     function addArrowhead(id: string, refX: number, refY: number, colour: string){
-        defs.select<SVGMarkerElement>(`#${id}`).remove();
-        const arrowhead = defs.append("marker").attr("id", id);
+        const fullId = `${prefix}${id}`;
+        const arrowhead = defs.select<SVGMarkerElement>(`#${fullId}`).empty() ? defs.append("marker").attr("id", fullId) : defs.select<SVGMarkerElement>(`#${fullId}`);
             arrowhead            
             .attr("viewBox", [0, 0, 10, 10])
             .attr("refX", refX).attr("refY", refY)
@@ -85,9 +85,9 @@ export function drawArrowheads(svg: d3.Selection<SVGSVGElement, unknown, null, u
 
     const base = window.location.href.split('#')[0];
     return {
-        arrowheadBlack: `url(${base}#arrowhead-black)`,
-        arrowheadPink: `url(${base}#arrowhead-pink)`,
-        arrowheadSg: "url(#arrowhead-sg)"
+        arrowheadBlack: `url(#${prefix}arrowhead-black)`,
+        arrowheadPink: `url(#${prefix}arrowhead-pink)`,
+        arrowheadSg: `url(#${prefix}arrowhead-sg)`
     };
 }
 

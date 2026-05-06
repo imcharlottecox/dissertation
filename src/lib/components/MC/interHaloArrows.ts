@@ -58,7 +58,7 @@ export function drawInterSgArrows(g: d3.Selection<SVGGElement, unknown, null, un
         .attr("fill", "none")
         .attr("stroke-width", (d: SgArrow) => d.strokeWidth)
         .attr("stroke-dasharray", "6 3")
-        .attr("marker-end", "url(#arrowhead-sg)")
+        .attr("marker-end", "url(#markov-arrowhead-sg)")
         .attr("stroke", "var(--text-muted)")
 
     layer.selectAll<SVGGElement, SgArrow>("text.subgraph-arrow-label")

@@ -63,8 +63,6 @@
     let zoomOut: () => void;
     let zoomReset: () => void;
     let nodeRadius = 15;
-    // let arrowheadBlack =`url(${base}#arrowhead-black)`;
-    // let arrowheadPink = `url(${base}(#arrowhead-pink)`;
 
     $: filterActiveNodes = filterPairs.length > 0 ? new Set<string>(filterPairs.flatMap(([a, b]) => [a, b])) : null; 
     $: filterActiveEdges = filterPairs.length > 0 ? new Set<string>(filterPairs.map(([a, b]) => `${a}->${b}`)) : null;
@@ -81,6 +79,11 @@
     };
     let canonicalBasePos = new Map<string, { x: number; y: number }>();
     let hiddenEdgesBySubgraph = new Map<string, string[]>();
+    let markerUrls : {
+        arrowheadBlack: string;
+        arrowheadPink: string;
+        arrowheadSg: string;
+    }
 
     function fineChainsToSubgraph(wc: typeof fineChains): Record<string, Subgraph>{
             return Object.fromEntries(
@@ -215,7 +218,6 @@
         }
     }
     function makeContext(): MCRenderContext {
-        const base = window.location.href.split('#')[0];
         return {
             g,
             hg,
@@ -224,8 +226,8 @@
             labelOffset: LABEL_OFFSET,
             acceptingStates: endState,
             startingStates: mStartingStates,
-            arrowheadBlack: `url(${base}#arrowhead-black)`,
-            arrowheadPink: `url(${base}#arrowhead-pink)`,
+            arrowheadBlack: markerUrls?.arrowheadBlack ?? "url(#markov-arrowhead-black)",
+            arrowheadPink: markerUrls?.arrowheadPink ?? "url(#markov-arrowhead-pink)",
             showDirectionalColours,
             weightedThickness,
             showEdgeLabels,
@@ -254,7 +256,7 @@
     function rerenderGraph() {
         g.attr("transform", currentZoomTransform.toString());
         drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour);
-        drawInterSgArrows(g, hg, markovTransitions, "url(#arrowhead-sg)");
+        drawInterSgArrows(g, hg, markovTransitions, markerUrls?.arrowheadSg ?? "url(#markov-arrowhead-sg)");
         drawEdges(makeContext());
         drawNodes(makeContext());
         if (inputSequence && inputSequence.trim()) drawPathHighlightLocal();
@@ -270,8 +272,6 @@
         const dimensions = measureHeight(wrapperElement,  svgElement);
         graphWidth = dimensions.graphWidth;
         graphHeight = dimensions.graphHeight;
-        // const svg = d3.select(svgElement);
-        // drawArrowheads(svg);
         buildBaseHGraph();
         computeFocusClickSets(null);
         lastZoomK = 1;
@@ -281,11 +281,10 @@
 
     onMount(() => {
         const svg = d3.select(svgElement);
-        drawArrowheads(svg);
-        g = addMCContentGroup(svg);
-        measureHeight(wrapperElement, svgElement);       
-        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions,"url(#arrowhead-sg)");  });
-        
+        markerUrls = drawArrowheads(svg, "markov-");
+        g = addMCContentGroup(svg);       
+        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions, markerUrls?.arrowheadSg ?? "url(#markov-arrowhead-sg)"); });
+
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .filter(event => !event.type.startsWith("dblclick") && (event instanceof WheelEvent || event.button === 0))
             .on('zoom', (event) => {
@@ -302,7 +301,7 @@
             });
 
         svg.call(zoomBehaviour).on("dblclick.zoom", null);
-        svg.on("dblclick", event => event.preventDeafult());
+        svg.on("dblclick", event => event.preventDefault());
         ({ zoomIn, zoomOut, zoomReset } = makeZoomControls(svgElement, zoomBehaviour));
         mounted = true;
 
@@ -318,9 +317,11 @@
         runHGraph();
     }
     $: if(mounted && isFullScreen !== undefined){
-        requestAnimationFrame(() => {
-            runHGraph();
-        });
+        requestAnimationFrame(() => {const dimensions = measureHeight(wrapperElement, svgElement); 
+            graphHeight = dimensions.graphHeight;
+            graphWidth = dimensions.graphWidth;
+            buildBaseHGraph(); 
+            rerenderGraph(); });
     } 
 
     $: if (mounted && filterPairs !== undefined){

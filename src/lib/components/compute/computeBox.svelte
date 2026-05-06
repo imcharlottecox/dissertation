@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
     import type { mTransition } from "$lib/graph/graphTypes";
     import { logEvent } from '$lib/supabase/logging';
+    import { input } from 'motion/react-client';
     
     export type MCQChoice = {
         id: string;
@@ -23,13 +24,13 @@
     export type Evaluation = {
         accepted: boolean;
         probability: number;
-        typedProbability: number;
-        confidenceLabel: "confident" | "uncertain" | "low confidence" | "unknown";
+        typedProbability?: number;
+        confidenceLabel?: "confident" | "uncertain" | "low confidence" | "unknown";
         fsmText: string;
         markovText: string;
         typedTokens: string[];
-        predictedTokens: string[];
-        allBeams: Array<{
+        predictedTokens?: string[];
+        allBeams?: Array<{
             predictedTokens: string[];
             predictedSeqProbability: number;
             terminatedNaturally: boolean; //todo fix
@@ -96,7 +97,7 @@
             probability: output.probability,
             input: raw.trim(),
         });
-
+        console.log("oninput:", canGoNext, input, accepted, );
         isCorrect = accepted ?? null;
         if (accepted){
             maxQUnlocked = Math.max(maxQUnlocked, currentQIndex+1); //so progress is preserved
@@ -112,7 +113,7 @@
     }
 
     function nextQ(){
-        if (!canGoNext) return;
+        if (!canGoNext) {console.log(canGoNext, input, ); return;}
         currentQIndex += 1;
         logEvent('next_question', {page, from:currentQIndex});
         resetInput()
@@ -168,7 +169,7 @@
         {#if isMCQ}
             <div class="choiceList">
                 {#each currentQuestion.choices as choice}
-                    <button class="sentenceBtn" class:active={selectedChoice === choice.id && isCorrect}
+                    <button class="sentenceBtn" class:ok={selectedChoice === choice.id && isCorrect}
                     class:err={selectedChoice === choice.id && !isCorrect}
                     on:click={() => onChoiceSelect(choice.id)}>{choice.question}</button>
                 {/each}
@@ -385,7 +386,7 @@
     .choiceList{
         display:flex;
         flex-direction: column;
-        gap:6px;
+        gap: 6px;
         margin: 8px 0px;
     }
 
@@ -426,7 +427,6 @@
     }
     .arrow{
         color:var(--text-muted);
-        /* align-self: center; */
         padding-top: 33px;
     }
     .pill{
@@ -491,5 +491,12 @@
         border-left: 3px solid #32d280;
         border-radius: 0 var(--radius) var(--radius) 0;
         font-size: 13px;
+    }
+    .sentenceBtn{
+        border: 1px solid var(--border-light);
+        border-radius: 5px;
+        padding: 5px;
+        
+
     }
 </style>

@@ -32,6 +32,7 @@ export function makeLetFSM() {
                 { from: 'START_PORT', to: 'IDENTIFIER', label: '[A-Za-z] | _'},
                 { from: 'IDENTIFIER', to: 'IDENTIFIER', label: '[A-Za-z0-9] | _'},
                 { from: 'IDENTIFIER', to: 'ID_END', label: 'space'},
+                // { from: 'IDENTIFIER', to: 'EXIT_PORT', label: '='},
                 { from: 'ID_END', to: 'ID_END', label: 'space'},
                 { from: 'ID_END', to: 'EXIT_PORT', label: '='}
             ],
@@ -58,7 +59,7 @@ export function makeLetFSM() {
             parentState: 'BOOL',
             entry: 'space',
             exit: 'end',
-            states: ['space', 't', 'r', 'u', 'e', 'f', 'a', 'l', 's', 'end'],
+            states: ['space', 'T', 'r', 'u', 'e', 'F', 'a', 'l', 's', 'end'],
             acceptingStates: ['end'],
             startingStates: ['space'],
             transitions: [
@@ -66,7 +67,6 @@ export function makeLetFSM() {
                 { from: 't', to: 'r', label: 'r' },
                 { from: 'r', to: 'u', label: 'u' },
                 { from: 'u', to: 'e', label: 'e' },
-                { from: 'e', to: 'end', label: 'newline' },
                 { from: 'space', to: 'f', label: 'F' },
                 { from: 'f', to: 'a', label: 'a' },
                 { from: 'a', to: 'l', label: 'l' },

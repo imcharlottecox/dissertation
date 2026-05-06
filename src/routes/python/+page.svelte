@@ -12,7 +12,8 @@
     import pythonAssignments from "$lib/data/python_assignments/real_dataset/real_python_assignments.txt?raw"; 
     import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/real_dataset/real_pythonMarkov";
     import { computeMarkovPredicted } from "$lib/components/compute/computeCompletePredictedMarkov";
-    import { ComputeValidityFSM } from '$lib/components/compute/computeAcceptance';
+    // import { ComputeValidityFSM } from '$lib/components/compute/computeAcceptance';
+    import { computeLetValidity } from "$lib/data/python_assignments/letFSMCompute";
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
     import ChallengePanel from "$lib/components/compute/computeBox.svelte"
     import type { Question, Evaluation } from "$lib/components/compute/computeBox.svelte";
@@ -75,7 +76,7 @@
         const predicted = computeMarkovPredicted(typedTokens, markovStates, markovTransitions, endState);
         const best = predicted.best;
         const fsmInput = [...typedTokens, "\n"];
-        const accepted = ComputeValidityFSM( fsmTransitions, fsmInput, acceptingStates, subgraphs, warps);
+        const accepted = computeLetValidity(fsmInput);
         const predictedSeq = best.predictedTokens.join("");
         const markovText = best.terminatedNaturally ? `Predicts: ${sequenceInput}[${predictedSeq}]` : `Predicts: ${sequenceInput}[${predictedSeq}] (no clean end)`;
 
@@ -159,8 +160,8 @@
             check: ()=> false,
             correctChoice: "MC",
             choices: [
-                {id: "FSM", label: "The Finite State Machine"},
-                {id: "MC", label: "The Markov Chain"},
+                {id: "FSM", question: "The Finite State Machine"},
+                {id: "MC", question: "The Markov Chain"},
             ],
             hint: "The Markov chain - because it guesses what you wanted to say based on probability!"
         },

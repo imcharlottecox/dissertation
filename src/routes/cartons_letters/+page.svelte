@@ -14,14 +14,14 @@
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
     const { markovStates, markovTransitions, mStartingStates, endState } = makeCaMarkov();
     import Accordion from "$lib/components/Accordion.svelte";
-    import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte"
+    import ChallengePanel, {type Question, type Evaluation} from "$lib/components/compute/computeBox.svelte"
     import { onMount } from "svelte";
     import { logEvent, seqLogger } from "$lib/supabase/logging";
 
     let weighted = false;
     let showDirectionalColours = false;
     let showEdgeLabels =true;
-    let weightedThickness = true;
+    let weightedThickness = false;
 
     let inputSequence: string = "";
     let fsmResult: string | null = null;
@@ -40,7 +40,7 @@
 
 
 
-    const questions: TaskQuestion[] = [
+    const questions: Question[] = [
         {
             id: 'Q0',
             question: "Try typing 'Cat'. What happens?",
@@ -48,7 +48,7 @@
             hint: "Notice how the FSM moves through the states Start-> C -> Ca -> Cat on each letter input, whereas the Markov chain just goes to the next letter input with a certain probability. HINT: pay attention at to which letters in the dataset need to be capital letters. This is important as the systems are based COMPLETELY on the dataset, which uses a capital C at the start of every word! ",
         },
         {
-            id: 'Q00',
+            id: 'Q1',
             question: "Try typing 'Cas'. It's rejected by the Finite State Machine and assigned a 0 probability! Why? Can you figure out where it breaks?",
             check: ({input}) => input === "Cas",
             hint: "Cas is not in our dataset - there are no transitions either model can take from 'a' to 's', so it rejected and the probability is assigned a 0!",
@@ -64,10 +64,10 @@
             check: ()=> false,
             correctChoice: "dataset",
             choices: [
-                {id: "MarkovLink", label: "The Markov chain assigns 'Cacao' a probability of 0, so the Finite State Machine has to reject it"},
-                {id: "length", label: "The word is too long for the FSM to accept it"},
-                {id: "dataset", label: "The FSM was designed to only accept the words in our 'accepting dataset' and 'Cacao' isn't in that dataset"},
-                {id: "trick", label: "The question is wrong! 'Cacao' is accepted by the FSM because it is a valid anagram of the letters the FSM accepts"},
+                {id: "MarkovLink", question: "The Markov chain assigns 'Cacao' a probability of 0, so the Finite State Machine has to reject it"},
+                {id: "length", question: "The word is too long for the FSM to accept it"},
+                {id: "dataset", question: "The FSM was designed to only accept the words in our 'accepting dataset' and 'Cacao' isn't in that dataset"},
+                {id: "trick", question: "The question is wrong! 'Cacao' is accepted by the FSM because it is a valid anagram of the letters the FSM accepts"},
             ]
         },
         {
@@ -77,42 +77,41 @@
             
         },
         {
-            id: "Q1",
+            id: "Q5",
             question: "Can you find a word rejected by the Finite State Machine that the Markov Chain still assigns a probability to? What is the lowest probability you can find for such a word?",
             check: ({accepted, probability}) => !accepted && probability>0,
             hint: "The lowest probability I've found is 0.04163"
         },
         {
-        id: "Q5",
+        id: "Q6",
             question: "How do you calculate the probability of a sequence in the Markov chain?",
             check: ()=> false,
             correctChoice: "multiply",
             choices: [
-                {id: "MarkovLink", label: "You add each transition's probability in the sequence together"},
-                {id: "length", label: "It is just what the final transition edge's probability is"},
-                {id: "multiply", label: "You multiply the probabilities of each transition in the sequence"},
+                {id: "MarkovLink", question: "You add each transition's probability in the sequence together"},
+                {id: "length", question: "It is just what the final transition edge's probability is"},
+                {id: "multiply", question: "You multiply the probabilities of each transition in the sequence"},
             ]
         },
         {
-            id: "Q-concept1",
+            id: "Q7",
             question: "Which statement best describes the difference between the two models?",
             check: ()=> false,
             correctChoice: "difference",
             choices: [
-                {id: "same", label: "Both models decide whether a word is correct or not"},
-                {id: "difference", label: "The FSM checks if a word follows rules, while the Markov chain measures how likely it is"},
-                {id: "markovOnly", label: "The Markov chain decides if a word is valid, the FSM gives probabilities"},
+                {id: "same", question: "Both models decide whether a word is correct or not"},
+                {id: "difference", question: "The FSM checks if a word follows rules, while the Markov chain measures how likely it is"},
+                {id: "markovOnly", question: "The Markov chain decides if a word is valid, the FSM gives probabilities"},
             ]
         },
         {
-            id: "Q6",
+            id: "Q8",
             question: "Compare with your friends - what is the highest and lowest probability sequences you can find?",
             check: ()=> true,
         },
     ];
 
     function evaluate(sequence: string): Evaluation{
-        console.log("Evaluating sequence:", sequence, "length:", sequence.length);
         const fsmInput = sequence?.trim().split("");
         const markovInput = sequence?.trim().split("");
 
@@ -125,11 +124,12 @@
         return{
             accepted,
             probability: parseFloat(rounded_p),
-            sequence,
             fsmText: accepted ? "FSM: Accepted" : "FSM: Rejected",
             markovText: `P(${markovInput}) = ${rounded_p}`,
             typedTokens: markovInput,
             probabilityBreakdown: probability.steps,
+            predictedTokens: [],
+            allBeams:[],
         };
     }
     $: fsmRenderKey = [
