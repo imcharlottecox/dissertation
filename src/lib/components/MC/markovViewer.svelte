@@ -283,7 +283,7 @@
         const svg = d3.select(svgElement);
         markerUrls = drawArrowheads(svg, "markov-");
         g = addMCContentGroup(svg);       
-        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions, markerUrls?.arrowheadSg ?? "url(#markov-arrowhead-sg)"); });
+        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions, markerUrls?.arrowheadSg ?? "url(#markov-arrowhead-sg)"); drawPathHighlightLocal();});
 
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .filter(event => !event.type.startsWith("dblclick") && (event instanceof WheelEvent || event.button === 0))
@@ -335,7 +335,8 @@
     }
     $: if (mounted) {
         if (!inputSequence || inputSequence.trim() === "") {
-            fadeOutPathHighlight(g.select("g.path-highlight"), 600);
+            fadeOutPathHighlight(g.select("g.path-highlight-edges"), g.select("g.path-highlight-nodes"),600);
+            // fadeOutPathHighlight(g.select("g.path-highlight-nodes"), 600);
         } else {
             drawPathHighlightLocal();
         }
@@ -344,14 +345,17 @@
     function drawPathHighlightLocal(){
         if (!g) return;
         const {steps, highlightedNodeIds } = computeWalkedPath(inputSequence ?? "");
-        drawPathHighlight(g.select("g.path-highlight"), steps, highlightedNodeIds, hg);
+        drawPathHighlight(g.select("g.path-highlight-edges"),g.select("g.path-highlight-nodes"), steps, highlightedNodeIds, hg);
     }
 
     function computeWalkedPath(sequence: string){
         const isHierarchical = Object.keys(subgraphs).length > 0
         if (!isHierarchical){
             const flatTransitions = markovTransitions.map(t => ({...t, label: t.to}));
-            return computeWalkedPathFlat(sequence, flatTransitions, mStartingStates, markovStates, hg, (t, token) => t.label === token, (sequnce) => sequence.split(" ").filter(Boolean));
+            const typedStates = markovStates.filter(s => s!=="START" && s!== "END" && s!== "$");
+            const isCharLevel = typedStates.length>0 && typedStates.every(s => s.length ===1);
+            const tokeniser = isCharLevel ? (sequence: string ) => sequence.split("") : (sequence: string ) => sequence.split(" ").filter(Boolean);
+            return computeWalkedPathFlat(sequence, flatTransitions, mStartingStates, markovStates, hg, (t, token) => t.label === token, tokeniser);
         }
         return computeWalkedPathHierarchical(sequence);
     }

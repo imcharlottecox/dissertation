@@ -7,9 +7,11 @@ export function addMCContentGroup(svg: d3.Selection<SVGSVGElement, unknown, null
         g.append("g").attr("class", "halos");
         g.append("g").attr("class", "subgraph-arrows");
         g.append("g").attr("class", "edges");
-        g.append("g").attr("class", "path-highlight").attr("pointer-events", "none");
+        g.append("g").attr("class", "path-highlight-edges").attr("pointer-events", "none");
         g.append("g").attr("class", "labels");
         g.append("g").attr("class", "nodes");
+        g.append("g").attr("class", "path-highlight-nodes").attr("pointer-events", "none");
+
     }
     return g;
 }

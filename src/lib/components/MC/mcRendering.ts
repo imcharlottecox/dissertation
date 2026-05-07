@@ -41,8 +41,8 @@ export function drawEdges(context: MCRenderContext) {
         .attr("stroke", d => showDirectionalColours ? (d.isUpward ? "lightpink" : "black") : "black")
         .attr("stroke-width", d => weightedThickness ? Math.min(4,Math.max(0.08, Math.exp(d.probability+1.5)-4.5)) : 1)
         .attr("opacity", d => {
-            if( focusClickedNodeId){ return focusClickEdgeIds.has(d.id) ? 1 : 0.15;} 
-            if (filterActiveEdges){ return filterActiveEdges.has(`${d.from}->${d.to}`) ? 1 : 0.15;}   
+            if( focusClickedNodeId){ return focusClickEdgeIds.has(d.id) ? 1 : 0.05;} 
+            if (filterActiveEdges){ return filterActiveEdges.has(`${d.from}->${d.to}`) ? 1 : 0.05;}   
             return 1;})
         .attr("marker-end", d => showDirectionalColours && d.isUpward ? arrowheadPink : arrowheadBlack)
         .attr("d", (d: EdgeRenderingData) => d.path);

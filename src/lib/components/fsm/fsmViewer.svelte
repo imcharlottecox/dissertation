@@ -66,7 +66,7 @@
     function drawPathHighlightLocal(){
         if (!g) return;
         const {steps, highlightedNodeIds } = computeWalkedPathFlat(inputSequence, fsmTransitions, startingStates, fsmStates, hg);
-        drawPathHighlight(g.select("g.path-highlight"), steps, highlightedNodeIds, hg);
+        drawPathHighlight(g.select("g.path-highlight-edges"),g.select("g.path-highlight-nodes"), steps, highlightedNodeIds, hg);
     }
     function expandSubgraph(parentId: string){
         const sg = subgraphs[parentId];
@@ -253,7 +253,7 @@
         drawArrowheads(svg);
         g = addContentGroup(svg);       
         measureHeight(wrapperElement, svgElement);
-        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs); });
+        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs); drawPathHighlightLocal() });
         
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .on('zoom', (event) => {
@@ -285,7 +285,7 @@
 
     $: if (mounted) {
         if (!inputSequence || inputSequence.trim() === "") {
-            fadeOutPathHighlight(g.select("g.path-highlight"), 600);
+            fadeOutPathHighlight(g.select("g.path-highlight-edges"),g.select("g.path-highlight-nodes"), 600);
         } else {
             drawPathHighlightLocal();
         }

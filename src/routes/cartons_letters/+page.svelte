@@ -8,7 +8,7 @@
     import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
     // import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
     import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
-    import {ComputeFlatValidityFSM} from "$lib/components/compute/computeAcceptance";
+    import {ComputeFlatValidityFSM} from "$lib/components/compute/computeFlatValidity";
     import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbability';
     import PageIntro from "$lib/components/pageIntro.svelte";
     const { fsmStates, fsmTransitions, acceptingStates, startingStates } = makeCaFSM();
