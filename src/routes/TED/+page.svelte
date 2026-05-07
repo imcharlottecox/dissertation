@@ -197,7 +197,7 @@
         text-align: left;
         padding: 3px 6px;
         font-size: 13px;
-        font-family: 'Courier New', monospace;
+        font-family: 'Courier New';
         border: none;
         background: none;
         cursor: pointer;

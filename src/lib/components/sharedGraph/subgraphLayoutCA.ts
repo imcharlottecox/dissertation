@@ -4,47 +4,68 @@ import type {Rect}  from "$lib/components/sharedGraph/rectangleUtilityHelpers";
 
 type Vec = {dx: number, dy:number};
 
-export function runCollisionAvoidance( context: {graphWidth:number; graphHeight: number; hg: HGraph; nodeRadius: number; subgraphRects: Map<string, Rect>; subgraphParent: Map<string, string | null>; siblingGrowthAxis?: "vertical" | "horizontal";}){
-    const {hg, nodeRadius, subgraphRects, subgraphParent, siblingGrowthAxis="vertical"} = context;
-
+export function recomputeAllRects(hg: HGraph, nodeRadius: number, subgraphRects: Map<string, Rect>, subgraphParent: Map<string, string|null>) {
+    
     const haloPadding = nodeRadius*1.5;
-    const moatPadding = nodeRadius; //non sg nodes must be outside halo plus moat
-    const gap = Math.max(2, nodeRadius * 0.75);
-    const MAX_ITERATIONS = 150;
+    const nestedSubgraphPadding = nodeRadius*2;
 
     const allSubgraphIds = [...subgraphParent.keys()];
     const sgsByDepth = [...allSubgraphIds].sort((a,b) => {
-        const depthA = depthOf(a);
-        const depthB = depthOf(b);
+        const depthA = depthOf(a, subgraphParent);
+        const depthB = depthOf(b, subgraphParent);
         if (depthA !== depthB) return depthB - depthA;
         return a.localeCompare(b);
     }); //deepest sg id first, so you can base parent's size based on size needed for children
 
-    function smallestContainerofNodes(nodes: HStateNode[]): Rect | null{
-        let minX = Infinity; //leftmost of node
-        let minY = Infinity; 
-        let maxX = -Infinity; //rightmost of node
-        let maxY = -Infinity;
 
-        for (const n of nodes){
-            minX = Math.min(minX, n.x - nodeRadius);
-            minY = Math.min(minY, n.y - nodeRadius);
-            maxX = Math.max(maxX, n.x + nodeRadius);
-            maxY = Math.max(maxY, n.y + nodeRadius);
+    //do deepest children first -bottom up
+    for (const sgId of sgsByDepth){
+        const thisSgVisibleNodes = [...hg.nodes.values()].filter((n) => n.visible && n.parent == sgId);
+        const nodeBox = smallestContainerofNodes(thisSgVisibleNodes, nodeRadius);
+        const childIds = allSubgraphIds.filter((childId) => (subgraphParent.get(childId) ?? null) === sgId);
+        let r: Rect|null = nodeBox;
+        for (const childId of childIds){
+            const childR = subgraphRects.get(childId);
+            if (childR) r = unionRect(r, expandRect(childR,nestedSubgraphPadding)); //make box big enough to fit child
         }
-        if (!isFinite(minX)) return null;
-        return {x: minX, y:minY, w: maxX - minX, h: maxY - minY};
-    }   
-
-    function depthOf(subId: string): number {
-        let depth = 0;
-        let p = subgraphParent.get(subId) ?? null;
-        while (p) {
-            depth++;
-            p = subgraphParent.get(p) ??  null;
-        }
-        return depth;
+        if (!r) {subgraphRects.delete(sgId); continue;} //dont draw empty halos
+        subgraphRects.set(sgId, expandRect(r, haloPadding));  //add margin inside container TODO fix when changed halopad 2 to 3
     }
+}
+function smallestContainerofNodes(nodes: HStateNode[], nodeRadius: number): Rect | null{
+    let minX = Infinity; //leftmost of node
+    let minY = Infinity; 
+    let maxX = -Infinity; //rightmost of node
+    let maxY = -Infinity;
+
+    for (const n of nodes){
+        minX = Math.min(minX, n.x - nodeRadius);
+        minY = Math.min(minY, n.y - nodeRadius);
+        maxX = Math.max(maxX, n.x + nodeRadius);
+        maxY = Math.max(maxY, n.y + nodeRadius);
+    }
+    if (!isFinite(minX)) return null;
+    return {x: minX, y:minY, w: maxX - minX, h: maxY - minY};
+}   
+
+function depthOf(subId: string, subgraphParent: Map<string, string|null>): number {
+    let depth = 0;
+    let p = subgraphParent.get(subId) ?? null;
+    while (p) {
+        depth++;
+        p = subgraphParent.get(p) ??  null;
+    }
+    return depth;
+}
+
+export function runCollisionAvoidance( context: {graphWidth:number; graphHeight: number; hg: HGraph; nodeRadius: number; subgraphRects: Map<string, Rect>; subgraphParent: Map<string, string | null>; siblingGrowthAxis?: "vertical" | "horizontal";}){
+    const {hg, nodeRadius, subgraphRects, subgraphParent, siblingGrowthAxis="vertical"} = context;
+
+    const moatPadding = nodeRadius; //non sg nodes must be outside halo plus moat
+    const gap = Math.max(2, nodeRadius * 0.75);
+    const siblingGap = nodeRadius*4;
+    const MAX_ITERATIONS = 150;
+
     //true if node live in this subgraph or a further nested subgraph?
     function subtreeContains(subId: string, node: HStateNode): boolean{
         return node.parent === subId || isDescendant(subId, node);
@@ -142,29 +163,19 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
         return byContainer;
     }
 
-    function recomputeAllRects() {
-        //do deepest children first -bottom up
-        for (const sgId of sgsByDepth){
-            const thisSgVisibleNodes = [...hg.nodes.values()].filter((n) => n.visible && n.parent == sgId);
-            const nodeBox = smallestContainerofNodes(thisSgVisibleNodes);
-            const childIds = allSubgraphIds.filter((childId) => (subgraphParent.get(childId) ?? null) === sgId);
-            let r: Rect|null = nodeBox;
-            for (const childId of childIds){
-                const childR = subgraphRects.get(childId);
-                if (childR) r = unionRect(r, childR); //make box big enough to fit child
-            }
-            if (!r) {subgraphRects.delete(sgId); continue;} //dont draw empty halos
-            subgraphRects.set(sgId, expandRect(r, haloPadding));  //add margin inside container TODO fix when changed halopad 2 to 3
-        }
-    }
-    
-            recomputeAllRects();
+     const sgsByDepth = [...subgraphParent.keys()].sort((a,b) => {
+        const depthA = depthOf(a, subgraphParent);
+        const depthB = depthOf(b, subgraphParent);
+        if (depthA !== depthB) return depthB - depthA;
+        return a.localeCompare(b);
+    });
+    recomputeAllRects(hg, nodeRadius, subgraphRects, subgraphParent);
 
             
     for (let iter=0; iter< MAX_ITERATIONS; iter++){
         let changed = false;
         console.log("iteration: ", iter);
-        recomputeAllRects();
+        recomputeAllRects(hg, nodeRadius, subgraphRects, subgraphParent);
 
         for (const subId of sgsByDepth){
             const halo = subgraphRects.get(subId);
@@ -195,7 +206,7 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
             }
         }
 
-        recomputeAllRects();
+        recomputeAllRects(hg, nodeRadius, subgraphRects, subgraphParent);
 
         //vetically pack sibling sgs within the same container but split half up half down
         const siblingsByContainer = buildSiblingsByContainer();
@@ -209,8 +220,9 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
                     if (!rectA || !rectB) continue;
                     if (!rectOverlapsRect(rectA, rectB, 0)) continue;
                     if (siblingGrowthAxis === "horizontal"){ //for MC where empty real estate is horizontal
-                        const overlap = (rectA.x + rectA.w + gap + moatPadding) - rectB.x;
+                        const overlap = (rectA.x + rectA.w + siblingGap) - rectB.x;
                         if (overlap > 0){
+                            if (overlap <= 0) continue;
                             const half = overlap / 2;
                             shiftSubtree(rectAId, {dx:-half, dy: 0}); // push A left
                             shiftSubtree(rectBId, {dx:half, dy: 0}); // push B riht
@@ -218,7 +230,8 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
                         }
 
                     } else{
-                        const overlap = (rectA.y + rectA.h + gap + moatPadding) - rectB.y;
+                        const overlap = (rectA.y + rectA.h + siblingGap) - rectB.y;
+                        if (overlap <= 0) continue;
                         if (overlap > 0){
                             const half = overlap / 2;
                             shiftSubtree(rectAId, {dx:0, dy: -half}); // push A up
@@ -231,7 +244,7 @@ export function runCollisionAvoidance( context: {graphWidth:number; graphHeight:
         }
 
         if (!changed){
-            recomputeAllRects();
+            recomputeAllRects(hg, nodeRadius, subgraphRects, subgraphParent);
             break;
         }
     }

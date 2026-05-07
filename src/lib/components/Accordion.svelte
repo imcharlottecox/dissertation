@@ -30,7 +30,7 @@
     }
     .box {
         border: 1px solid var(--border-light);
-        border-radius: var(--radius);
+        border-radius: 5px;
         margin-bottom: 6px;
         width: 100%;
         overflow: hidden;

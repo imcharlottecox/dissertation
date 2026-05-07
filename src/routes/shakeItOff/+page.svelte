@@ -71,6 +71,7 @@
         <li>What words in the song have the highest probability transitions?</li>
         <li>What do you notice about the probability of transitions between different subgraphs of the song - does this line up with what you know about music?</li>
     </ul>
+    <p class="copyright">Lyrics from "Shake It Off" by Taylor Swift (2014). Used for non-commerical educational purposes under UK CPDA 1988.</p>            
 </div>
     <!-- <div class="box">
         <h3>Accepting States</h3>
@@ -85,7 +86,7 @@
 
     <Accordion title="Song Lyrics" initiallyOpen={false}>
         {#each lyricsSgs as subgraph}
-            <div class="subgraphBlock">
+            <div>
                 <span class="subgraphLabel">[{subgraph.id}]</span>
                 {#each subgraph.lines as line}
                     <button class="lyricLine" 
@@ -97,7 +98,6 @@
                 {/each}
             </div>
         {/each}
-
     </Accordion>
 
     <div class="graphRow">
@@ -213,14 +213,14 @@
         text-transform: uppercase;
         letter-spacing: 0.08em;
         color: #999;
-        font-family: 'Courier New', monospace;
+        font-family: 'Courier New';
         padding: 2px 0;
     }
     .lyricLine {
         text-align: left;
         padding: 3px 6px;
         font-size: 13px;
-        font-family: 'Courier New', monospace;
+        font-family: 'Courier New';
         border: none;
         background: none;
         cursor: pointer;
@@ -233,5 +233,13 @@
         background: #cde1ff;
         font-weight: 600;
         color: #1a4fa0;
+    }
+    .copyright{
+        text-align: right;
+        font-size: 12px;
+        padding: 0;
+        margin: 0;
+        align-items: flex-end;
+        font-style: italic;
     }
 </style>

@@ -10,12 +10,13 @@
     import { addContentGroup } from "$lib/components/FSM/fsmSVGSetup";
     import { drawNodes, drawEdges, type FSMRenderContext } from "$lib/components/FSM/fsmRendering";
     import { createDragHandler, createDragSelective } from "$lib/graph/graphBehaviours";
-    import {runCollisionAvoidance} from "$lib/components/sharedGraph/subgraphLayoutCA";
+    import {runCollisionAvoidance, recomputeAllRects} from "$lib/components/sharedGraph/subgraphLayoutCA";
     import { makeZoomControls, measureHeight } from "../sharedGraph/screenControls";
     import { drawPathHighlight, fadeOutPathHighlight, computeWalkedPathFlat, type PathWalked } from "../sharedGraph/pathwalk";
     import { collapseSubgraph, subgraphShouldExpand, getSgDescendants, placeSubgraphRect, addSubEdges, addSubNodes, addWarpEdges, hideAnchorAndEdges } from "../sharedGraph/subgraphExpansion";
     import {drawArrowheads, drawHalos} from "../sharedGraph/graphRendering";
     import { resetHGraph } from "../sharedGraph/lifecycle";
+    import { measure, clearBenchRows } from "../benchmarking/profiler";
     import "$lib/styles/theme.css";
 
     const dispatch = createEventDispatcher();
@@ -245,7 +246,18 @@
         }
         depthText = `Subgraph Depth Expanded: ${maxDepthExpanded}`;
     }
-    
+    export function runBenchmarkPass(n: number){
+        measure("fsm:buildBaseGraph", n, () => buildBaseHGraph());
+        measure("fsm:runCollisionAvoidance", n, () => runCollisionAvoidance({graphWidth:svgElement.clientWidth, graphHeight: svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent}));
+        measure("fsm:drawNodes", n, () => drawNodes(makeContext(), dragBehaviour));
+        measure("fsm:drawEdges", n, () => drawEdges(makeContext()));
+        measure("fsm:totalRender", n, () => {
+            runCollisionAvoidance({graphWidth:svgElement.clientWidth, graphHeight: svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent});
+            drawNodes(makeContext(), dragBehaviour);
+            drawEdges(makeContext());
+        });
+    }
+
 
     onMount(() => {
         //initial render and props sorted here
@@ -253,7 +265,7 @@
         drawArrowheads(svg);
         g = addContentGroup(svg);       
         measureHeight(wrapperElement, svgElement);
-        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs); drawPathHighlightLocal() });
+        dragBehaviour = createDragHandler(() => { recomputeAllRects(hg, nodeRadius, subgraphRects, subgraphParent); drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs); drawPathHighlightLocal() });
         
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .on('zoom', (event) => {

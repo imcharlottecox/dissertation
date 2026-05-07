@@ -346,7 +346,7 @@
     }
     input[type="text"]:focus{
         outline: none;
-        border-color: var(--accent-mid);
+        border-color: var(--active-border);
     }
 
     .metadata{
@@ -423,7 +423,7 @@
 
     .predicted{
         color: var(--navy);
-        background: var(--navy-light);
+        background: #e7edf5;
     }
     .arrow{
         color:var(--text-muted);
@@ -446,13 +446,13 @@
         padding: 6px 10px;
         background: var(--bg-header);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: 5px;
         font-size: 12px;
-        font-family: "Courier New", monospace;
+        font-family: "Courier New";
         margin-top: 6px;
     }
     .probStep{
-        border-bottom: 1px dotted var(--stone-mid);
+        border-bottom: 1px dotted #c4bfb0;
     }
     
     .beamRow {
@@ -462,7 +462,7 @@
         padding: 6px 10px;
         background: var(--bg-header);
         border: 1px solid var(--border);
-        border-radius: var(--radius);
+        border-radius: 5px;
     }
     .beamText{
         flex: 1 1 0;
@@ -489,7 +489,7 @@
         color: darkgreen;
         background: #f4fcf0;
         border-left: 3px solid #32d280;
-        border-radius: 0 var(--radius) var(--radius) 0;
+        border-radius: 0 5px 5px 0;
         font-size: 13px;
     }
     .sentenceBtn{

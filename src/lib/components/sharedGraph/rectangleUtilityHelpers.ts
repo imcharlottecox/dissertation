@@ -48,7 +48,7 @@ export function clampRectangleInside(container: Rect, rect: Rect, pad = 20){
     return { ...rect, x, y};
 }
 
-export function isPointInRect(x: number, y:number, r: Rect, padding: 0): boolean {
+export function isPointInRect(x: number, y:number, r: Rect, padding = 0): boolean {
     const rect1 = padding !== 0 ? expandRect(r,padding) : r;
     return (x > rect1.x) && (x <= right(rect1)) && (y >= rect1.y) && (y <= bottom(rect1));
 }
@@ -122,4 +122,30 @@ export function rectBorderPoint(r: Rect, targetX: number, targetY: number): {x:n
         y: centreY + target*dy,
     }
 
+}
+
+//checkes whether 12 evenly space poimts along the curve land inside a halo: c are the control points
+export function bezierClear(startx: number, starty: number, cx1: number, cy1: number, cx2: number, cy2: number, endx: number, endy: number, obstacles: Rect[], samples=12
+): boolean{
+    for (let s = 1; s<samples; s++){
+        const t = s/samples; //12 evenly spaced points
+        const mt = 1-t;
+        const b0 = mt*mt*mt;
+        const b1  = 3* mt*mt * t;
+        const b2 = 3* mt * t*t;
+        const b3 = t*t*t;
+
+        const sampleX = b0* startx + b1*cx1 + b2*cx2 + b3*endx;
+        const sampleY = b0* starty + b1*cy1 + b2*cy2 + b3*endy;
+        if (obstacles.some(ob => isPointInRect(sampleX, sampleY, ob, 0))) return false;
+
+    }
+    return true;
+}
+
+export function bezierMidpoint(startx: number, starty: number, cx1: number, cy1: number, cx2: number, cy2: number, endx: number, endy: number,){
+    return {
+        x: 0.125*startx +0.375*cx1 + 0.375*cx2 + 0.125*endx,
+        y: 0.125*starty +0.375*cy1 + 0.375*cy2 + 0.125*endy
+    };
 }

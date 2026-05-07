@@ -19,6 +19,7 @@
     import { drawInterSgArrows } from "./interHaloArrows";
     import { fadeOutPathHighlight, drawPathHighlight, type PathWalked , buildFallbackPath, computeWalkedPathFlat} from "$lib/components/sharedGraph/pathwalk"
     import { resetHGraph } from "../sharedGraph/lifecycle";
+    import { measure, clearBenchRows } from '$lib/components/benchmarking/profiler';
 
     export let markovStates: string[] = [];
     export let markovTransitions: mTransition[] = [];
@@ -278,6 +279,64 @@
         lastSemanticZoomK = 1;
         rerenderGraph();
     }   
+        function drawPathHighlightLocal(){
+        if (!g) return;
+        const {steps, highlightedNodeIds } = computeWalkedPath(inputSequence ?? "");
+        drawPathHighlight(g.select("g.path-highlight-edges"),g.select("g.path-highlight-nodes"), steps, highlightedNodeIds, hg);
+    }
+
+    function computeWalkedPath(sequence: string){
+        const isHierarchical = Object.keys(subgraphs).length > 0
+        if (!isHierarchical){
+            const flatTransitions = markovTransitions.map(t => ({...t, label: t.to}));
+            const typedStates = markovStates.filter(s => s!=="START" && s!== "END" && s!== "$");
+            const isCharLevel = typedStates.length>0 && typedStates.every(s => s.length ===1);
+            const tokeniser = isCharLevel ? (sequence: string ) => sequence.split("") : (sequence: string ) => sequence.split(" ").filter(Boolean);
+            return computeWalkedPathFlat(sequence, flatTransitions, mStartingStates, markovStates, hg, (t, token) => t.label === token, tokeniser);
+        }
+        return computeWalkedPathHierarchical(sequence);
+    }
+
+    function computeWalkedPathHierarchical(sequnce: string){
+        const steps: PathWalked[] = [];
+        const highlightedNodesIds = new Set<string>();
+        
+        const subgraphId = hg.activeSubgraphs.size > 0 ? Array.from(hg.activeSubgraphs)[0] : Object.keys(subgraphs)[0];
+
+        const sg = subgraphs[subgraphId];
+        if (!sg) return {steps, highlightedNodesIds};
+        const expanded = hg.activeSubgraphs.has(subgraphId);
+        if (!expanded){
+            const anchor = hg.nodes.get(subgraphId);
+            if (anchor?.visible) highlightedNodesIds.add(subgraphId);
+            return {subgraphId, highlightedNodesIds};
+        } 
+        const {steps: innerSteps} = computeWalkedPathFlat(sequnce, sg.transitions, sg.startingStates, sg.states, hg, (t, token) => t.label === token, (sequnce) => sequnce.split(" ").filter(Boolean));
+
+        for (const s of innerSteps){
+            const fromid = `${subgraphId}.${s.from}`;
+            const toid = `${subgraphId}.${s.to}`;
+            steps.push({from: fromid, to: toid, path: buildFallbackPath(hg, fromid, toid)});
+            highlightedNodesIds.add(toid);
+        }
+        return {steps, highlightedNodesIds: highlightedNodesIds};
+
+    }
+
+    export function runBenchmarkPass(n: number){
+        buildBaseHGraph();
+        measure("mc:buildBaseGraph", n, () => buildBaseHGraph());
+        measure("mc:drawNodes", n, () => drawNodes(makeContext()));
+        measure("mc:drawEdges", n, () => drawEdges(makeContext()));
+        measure("mc:drawHalos", n, () => drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour));
+        measure("mc:drawInterSgArrows", n, () => drawInterSgArrows(g,hg, markovTransitions, "url(#arrowhead-sg)"));
+        measure("mc:totalRender", n, () => {
+            drawNodes(makeContext());
+            drawEdges(makeContext());
+            drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour);
+            drawInterSgArrows(g,hg, markovTransitions, "url(#arrowhead-sg)");
+        });
+    }
 
     onMount(() => {
         const svg = d3.select(svgElement);
@@ -342,49 +401,6 @@
         }
     }
 
-    function drawPathHighlightLocal(){
-        if (!g) return;
-        const {steps, highlightedNodeIds } = computeWalkedPath(inputSequence ?? "");
-        drawPathHighlight(g.select("g.path-highlight-edges"),g.select("g.path-highlight-nodes"), steps, highlightedNodeIds, hg);
-    }
-
-    function computeWalkedPath(sequence: string){
-        const isHierarchical = Object.keys(subgraphs).length > 0
-        if (!isHierarchical){
-            const flatTransitions = markovTransitions.map(t => ({...t, label: t.to}));
-            const typedStates = markovStates.filter(s => s!=="START" && s!== "END" && s!== "$");
-            const isCharLevel = typedStates.length>0 && typedStates.every(s => s.length ===1);
-            const tokeniser = isCharLevel ? (sequence: string ) => sequence.split("") : (sequence: string ) => sequence.split(" ").filter(Boolean);
-            return computeWalkedPathFlat(sequence, flatTransitions, mStartingStates, markovStates, hg, (t, token) => t.label === token, tokeniser);
-        }
-        return computeWalkedPathHierarchical(sequence);
-    }
-
-    function computeWalkedPathHierarchical(sequnce: string){
-        const steps: PathWalked[] = [];
-        const highlightedNodesIds = new Set<string>();
-        
-        const subgraphId = hg.activeSubgraphs.size > 0 ? Array.from(hg.activeSubgraphs)[0] : Object.keys(subgraphs)[0];
-
-        const sg = subgraphs[subgraphId];
-        if (!sg) return {steps, highlightedNodesIds};
-        const expanded = hg.activeSubgraphs.has(subgraphId);
-        if (!expanded){
-            const anchor = hg.nodes.get(subgraphId);
-            if (anchor?.visible) highlightedNodesIds.add(subgraphId);
-            return {subgraphId, highlightedNodesIds};
-        } 
-        const {steps: innerSteps} = computeWalkedPathFlat(sequnce, sg.transitions, sg.startingStates, sg.states, hg, (t, token) => t.label === token, (sequnce) => sequnce.split(" ").filter(Boolean));
-
-        for (const s of innerSteps){
-            const fromid = `${subgraphId}.${s.from}`;
-            const toid = `${subgraphId}.${s.to}`;
-            steps.push({from: fromid, to: toid, path: buildFallbackPath(hg, fromid, toid)});
-            highlightedNodesIds.add(toid);
-        }
-        return {steps, highlightedNodesIds: highlightedNodesIds};
-
-    }
 </script>
 
 <div class="graphWrapper" bind:this={wrapperElement}>

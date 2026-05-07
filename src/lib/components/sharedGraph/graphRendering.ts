@@ -93,7 +93,7 @@ export function drawArrowheads(svg: d3.Selection<SVGSVGElement, unknown, null, u
 
 export function drawHalos(g: d3.Selection<SVGGElement, unknown, null, undefined>, hg: HGraph, nodeRadius: number, subgraphRects: Map<string, Rect>, subgraphs: Record<string, Subgraph>, colourFn?:(id: string, depth: number) => string) {
     const rects = subgraphRects ?? new Map<string, Rect>();
-    recomputeLiveHaloSgRects(hg, hg.activeSubgraphs, nodeRadius, rects);
+    // recomputeLiveHaloSgRects(hg, hg.activeSubgraphs, nodeRadius, rects);
     type HaloData = { id: string; x: number; y: number; w: number; h: number; colour: string; depth: number };
     const halos: HaloData[] = [];
 
