@@ -5,7 +5,7 @@ type SimulationState = {
     returnStack: string[]; //where to exit to ( a state name) once the subgraph call returns
 }
 
-//for broadcast/PDA-like edges of form "Call ___": we need a sense of a stack to simulate due to hierarchical calling, despite not being a CFG
+//for broadcast/PDA-like edges (of form "Call XXX"):  a sense of a stack is needed to simulate due to hierarchical calling, despite not being a CFG, and not an actual stack mechanism
 type SubgraphCallEdge = {
     callerState: string;
     calleeEntryState: string;

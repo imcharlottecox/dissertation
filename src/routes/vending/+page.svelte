@@ -33,8 +33,8 @@
     	logEvent('page_load', { page: PAGE });
     });
     $: {
-         const currentFSM = include5p ? makeVending5pFSM() : makeVending40pFSM();
-         ({ fsmStates, fsmTransitions, acceptingStates, startingStates } = currentFSM);
+        const currentFSM = include5p ? makeVending5pFSM() : makeVending40pFSM();
+        ({ fsmStates, fsmTransitions, acceptingStates, startingStates } = currentFSM);
     }
     $: fsmRenderKey = [
 		include5p ? 'with5p' : 'without5p',
@@ -50,55 +50,31 @@
 
   <PageIntro 
 		title="Vending Machine"
-		description="Finite State Machines and Markov chains don't just have to be used for language - they can model any scenario that happens in real life. For example, a businessman has a vending machine that only accepts 10p and 20p coins. All of his prices are 30p. He wants to understand how the vending machine accepts coins, and whether he should introduce more allowed coins to potentially increase his prices. Do you notice how much more complicated the Finite State Machine gets from just one small change when you add 5p?"
+		description="Finite State Machines and Markov chains don't just have to be used for language; they can model any scenario. For example, a businessman has a vending machine that only accepts 10p and 20p coins. All of his prices are 30p. He wants to understand how the vending machine accepts coins, and whether he should introduce more allowed coins to potentially increase his prices. Do you notice how much more complicated the Finite State Machine gets from just one small change when you add 5p?"
   />
   <div class="topControls" style="display: flex; gap: 4px; flex-direction:row;">
-      <button
-		type="button"
-        class="toggle"
-        on:click={() => { showMarkov = !showMarkov; logEvent('checkbox_toggle', { page: PAGE, name: 'showMarkov', value: showMarkov }); }}>
-        {showMarkov ? 'Hide the Markov Chain' : 'What would a Markov Chain look like?'}
-      </button>
+      	<button
+			type="button"
+			class="toggle"
+			on:click={() => { showMarkov = !showMarkov; logEvent('checkbox_toggle', { page: PAGE, name: 'showMarkov', value: showMarkov }); }}>
+			{showMarkov ? 'Hide the Markov Chain' : 'What would a Markov Chain look like?'}
+      	</button>
   </div>
  
   <div class="graphRow">
     {#if !showMarkov}
-          <div class="fsmPane" style="width:60%;">
-            <div class="paneHeader">
-            <span class="paneTitle">Finite State Machine</span>
-              <button
-                type="button"
-                class="toggle"
-            	on:click={() => (include5p = !include5p)}>
-                	{include5p ? 'Look without 5ps' : 'What does adding 5ps do to the FSM?'}
-              </button>
-            </div>
-            <div class="fsmGraph">
-              <FsmHierarchicalViewer 
-                  {fsmStates}
-                  {fsmTransitions}
-                  {acceptingStates}
-                  {startingStates}
-                  {showDepthBox}        
-                  renderKey = {fsmRenderKey}
-
-                />
-            </div>
-          </div>
-    {:else}
-        <div class="graphRow">
-          <div class="fsmPane" style="width:60%;">
-            <div class="paneHeader">
-            <span class="paneTitle">Finite State Machine</span>
-              <button
-                type="button"
-                class="toggle"
-                on:click={() => (include5p = !include5p)}>
-                	{include5p ? 'Look without 5ps' : 'What does adding 5ps do to the FSM?'}
-              </button>
-            </div>
-            <div class="fsmGraph">
-              <FsmHierarchicalViewer 
+          	<div class="fsmPane" style="width:60%;">
+				<div class="paneHeader">
+				<span class="paneTitle">Finite State Machine</span>
+				<button
+					type="button"
+					class="toggle"
+					on:click={() => (include5p = !include5p)}>
+						{include5p ? 'Look without 5ps' : 'What does adding 5ps do to the FSM?'}
+				</button>
+				</div>
+				<div class="fsmGraph">
+				<FsmHierarchicalViewer 
 					{fsmStates}
 					{fsmTransitions}
 					{acceptingStates}
@@ -106,9 +82,33 @@
 					{showDepthBox}        
 					renderKey = {fsmRenderKey}
 
-                />
-            </div>
-          </div>
+					/>
+				</div>
+          	</div>
+    {:else}
+        <div class="graphRow">
+			<div class="fsmPane" style="width:60%;">
+				<div class="paneHeader">
+				<span class="paneTitle">Finite State Machine</span>
+				<button
+					type="button"
+					class="toggle"
+					on:click={() => (include5p = !include5p)}>
+					{include5p ? 'Look without 5ps' : 'What does adding 5ps do to the FSM?'}
+				</button>
+				</div>
+				<div class="fsmGraph">
+				<FsmHierarchicalViewer 
+						{fsmStates}
+						{fsmTransitions}
+						{acceptingStates}
+						{startingStates}
+						{showDepthBox}        
+						renderKey = {fsmRenderKey}
+
+					/>
+				</div>
+			</div>
         <div class="markovPane" style="width:40%;">
 			<div class="paneHeader">
 			<span class="paneTitle">Markov Chain</span>

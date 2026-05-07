@@ -26,9 +26,6 @@
 {@render children?.()}
 
 <style>
-	:global(body) {
-		font-family: 'Inter Variable', sans-serif;
-	}
 	.taskbar{
 		display: flex;
 		flex-direction: row;
