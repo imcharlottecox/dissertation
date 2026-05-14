@@ -1,4 +1,4 @@
-export type Transition = { from: string; to: string; label: string };
+import type { fTransition } from "$lib/graph/graphTypes";
 
 export function makeVending40pFSM() {
     const startingStates: string[] = ['S: 0p'];
@@ -13,7 +13,7 @@ export function makeVending40pFSM() {
         'S: ≥40p',
     ];
 
-    const fsmTransitions: Transition[] = [
+    const fsmTransitions: fTransition[] = [
         { from: 'S: 0p', to: 'S: 10p', label: '10p' },
         { from: 'S: 0p', to: 'S: 20p', label: '20p' },
 
