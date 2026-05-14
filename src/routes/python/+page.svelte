@@ -2,18 +2,18 @@
     import Accordion from "$lib/components/Accordion.svelte";
     // import FsmViewer from "$lib/components/FSMView.svelte";
     import FsmHierarchicalViewer from "$lib/components/FSM/fsmViewer.svelte";
-    import { makeLetFSM } from '$lib/data/python_assignments/letFSM';
+    import { makeLetFSM } from '../../data/python_assignments/letFSM';
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
 
-    // import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/pythonMarkov";
-    // import pythonAssignments from "$lib/data/python_assignments/python_assignments.txt?raw"; 
+    // import { makePythonAssignmentMarkov } from "../../data/python_assignments/pythonMarkov";
+    // import pythonAssignments from "../../data/python_assignments/python_assignments.txt?raw"; 
     import PageIntro from "$lib/components/pageIntro.svelte";
-    import pythonAssignments from "$lib/data/python_assignments/real_dataset/real_python_assignments.txt?raw"; 
-    import { makePythonAssignmentMarkov } from "$lib/data/python_assignments/real_dataset/real_pythonMarkov";
-    import { computeMarkovPredicted } from "$lib/components/compute/computeCompletePredictedMarkov";
+    import pythonAssignments from "../../data/python_assignments/real_dataset/real_python_assignments.txt?raw"; 
+    import { makePythonAssignmentMarkov } from "../../data/python_assignments/real_dataset/real_pythonMarkov";
     // import { ComputeValidityFSM } from '$lib/components/compute/computeAcceptance';
-    import { computeLetValidity } from "$lib/data/python_assignments/letFSMCompute";
+    import { computeMarkovPredicted } from "$lib/components/compute/computeCompletePredictedMarkov";
+    import { computeLetValidity } from "../../data/python_assignments/letFSMCompute";
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
     import ChallengePanel from "$lib/components/compute/computeBox.svelte"
     import type { Question, Evaluation } from "$lib/components/compute/computeBox.svelte";
@@ -107,7 +107,7 @@
     const questions: Question[] = [
         {
             id: "q0",
-            question: 'Type a simple variable assignment, like x = 1 or name="hi". Is it accepted by the FSM? What does the Markov chain predict will come next?',
+            question: 'Type a simple variable assignment, like x = 1 or name = "me". Is it accepted by the FSM? What does the Markov chain predict will come next?',
             check: ({ accepted }) => accepted,
         },
         {

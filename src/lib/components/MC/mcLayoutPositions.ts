@@ -1,8 +1,8 @@
 import type { mTransition } from "$lib/graph/graphTypes";
 type ViewerRows = {nodes: string[]; level: number; xOffset?: number};
 
-export function computePositionLayout(markovTransitions: {from: string; to: string;}[], nodeRadius: number, renderKey: string, markovStates: string[], mStartingStates: string[], graphWidth: number, graphHeight: number, padding: number, anchor?:{x:number, y:number}) {
-    const pad = 60;
+export function computePositionLayout(markovTransitions: mTransition[], nodeRadius: number, renderKey: string, markovStates: string[], mStartingStates: string[], graphWidth: number, graphHeight: number, padding: number, anchor?:{x:number, y:number}) {
+    const pad = 30;
 
     if (mStartingStates.length == 0){
         const innerW = graphWidth - 2*padding;
@@ -46,7 +46,7 @@ export function computePositionLayout(markovTransitions: {from: string; to: stri
         groupedByLevel.get(lvl)?.push(s);
     }
 
-        if (renderKey === "5::7::S4:END::S0:START"){
+    if (renderKey === "5::7::S4:END::S0:START"){
         const positions = new Map<string, {x: number, y:number}>();
         const innerW = graphWidth -2 *pad;
         const innerH = graphHeight-2*pad;
@@ -64,7 +64,8 @@ export function computePositionLayout(markovTransitions: {from: string; to: stri
                 return dr !== 0 ? dr: a.localeCompare(b);
             });
 
-            const maxPerRow = Math.max(2, Math.floor(graphWidth - 2*pad/28));
+            console.log(graphWidth);
+            const maxPerRow = Math.max(2, Math.floor((graphWidth - (2*pad))/30));
             const rows: {siblings: string[]}[] = [];
             for (const lvl of sortedLevelsSp){
                 const sorted = (groupedByLevel.get(lvl) ?? []).slice().sort((a,b) => a-b);

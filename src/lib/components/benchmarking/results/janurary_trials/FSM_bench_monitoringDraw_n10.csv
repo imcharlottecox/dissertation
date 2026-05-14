@@ -1,11 +1,11 @@
 name,n,ms
 fsm:buildBase:reset_graph,10,0
-fsm:buildBaseHGraph:setStart,10,0
+fsm:buildBaseGraph:setStart,10,0
 computeLevelsMap:adjacency_build,10,0
 computeLevelsMap:bfs_levels_init,10,0
 computeLevelsMap:bfs_levels_compute,10,0
 computeLevelsMap:compute_unreachable_nodes,10,0
-fsm:buildBaseHGraph:computeLevelsMap,10,0
+fsm:buildBaseGraph:computeLevelsMap,10,0
 computeNodePositionsWithBackbone:group_nodes_by_level,10,0
 computeNodePositionsWithBackbone:find_straight_path,10,0
 computeNodePositionsWithBackbone:node_positioning_loop,10,0
@@ -13,7 +13,7 @@ fsm:buildBase:computeNodePositionsWithBackbone,10,0
 fsm:buildBase:setNodes,10,0
 fsm:buildBase:setEdges,10,0
 fsm:buildBase:snapshotBasePos,10,0
-fsm:buildBaseHGraph,10,0.10000002384185791
+fsm:buildBaseGraph,10,0.10000002384185791
 fsm:runCollisionAvoidance,10,0
 fsm:rerender:ZoomTransform,10,0
 fsm:rerender:makeContext,10,0

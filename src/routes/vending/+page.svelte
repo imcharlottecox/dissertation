@@ -4,11 +4,12 @@
     import type { fTransition} from "$lib/graph/graphTypes";
     import FsmHierarchicalViewer from "$lib/components/FSM/fsmViewer.svelte";
     // import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";//TODO make button change work on editing not just benchmark
-    import MarkovView from "$lib/components/MC/markovFlatViewer.svelte";
-    import { makeVending5pFSM } from '$lib/data/vending/vending5pFSM';
-    import { makeVending40pFSM } from '$lib/data/vending/vending40pFSM';
-    import { makeVending40pMarkov } from "$lib/data/vending/vending40pMarkov";
-    // import pythonAssignments from "$lib/data/python_assignments.txt?raw"; 
+    import MarkovView from "$lib/components/MC/markovViewer.svelte";
+
+	import { makeVending5pFSM } from '../../data/vending/vending5pFSM';
+    import { makeVending40pFSM } from '../../data/vending/vending40pFSM';
+    import { makeVending40pMarkov } from "../../data/vending/vending40pMarkov";
+    // import pythonAssignments from "../../data/python_assignments.txt?raw"; 
     import PageIntro from "$lib/components/pageIntro.svelte";
     import { onMount } from "svelte";
     import { logEvent } from "$lib/supabase/logging";

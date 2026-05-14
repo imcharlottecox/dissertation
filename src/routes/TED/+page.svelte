@@ -5,7 +5,7 @@
     import Accordion from "$lib/components/Accordion.svelte";
     // import ChallengePanel, {type TaskQuestion, type Evaluation} from "$lib/components/compute/computeBox.svelte";
     import { ComputeProbabilityMarkov } from "$lib/components/compute/computeProbability";
-    import {getTedTalkList, getDefaultTedTalk, getTedTalkByTitle} from "$lib/data/TED/makeTedMarkov";
+    import {getTedTalkList, getDefaultTedTalk, getTedTalkByTitle} from "../../data/TED/makeTedMarkov";
 	import { wordBigrams } from '$lib/components/compute/markovFilterHelpers';
     import { onMount } from 'svelte';
 

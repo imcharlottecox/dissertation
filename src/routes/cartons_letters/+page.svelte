@@ -5,9 +5,9 @@
     // import MarkovView from "$lib/components/markovHierarchicalViewer.svelte";
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
 
-    import { makeCaFSM } from '$lib/data/ca_letters/caFSM';
-    // import { makeCaMarkov } from "$lib/data/ca_letters/caLetterMarkov";
-    import { makeCaMarkov } from "$lib/data/ca_letters/ca_markov";
+    import { makeCaFSM } from '../../data/ca_letters/caFSM';
+    // import { makeCaMarkov } from "../../data/ca_letters/caLetterMarkov";
+    import { makeCaMarkov } from "../../data/ca_letters/ca_markov";
     import {ComputeFlatValidityFSM} from "$lib/components/compute/computeFlatValidity";
     import { ComputeProbabilityMarkov } from '$lib/components/compute/computeProbability';
     import PageIntro from "$lib/components/pageIntro.svelte";
@@ -45,7 +45,7 @@
             id: 'Q0',
             question: "Try typing 'Cat'. What happens?",
             check: ({input}) => input === "Cat",
-            hint: "Notice how the FSM moves through the states Start-> C -> Ca -> Cat on each letter input, whereas the Markov chain just goes to the next letter input with a certain probability. HINT: pay attention at to which letters in the dataset need to be capital letters. This is important as the systems are based COMPLETELY on the dataset, which uses a capital C at the start of every word! ",
+            hint: "HINT: Pay attention at to which letters in the dataset are capital letters. This is important as the models are based completely on the dataset, and this dataset uses a capital 'C' at the start of every word! ",
         },
         {
             id: 'Q1',

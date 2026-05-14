@@ -143,7 +143,7 @@
         }
         evaluating = false;
     }
-    function buildBaseHGraph() {
+    function buildBaseGraph() {
         resetHGraph(hg);
 
         graphWidth = svgElement.clientWidth;
@@ -198,7 +198,7 @@
         rerunDepthBox();
     }
     function runHGraph(){
-        buildBaseHGraph();
+        buildBaseGraph();
         runCollisionAvoidance({graphWidth: svgElement.clientWidth, graphHeight: svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent});
         rerunDepthBox();
         rerenderGraph();
@@ -247,7 +247,7 @@
         depthText = `Subgraph Depth Expanded: ${maxDepthExpanded}`;
     }
     export function runBenchmarkPass(n: number){
-        measure("fsm:buildBaseGraph", n, () => buildBaseHGraph());
+        measure("fsm:buildBaseGraph", n, () => buildBaseGraph());
         measure("fsm:runCollisionAvoidance", n, () => runCollisionAvoidance({graphWidth:svgElement.clientWidth, graphHeight: svgElement.clientHeight, hg, nodeRadius, subgraphRects, subgraphParent}));
         measure("fsm:drawNodes", n, () => drawNodes(makeContext(), dragBehaviour));
         measure("fsm:drawEdges", n, () => drawEdges(makeContext()));
@@ -290,7 +290,7 @@
         runHGraph();
     }
     $: if(mounted && isFullScreen !== undefined){
-        requestAnimationFrame(() => {measureHeight(wrapperElement, svgElement); buildBaseHGraph(); rerenderGraph(); });
+        requestAnimationFrame(() => {measureHeight(wrapperElement, svgElement); buildBaseGraph(); rerenderGraph(); });
     } 
     $: showDepthBox = Object.keys(subgraphs ?? {}).length > 0;
     $: if (!showDepthBox) depthText = "";
@@ -322,7 +322,7 @@
 
 <style>
     svg {
-        background: snow;
+        background: rgb(255, 255, 255);
         border: 1px solid #ccc;
         display: block;
     }

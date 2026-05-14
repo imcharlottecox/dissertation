@@ -1,1 +1,0 @@
-const a={regular:"#DDDDDD",starting:"#99DDFF",accepting:"#BBCC33"},r=["#77AADD","#44BB99","#EEDD88","#EE8866","#FFAABB","#99DDFF"],o={verse:r[0],chorus:r[4],prechorus:r[2],bridge:r[5],outro:r[1]};function D(t){return r[t%r.length]}function s(t,n=0){return o[t]??D(n)}const c={regular:"#888888",starting:"#2a6fa8",accepting:"#6b7a1a"};export{a as N,c as a,s};

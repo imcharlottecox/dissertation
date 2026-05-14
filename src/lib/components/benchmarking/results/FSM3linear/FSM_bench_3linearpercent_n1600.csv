@@ -1,5 +1,5 @@
 name,n,ms
-fsm:buildBaseHGraph,1600,33.29999999998836
+fsm:buildBaseGraph,1600,33.29999999998836
 fsm:runCollisionAvoidance,1600,0
 fsm:drawNodes,1600,10.099999999976717
 fsm:drawEdges,1600,23.29999999998836

@@ -1,5 +1,5 @@
 name,n,ms
-mc:buildBaseHGraph,10,0
+mc:buildBaseGraph,10,0
 mc:drawNodes,10,0.09999999997671694
 mc:drawEdges,10,1.1999999999534339
 mc:totalRender,10,1.1999999999534339

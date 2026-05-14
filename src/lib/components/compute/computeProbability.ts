@@ -13,6 +13,7 @@ export function ComputeProbabilityMarkov(transitions: mTransition[], sequence: s
         const edge = transitions.find(t => t.from === from && t.to === to);
 
         if (!edge || edge.probability === undefined) {
+            console.log("edge:",edge );
             steps.push({from, to, probability: 0})
             return {steps, probability: 0};
         }

@@ -1,1 +1,0 @@
-const i=()=>typeof window<"u"&&window.innerWidth<=768;function t(){const e=i();return{graphHeight:1500,nodeRadius:e?5:15,padding:e?1:100,markerBoxWidth:10,markerBoxHeight:10}}function n(){const e=i();return{graphHeight:600,nodeRadius:e?10:15,padding:e?12:20,markerBoxWidth:10,markerBoxHeight:10}}export{t as a,n as g};

@@ -15,14 +15,14 @@ C_FSM = "#8BACC1"
 C_MC = "#4F6861"
 
 PHASE_COLOURS = {
-    "buildBaseHGraph": C_BUILD,
+    "buildBaseGraph": C_BUILD,
     "drawEdges": C_EDGES,
     "drawNodes": C_NODES,
     "drawHalos": "#d6c4c4",
     "drawInterSgArrows": "#dec2f0",
 }
 PHASE_LABELS = {
-    "buildBaseHGraph": "buildBaseHGraph",
+    "buildBaseGraph": "buildBaseGraph",
     "drawEdges": "drawEdges",
     "drawNodes": "drawNodes",
     "drawHalos": "drawHalos",
@@ -51,7 +51,7 @@ FSM_PREFIX = "FSM_bench_5percent"
 
 fsm_df = load_csvs(FSM_DIR, FSM_PREFIX, NS)
 if not fsm_df.empty:
-    phases = ["buildBaseHGraph", "drawEdges", "drawNodes"]
+    phases = ["buildBaseGraph", "drawEdges", "drawNodes"]
     fsm_wide = piv_names(fsm_df, phases)
     totals = fsm_wide.sum(axis=1)
     fig, ax = plt.subplots(figsize=(14, 6))
@@ -83,7 +83,7 @@ MC_PREFIX = "MC_benchfull_sqrt"
 
 mc_df = load_csvs(MC_DIR, MC_PREFIX, NS)
 if not mc_df.empty:
-    phases = ["buildBaseHGraph", "drawEdges", "drawNodes",  "drawHalos", "drawInterSgArrows"]
+    phases = ["buildBaseGraph", "drawEdges", "drawNodes",  "drawHalos", "drawInterSgArrows"]
     mc_wide = piv_names(mc_df, phases)
     # total_wide = mc_df[mc_df["phase"] == "totalRender"][["n", "ms"]].set_index("n")
     # total_wide = total_wide.reindex(mc_wide.index)  

@@ -170,7 +170,7 @@
         if (changed) rerenderGraph();
         evaluating = false;
     }
-    function buildBaseHGraph() {
+    function buildBaseGraph() {
         resetHGraph(hg);
 
         const positions = computePositionLayout(markovTransitions, 15, renderKey, markovStates, mStartingStates, graphWidth, graphHeight, 60);
@@ -273,7 +273,7 @@
         const dimensions = measureHeight(wrapperElement,  svgElement);
         graphWidth = dimensions.graphWidth;
         graphHeight = dimensions.graphHeight;
-        buildBaseHGraph();
+        buildBaseGraph();
         computeFocusClickSets(null);
         lastZoomK = 1;
         lastSemanticZoomK = 1;
@@ -324,8 +324,8 @@
     }
 
     export function runBenchmarkPass(n: number){
-        buildBaseHGraph();
-        measure("mc:buildBaseGraph", n, () => buildBaseHGraph());
+        buildBaseGraph();
+        measure("mc:buildBaseGraph", n, () => buildBaseGraph());
         measure("mc:drawNodes", n, () => drawNodes(makeContext()));
         measure("mc:drawEdges", n, () => drawEdges(makeContext()));
         measure("mc:drawHalos", n, () => drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour));
@@ -379,7 +379,7 @@
         requestAnimationFrame(() => {const dimensions = measureHeight(wrapperElement, svgElement); 
             graphHeight = dimensions.graphHeight;
             graphWidth = dimensions.graphWidth;
-            buildBaseHGraph(); 
+            buildBaseGraph(); 
             rerenderGraph(); });
     } 
 
@@ -408,9 +408,8 @@
 
     <div class="zoomControls">
         <button type="button" class="zoomButton" title="{isFullScreen ? 'Exit fullscreen' : 'Expand'}" on:click={() => dispatch('toggleFullscreen')}>{isFullScreen ? '✕' : '⤢'}</button>
-
         <button type="button" class="zoomButton" on:click={zoomIn}>+</button>
-        <button type="button" class="zoomButton" on:click={zoomOut}>−</button>
+        <button type="button" class="zoomButton" on:click={zoomOut}>-</button>
         <button type="button" class="zoomButton" on:click={zoomReset}>⟳</button>
     </div>
 
@@ -425,7 +424,7 @@
 
 <style>
     svg {
-        background: snow;
+        background: rgb(255, 255, 255);
         border: 1px solid #ccc;
         display: block;
         width: 100%;

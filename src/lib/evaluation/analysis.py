@@ -5,6 +5,9 @@ import matplotlib.patches as mpatches
 from scipy import stats
 import json
 import os
+from numpy.linalg import inv
+import scipy
+
 
 DATA_DIR = os.path.dirname(__file__)
 FIG_DIR = os.path.join(DATA_DIR, "figures")
@@ -192,3 +195,23 @@ def make_bar_chart(group_num, title, pre_n, post_n, filename):
 
 make_bar_chart(1, "Hills Road SFC lesson", pre_n=record[record['cohort'] == 1]['pre'].dropna().shape[0], post_n=record[record['cohort'] == 1]['post'].dropna().shape[0], filename="HRSFC_qual_comparison.png")
 make_bar_chart(2, "All Saints' Sixth Form lesson", pre_n=record[record['cohort'] == 2]['pre'].dropna().shape[0], post_n=record[record['cohort'] == 2]['post'].dropna().shape[0], filename="ALLSAINTS_qual_comparison.png")
+
+def manova_hotelling(school_df, label):
+    scores_before = school_df[before_cols].copy().reset_index(drop=True)
+    scores_after = school_df[after_cols].copy().reset_index(drop=True)
+    scores_before.columns = CONCEPTS
+    scores_after.columns = CONCEPTS
+    gain_matrix = (scores_after - scores_before).dropna().values.astype(float)
+    n_students, n_concepts = gain_matrix.shape
+    mean_gain_vector = gain_matrix.mean(axis=0)
+    gain_covariance = np.cov(gain_matrix.T)
+    t2_stat = n_students * mean_gain_vector @ inv(gain_covariance) @ mean_gain_vector
+    f_stat = (n_students - n_concepts) / (n_concepts * (n_students - 1)) * t2_stat
+    p_value = 1 - scipy.stats.f.cdf(f_stat, n_concepts, n_students - n_concepts)
+    print(f"{label} (n={n_students}, p={n_concepts})")
+    print(f"Tsq={t2_stat:.4f}, F({n_concepts}, {n_students - n_concepts})={f_stat:.4f}, p={p_value:.6f}")
+
+manova_hotelling(l1, "Hills Road SFC lesson")
+manova_hotelling(l2, "All Saints' Sixth Form lesson")
+pooled = pd.concat([l1, l2]).reset_index(drop=True)
+manova_hotelling(pooled, "Pooled data from both lessons")
