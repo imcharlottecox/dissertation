@@ -342,7 +342,7 @@
         const svg = d3.select(svgElement);
         markerUrls = drawArrowheads(svg, "markov-");
         g = addMCContentGroup(svg);       
-        dragBehaviour = createDragHandler(() => { drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions, markerUrls?.arrowheadSg ?? "url(#markov-arrowhead-sg)"); drawPathHighlightLocal();});
+        dragBehaviour = createDragHandler(() => { recomputeLiveHaloSgRects(hg, hg.activeSubgraphs, WORD_NODE_RADIUS, subgraphRects); drawEdges(makeContext()); drawHalos(g, hg, nodeRadius, subgraphRects, subgraphs, haloColour); drawInterSgArrows(g, hg, markovTransitions, markerUrls?.arrowheadSg ?? "url(#markov-arrowhead-sg)"); drawPathHighlightLocal();});
 
         zoomBehaviour = d3.zoom<SVGSVGElement, unknown>()
             .filter(event => !event.type.startsWith("dblclick") && (event instanceof WheelEvent || event.button === 0))

@@ -75,7 +75,6 @@ export function drawNodes(context: MCRenderContext) {
     const { g, hg, nodeRadius, acceptingStates, startingStates,focusClickedNodeId, nodeColour, focusClickNodeIds, filterActiveNodes, dragBehaviour, handleNodeClick } = context;
     const nodeData = Array.from(hg.nodes.values()).filter(n => n.visible);
 
-    //todo write
     g.select<SVGGElement>("g.nodes")
         .selectAll<SVGGElement, HStateNode>("g.node")
         .data(nodeData, (d: HStateNode) => d.id)

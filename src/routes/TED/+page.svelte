@@ -84,6 +84,7 @@
         title="TED Talks Markov Explorer"
         description="Here is a list of 50 TED talks. Each has its own Markov chain built from the speaker's talk. Select a talk and explore the Markov chain- can you notice any interesting patterns? Any words with a transition probability = 1, such that they only occur together- why could that be? What about common words that appear in the introduction between talks? Do any different patterns occur between longer and shorter talks? Investigate, and you tell me!"
     />
+    <p class="copyright">TED Talk transcript data adapted from Rounak Banik's "TED Talks" Kaggle dataset.</p>            
    <div class="selectorRow">
         <label class="selectorLabel" for="talkSelect">
             Choose a talk!
@@ -210,5 +211,13 @@
         background: #cde1ff;
         font-weight: 600;
         color: #1a4fa0;
+    }
+    .copyright{
+        text-align: right;
+        font-size: 12px;
+        padding: 0;
+        margin: 0;
+        align-items: flex-end;
+        font-style: italic;
     }
 </style>

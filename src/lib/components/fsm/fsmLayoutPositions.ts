@@ -35,7 +35,7 @@ export function computeLevelsMap(edges: fTransition[], root: string, allStates: 
     t = performance.now();
 
     while (queue.length) {
-        const current = queue.shift()!; //TODO BENCHMARK EDIT?
+        const current = queue.shift()!; 
         const neighbours = adjacency.get(current) ?? [];
         neighbours.forEach(target => {
             if (!levels.has(target)) {

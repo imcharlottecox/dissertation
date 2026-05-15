@@ -3,7 +3,7 @@
     // import FsmViewer from "$lib/components/FSMView.svelte";
     import type { fTransition} from "$lib/graph/graphTypes";
     import FsmHierarchicalViewer from "$lib/components/FSM/fsmViewer.svelte";
-    // import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";//TODO make button change work on editing not just benchmark
+    // import FsmHierarchicalViewer from "$lib/benchmarking/fsmViewerBenchmarking.svelte";
     import MarkovView from "$lib/components/MC/markovViewer.svelte";
 
 	import { makeVending5pFSM } from '../../data/vending/vending5pFSM';

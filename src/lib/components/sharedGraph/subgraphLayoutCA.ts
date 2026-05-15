@@ -29,7 +29,7 @@ export function recomputeAllRects(hg: HGraph, nodeRadius: number, subgraphRects:
             if (childR) r = unionRect(r, expandRect(childR,nestedSubgraphPadding)); //make box big enough to fit child
         }
         if (!r) {subgraphRects.delete(sgId); continue;} //dont draw empty halos
-        subgraphRects.set(sgId, expandRect(r, haloPadding));  //add margin inside container TODO fix when changed halopad 2 to 3
+        subgraphRects.set(sgId, expandRect(r, haloPadding));  
     }
 }
 function smallestContainerofNodes(nodes: HStateNode[], nodeRadius: number): Rect | null{

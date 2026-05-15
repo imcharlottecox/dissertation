@@ -33,7 +33,7 @@
         allBeams?: Array<{
             predictedTokens: string[];
             predictedSeqProbability: number;
-            terminatedNaturally: boolean; //todo fix
+            terminatedNaturally: boolean; 
         }>;
         probabilityBreakdown?: Array<mTransition>;
     }
