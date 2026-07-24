@@ -19,7 +19,7 @@ export function computeLevelsMap(edges: fTransition[], root: string, allStates: 
         });
     
     benchmarkReport?.("adjacency_build", performance.now() - t);
-    t = performance.now();
+    t = performance.now(); 
 
     const statesSet = new Set(allStates);
     statesSet.add(root);
